@@ -448,7 +448,7 @@ class Ui_MainWindow(QWidget):
         self.actionTemp.triggered.connect(lambda: self.Run('settings'))
         self.actionTemp.setText('S')
         self.actionTemp.setIcon(getIcon("settings.ico"))
-        self.actionTemp.setToolTip(_translate("MainWindow", 'Open Settigns folder'))
+        self.actionTemp.setToolTip(_translate("MainWindow", 'Open Settings folder'))
         self.toolBar.addAction(self.actionTemp)
 
         self.toolBar.addSeparator()
