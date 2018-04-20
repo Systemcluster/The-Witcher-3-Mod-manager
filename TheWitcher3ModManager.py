@@ -952,7 +952,7 @@ class Ui_MainWindow(QWidget):
                                     QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel, QMessageBox.No)
     def MessageAlertScript(self):
         '''Shows dialog to let user know he/she should run script merger after each change in the mod list'''
-        return QMessageBox.question(self, _translate("MainWindow", "Run Script Merger"), _translate("MainWindow", "After changing mod list in any way you should run script merger to merge the mods and ensure their compatibility and remove previously merged scripts\n"
+        return QMessageBox.question(self, _translate("MainWindow", "Run Script Merger"), _translate("MainWindow", "After changing the mod list in any way you should run script merger to merge the mods and ensure their compatibility and remove previously merged scripts\n"
                                                                                                               "Do you want to run it now?\n"
                                                                                                               "\n"
                                                                                                               "Note: You can disable these alerts in the settings..."),
