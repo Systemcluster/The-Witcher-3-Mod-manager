@@ -155,7 +155,9 @@ class Ui_MainWindow(QWidget):
             self.actionDetails = QtWidgets.QAction(MainWindow)
             self.actionDetails.setObjectName("actionDetails")
             self.actionMain_Web_Page = QtWidgets.QAction(MainWindow)
+            self.actionGitHub = QtWidgets.QAction(MainWindow)
             self.actionMain_Web_Page.setObjectName("actionMain_Web_Page")
+            self.actionGitHub.setObjectName("acitionGitHub")
             self.actionAlert_to_run_Script_Merger = QtWidgets.QAction(MainWindow)
             self.actionAlert_to_run_Script_Merger.setCheckable(True)
             self.actionAlert_to_run_Script_Merger.setObjectName("actionAlert_to_run_Script_Merger")
@@ -201,6 +203,7 @@ class Ui_MainWindow(QWidget):
             self.menuSex.addAction(self.menuSelect_Language.menuAction())
             self.menuHelp.addAction(self.actionAbout)
             self.menuHelp.addAction(self.actionMain_Web_Page)
+            self.menuHelp.addAction(self.actionGitHub)
             self.menubar.addAction(self.menuFile.menuAction())
             self.menubar.addAction(self.menuEdit.menuAction())
             self.menubar.addAction(self.menuSex.menuAction())
@@ -266,7 +269,9 @@ class Ui_MainWindow(QWidget):
         self.actionAbout.setText(_translate("MainWindow", "About"))
         self.actionAbout.setShortcut("F1")
         self.actionMain_Web_Page.setText(_translate("MainWindow", "Main Web Page"))
+        self.actionGitHub.setText(_translate("MainWindow", "GitHub"))
         self.actionMain_Web_Page.setShortcut("Ctrl+F1")
+        self.actionGitHub.setShortcut("Ctrl+F2")
         self.actionAlert_to_run_Script_Merger.setText(_translate("MainWindow", "Alert to run Script Merger"))
         # self.actionEnglish.setText(_translate("MainWindow", "English"))
         # self.actionSerbian.setText(_translate("MainWindow", "Serbian"))
@@ -316,6 +321,7 @@ class Ui_MainWindow(QWidget):
         self.actionRun_The_Game.triggered.connect(self.RunTheGame)
         self.actionRun_Script_Merger.triggered.connect(self.RunScriptMerger)
         self.actionMain_Web_Page.triggered.connect(self.MainWebPage)
+        self.actionGitHub.triggered.connect(self.OpenGitHub)
         self.actionAlert_to_run_Script_Merger.triggered.connect(self.AlertPopupChanged)
         # self.actionEnglish.triggered.connect(lambda: self.ChangeLanguage("en"))
         # self.actionSerbian.triggered.connect(lambda: self.ChangeLanguage("rs"))
@@ -805,6 +811,9 @@ class Ui_MainWindow(QWidget):
     def MainWebPage(self):
         '''Opens nexus web page'''
         webbrowser.open('https://rd.nexusmods.com/witcher3/mods/2678')
+    def OpenGitHub(self):
+        '''Opens github'''
+        webbrowser.open('https://github.com/stefan3372/The-WItcher-3-Mod-manager.git')
     def SelectAllMods(self):
         '''Selects all mods in the list'''
         self.treeWidget.selectAll()
