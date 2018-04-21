@@ -1,9 +1,9 @@
-import patoolib
 import os.path as path
 from PyQt5.Qt import *
 from Helpers import *
 from ModClass import Mod, Key
 from time import gmtime, strftime
+import subprocess
 
 xmlpattern = re.compile("<Var.+\/>", re.UNICODE)
 inputpattern = re.compile(r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
@@ -22,7 +22,8 @@ def installMod(ui, modPath, pstart, pend):
             if(path.exists(manager + "/extracted")):
                 files.rmtree(manager + "/extracted")
             os.mkdir(manager + "/extracted")
-            patoolib.extract_archive(modPath, outdir=manager + "/extracted", verbosity=-1)
+            # patoolib.extract_archive(modPath, outdir=manager + "/extracted", verbosity=-1) -- old way
+            subprocess.call('7-Zip\\7z x "'+modPath+'" -o"'+manager+'/extracted"')
             modPath = manager + "/extracted"
 
         ask = True

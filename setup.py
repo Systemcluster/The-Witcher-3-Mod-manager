@@ -1,5 +1,5 @@
 from cx_Freeze import setup, Executable
-files =["res/", "translations/", "patoolib/"]
+files =["res/", "translations/", "7-Zip/"]
 shortcut_table = [
     ("DesktopShortcut",        # Shortcut
      "DesktopFolder",          # Directory_
@@ -22,7 +22,7 @@ bdist_msi_options = {'data': msi_data}
 
 setup(
     name='The Witcher 3 Mod Manager',
-    version='0.4',
+    version='0.5',
     url='https://rd.nexusmods.com/witcher3/mods/2678',
     license='Open-source',
     options={"build_exe": {"include_files":files}, "bdist_msi": bdist_msi_options},

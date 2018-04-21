@@ -21,6 +21,8 @@ parts/
 sdist/
 var/
 wheels/
+patoolib/
+7-Zip/
 *.egg-info/
 .installed.cfg
 *.egg
