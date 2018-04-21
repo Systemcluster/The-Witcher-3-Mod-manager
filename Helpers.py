@@ -74,9 +74,21 @@ def iniwrite():
     with open(manager+'/config.ini', 'w') as configfile:
         config.write(configfile)
 
-def savewindowsettings(ui):
-    setini('WINDOW', 'width', str(ui.width()))
-    setini('WINDOW', 'height', str(ui.height()))
+def savewindowsettings(ui, window):
+    setini('WINDOW', 'width', str(window.width()))
+    setini('WINDOW', 'height', str(window.height()))
+    setini('WINDOW', 'section0', str(ui.treeWidget.header().sectionSize(0)))
+    setini('WINDOW', 'section1', str(ui.treeWidget.header().sectionSize(1)))
+    setini('WINDOW', 'section2', str(ui.treeWidget.header().sectionSize(2)))
+    setini('WINDOW', 'section3', str(ui.treeWidget.header().sectionSize(3)))
+    setini('WINDOW', 'section4', str(ui.treeWidget.header().sectionSize(4)))
+    setini('WINDOW', 'section5', str(ui.treeWidget.header().sectionSize(5)))
+    setini('WINDOW', 'section6', str(ui.treeWidget.header().sectionSize(6)))
+    setini('WINDOW', 'section7', str(ui.treeWidget.header().sectionSize(7)))
+    setini('WINDOW', 'section8', str(ui.treeWidget.header().sectionSize(8)))
+    setini('WINDOW', 'section9', str(ui.treeWidget.header().sectionSize(9)))
+    setini('WINDOW', 'section10', str(ui.treeWidget.header().sectionSize(10)))
+    setini('WINDOW', 'section11', str(ui.treeWidget.header().sectionSize(11)))
 
 def prioritywrite():
     '''Saves priority data to disk - documents/The Witcher 3/mods.settings file'''

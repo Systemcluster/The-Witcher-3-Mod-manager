@@ -284,19 +284,19 @@ class Ui_MainWindow(QWidget):
 
         # Edit
 
-        self.treeWidget.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        # self.treeWidget.header().resizeSection(0, 60)
-        # self.treeWidget.header().resizeSection(1, 200)
-        # self.treeWidget.header().resizeSection(2, 50)
-        # self.treeWidget.header().resizeSection(3, 39)
-        # self.treeWidget.header().resizeSection(4, 39)
-        # self.treeWidget.header().resizeSection(5, 39)
-        # self.treeWidget.header().resizeSection(6, 39)
-        # self.treeWidget.header().resizeSection(7, 45)
-        # self.treeWidget.header().resizeSection(8, 39)
-        # self.treeWidget.header().resizeSection(9, 50)
-        # self.treeWidget.header().resizeSection(10, 45)
-        # self.treeWidget.header().resizeSection(11, 120)
+        # self.treeWidget.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.treeWidget.header().resizeSection(0, int(getini('WINDOW', 'section0')) if getini('WINDOW', 'section0') else 60)
+        self.treeWidget.header().resizeSection(1, int(getini('WINDOW', 'section1')) if getini('WINDOW', 'section1') else 200)
+        self.treeWidget.header().resizeSection(2, int(getini('WINDOW', 'section2')) if getini('WINDOW', 'section2') else 50)
+        self.treeWidget.header().resizeSection(3, int(getini('WINDOW', 'section3')) if getini('WINDOW', 'section3') else 39)
+        self.treeWidget.header().resizeSection(4, int(getini('WINDOW', 'section4')) if getini('WINDOW', 'section4') else 39)
+        self.treeWidget.header().resizeSection(5, int(getini('WINDOW', 'section5')) if getini('WINDOW', 'section5') else 39)
+        self.treeWidget.header().resizeSection(6, int(getini('WINDOW', 'section6')) if getini('WINDOW', 'section6') else 39)
+        self.treeWidget.header().resizeSection(7, int(getini('WINDOW', 'section7')) if getini('WINDOW', 'section7') else 45)
+        self.treeWidget.header().resizeSection(8, int(getini('WINDOW', 'section8')) if getini('WINDOW', 'section8') else 39)
+        self.treeWidget.header().resizeSection(9, int(getini('WINDOW', 'section9')) if getini('WINDOW', 'section9') else 50)
+        self.treeWidget.header().resizeSection(10,int(getini('WINDOW', 'section10')) if getini('WINDOW', 'section10') else 45)
+        self.treeWidget.header().resizeSection(11,int(getini('WINDOW', 'section11')) if getini('WINDOW', 'section11') else 120)
         self.treeWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.treeWidget.header().setDefaultAlignment(Qt.AlignCenter)
         self.treeWidget.sortByColumn(1, Qt.AscendingOrder)
@@ -355,6 +355,7 @@ class Ui_MainWindow(QWidget):
                 self.configurePaths()
                 self.configureSettings()
                 self.configureMods()
+                self.configureWindow()
                 self.configureToolbar()
                 break
             else:
@@ -399,6 +400,21 @@ class Ui_MainWindow(QWidget):
             os.mkdir(documents + "/The Witcher 3 Mod Manager")
         if (not getini('PATHS', 'scriptmerger')):
             setini('PATHS', 'scriptmerger', '')
+    def configureWindow(self):
+        setini('WINDOW', 'width', "1024")
+        setini('WINDOW', 'height', "720")
+        setini('WINDOW', 'section0', '60')
+        setini('WINDOW', 'section1', '200')
+        setini('WINDOW', 'section2', '50')
+        setini('WINDOW', 'section3', '39')
+        setini('WINDOW', 'section4', '39')
+        setini('WINDOW', 'section5', '39')
+        setini('WINDOW', 'section6', '39')
+        setini('WINDOW', 'section7', '45')
+        setini('WINDOW', 'section8', '39')
+        setini('WINDOW', 'section9', '50')
+        setini('WINDOW', 'section10', '45')
+        setini('WINDOW', 'section11', '120')
     def configureSettings(self):
         '''Generates default settings if they are not present'''
         if (not getini('SETTINGS', 'AllowPopups')):
@@ -981,7 +997,7 @@ if __name__ == "__main__":
     MainWindow.show()
 
     ret = app.exec_()
-    savewindowsettings(MainWindow)
+    savewindowsettings(ui, MainWindow)
     iniwrite()
     saveXML(ui.modList)
 
