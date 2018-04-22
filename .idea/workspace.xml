@@ -1,10 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="62d9a2bd-ed89-41db-b7df-8a7a2ac411a4" name="Default" comment="">
+    <list default="true" id="62d9a2bd-ed89-41db-b7df-8a7a2ac411a4" name="Default" comment="Added">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7-zip.chm" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7-zip.dll" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7-zip32.dll" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7z.dll" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7z.exe" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7z.sfx" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7zCon.sfx" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7zFM.exe" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/7zG.exe" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Uninstall.exe" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/History.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/af.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/an.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ar.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ast.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/az.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ba.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/be.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/bg.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/bn.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/br.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ca.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/co.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/cs.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/cy.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/da.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/de.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/el.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/en.ttt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/eo.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/es.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/et.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/eu.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ext.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/fa.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/fi.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/fr.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/fur.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/fy.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ga.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/gl.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/gu.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/he.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/hi.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/hr.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/hu.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/hy.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/id.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/io.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/is.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/it.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ja.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ka.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/kaa.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/kk.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ko.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ku-ckb.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ku.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ky.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/lij.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/lt.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/lv.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/mk.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/mn.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/mng.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/mng2.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/mr.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ms.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/nb.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ne.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/nl.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/nn.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/pa-in.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/pl.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ps.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/pt-br.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/pt.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ro.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ru.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sa.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/si.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sk.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sl.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sq.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sr-spc.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sr-spl.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/sv.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ta.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/th.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/tr.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/tt.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/ug.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/uk.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/uz.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/va.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/vi.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/yo.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/zh-cn.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/Lang/zh-tw.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/License.txt" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/descript.ion" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/7-Zip/readme.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TheWitcher3ModManager.py" afterPath="$PROJECT_DIR$/TheWitcher3ModManager.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/changelog.txt" afterPath="$PROJECT_DIR$/changelog.txt" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -15,11 +116,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="TheWitcher3ModManager.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="TheWitcher3ModManager.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TheWitcher3ModManager.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="409">
-              <caret line="823" column="31" lean-forward="true" selection-start-line="823" selection-start-column="31" selection-end-line="823" selection-end-column="31" />
+            <state relative-caret-position="7633">
+              <caret line="829" column="21" lean-forward="false" selection-start-line="829" selection-start-column="21" selection-end-line="829" selection-end-column="21" />
               <folding>
                 <element signature="e#22102#22992#0" expanded="false" />
                 <element signature="e#23028#23189#0" expanded="false" />
@@ -75,6 +176,26 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="setup.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/setup.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="527">
+              <caret line="31" column="21" lean-forward="false" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="306">
+              <caret line="18" column="6" lean-forward="true" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="6" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -121,6 +242,11 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="distributions" />
+      </map>
+    </option>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -136,12 +262,12 @@
         <option value="C:/Python/Lib/encodings/__init__.py" />
         <option value="$PROJECT_DIR$/MainGUI.py" />
         <option value="$PROJECT_DIR$/ModClass.py" />
-        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Core.py" />
-        <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/changelog.txt" />
         <option value="$PROJECT_DIR$/Helpers.py" />
         <option value="$PROJECT_DIR$/TheWitcher3ModManager.py" />
+        <option value="$PROJECT_DIR$/setup.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -306,22 +432,29 @@
       <option name="project" value="LOCAL" />
       <updated>1524325772936</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Added open git hub option">
+      <created>1524327676908</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1524327676908</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18443497" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13326226" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25785482" sideWeight="0.52418303" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25785482" sideWeight="0.475817" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19344608" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25460455" sideWeight="0.53444034" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19609967" sideWeight="0.48366013" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25460455" sideWeight="0.46555966" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19344608" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20895523" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24160346" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32995737" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -341,7 +474,8 @@
     <MESSAGE value="Removed patoolib, added integrated 7-Zip" />
     <MESSAGE value="Column widths are now configurable and saved on exit" />
     <MESSAGE value="Added text under icons" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added text under icons" />
+    <MESSAGE value="Added open git hub option" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added open git hub option" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -413,9 +547,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#22#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -423,9 +554,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="714">
           <caret line="42" column="36" lean-forward="false" selection-start-line="42" selection-start-column="36" selection-end-line="42" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -493,9 +621,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#22#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -504,9 +629,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="19" column="20" lean-forward="false" selection-start-line="19" selection-start-column="20" selection-end-line="19" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -572,9 +694,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#22#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -582,9 +701,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="19" column="20" lean-forward="false" selection-start-line="19" selection-start-column="20" selection-end-line="19" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -651,9 +767,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="19" column="20" lean-forward="false" selection-start-line="19" selection-start-column="20" selection-end-line="19" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -920,27 +1033,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <marker date="1524327657924" expanded="true" signature="65687:65704" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65687:65722" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65687:65735" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65687:65750" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65785:66140" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65798:66125" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65846:66111" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65865:66096" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65898:66076" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65938:66042" ph="..." />
-            <marker date="1524327657924" expanded="true" signature="65959:66020" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="24" column="6" lean-forward="false" selection-start-line="24" selection-start-column="6" selection-end-line="24" selection-end-column="6" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -948,7 +1040,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
           <caret line="5" column="10" lean-forward="false" selection-start-line="5" selection-start-column="10" selection-end-line="5" selection-end-column="10" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -957,19 +1048,10 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="23" column="37" lean-forward="false" selection-start-line="23" selection-start-column="37" selection-end-line="23" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/changelog.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="62" lean-forward="true" selection-start-line="2" selection-start-column="62" selection-end-line="2" selection-end-column="62" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -977,9 +1059,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
           <caret line="23" column="34" lean-forward="false" selection-start-line="23" selection-start-column="34" selection-end-line="23" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#22#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -987,23 +1066,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="160" column="27" lean-forward="false" selection-start-line="160" selection-start-column="27" selection-end-line="160" selection-end-column="27" />
-          <folding>
-            <element signature="e#193#473#0" expanded="false" />
-            <element signature="e#509#610#0" expanded="false" />
-            <element signature="e#653#748#0" expanded="false" />
-            <element signature="e#786#1166#0" expanded="false" />
-            <element signature="e#1197#2120#0" expanded="false" />
-            <element signature="e#2152#3006#0" expanded="false" />
-            <element signature="e#3052#4076#0" expanded="false" />
-            <element signature="e#4114#4291#0" expanded="false" />
-            <element signature="e#4332#5444#0" expanded="false" />
-            <element signature="e#5479#6406#0" expanded="false" />
-            <element signature="e#9687#10040#0" expanded="false" />
-            <element signature="e#10078#10899#0" expanded="false" />
-            <element signature="e#10931#12266#0" expanded="false" />
-            <element signature="e#12386#12523#0" expanded="false" />
-            <element signature="e#13149#13461#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1011,16 +1073,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="247">
           <caret line="105" column="26" lean-forward="false" selection-start-line="105" selection-start-column="26" selection-end-line="105" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/TheWitcher3ModManager.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="409">
-          <caret line="823" column="31" lean-forward="true" selection-start-line="823" selection-start-column="31" selection-end-line="823" selection-end-column="31" />
+        <state relative-caret-position="7633">
+          <caret line="829" column="21" lean-forward="false" selection-start-line="829" selection-start-column="21" selection-end-line="829" selection-end-column="21" />
           <folding>
             <element signature="e#22102#22992#0" expanded="false" />
             <element signature="e#23028#23189#0" expanded="false" />
@@ -1072,6 +1131,22 @@
             <element signature="e#49872#50144#0" expanded="false" />
             <element signature="e#50969#51434#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="527">
+          <caret line="31" column="21" lean-forward="false" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" column="6" lean-forward="true" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="6" />
+          <folding />
         </state>
       </provider>
     </entry>
