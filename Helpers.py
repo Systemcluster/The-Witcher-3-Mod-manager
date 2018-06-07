@@ -14,14 +14,11 @@ priority.optionxform = str
 buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
 ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
 documents = str(buf.value).replace('\\', '/')
-manager = documents + '/The Witcher 3 Mod Manager'
 
 def initconfig():
     '''Creates or reads existing configuration'''
-    if (not os.path.exists(manager)):
-        os.mkdir(manager)
-    config.read(manager+'/config.ini')
-    priority.read(documents+'/The Witcher 3/mods.settings')
+    config.read('config.ini')
+    priority.read(documents+'The Witcher 3/mods.settings')
 
 def getini(section, option):
     '''Gets option value from configuration if exists'''
@@ -71,7 +68,7 @@ def removeininovalue(section, value):
 
 def iniwrite():
     '''Saves configuration to disk to documents/The Witcher 3 Mod Manager/config.ini file'''
-    with open(manager+'/config.ini', 'w') as configfile:
+    with open('config.ini', 'w') as configfile:
         config.write(configfile)
 
 def savewindowsettings(ui, window):
@@ -159,7 +156,7 @@ def saveXML(modlist):
         root = mod.writeToXml(root)
     indent(root)
     tree = XML.ElementTree(root)
-    tree.write(manager+'/installed.xml')
+    tree.write('installed.xml')
 
 def get_size(start_path = '.'):
     '''Calculates the size of the selected folder'''

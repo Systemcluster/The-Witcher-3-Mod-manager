@@ -432,8 +432,8 @@ class Ui_MainWindow(QWidget):
     def configureMods(self):
         '''Reads all mods data from xml and creates inner mod structure'''
         self.modList = {}
-        if (path.exists(manager + '/installed.xml')):
-            tree = XML.parse(manager + '/installed.xml')
+        if (path.exists('installed.xml')):
+            tree = XML.parse('installed.xml')
             root = tree.getroot()
             for xmlmod in root.findall('mod'):
                 mod = Mod()
@@ -787,8 +787,8 @@ class Ui_MainWindow(QWidget):
                 setini('PATHS', 'lastpath', lastpath)
                 self.setProgress(0)
                 self.RefreshList()
-                if (path.exists(manager + "/extracted")):
-                    files.rmtree(manager + "/extracted")
+                if (path.exists("extracted")):
+                    files.rmtree("extracted")
                 self.AlertRunScriptMerger()
             else:
                 self.output(_translate("MainWindow", "Installation canceled"))

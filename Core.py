@@ -19,11 +19,11 @@ def installMod(ui, modPath, pstart, pend):
         mod.setName(modname)
         mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         if (re.match(".+\.(zip|rar|7z)$",path.basename(modPath))):
-            if(path.exists(manager + "/extracted")):
-                files.rmtree(manager + "/extracted")
-            os.mkdir(manager + "/extracted")
-            subprocess.call('7-Zip\\7z x "'+modPath+'" -o"'+manager+'/extracted"')
-            modPath = manager + "/extracted"
+            if(path.exists("extracted")):
+                files.rmtree("extracted")
+            os.mkdir("extracted")
+            subprocess.call('7-Zip\\7z x "'+modPath+'" -o"'+'extracted"')
+            modPath = "extracted"
 
         ask = True
 
