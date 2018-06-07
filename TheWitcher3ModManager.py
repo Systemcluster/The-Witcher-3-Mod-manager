@@ -549,7 +549,7 @@ class Ui_MainWindow(QWidget):
     def RemoveFromToolbar(self, action):
         '''Creates menu for removing actions from toolbar'''
         self.toolBar.removeAction(action)
-        removeininovalue('TOOLBAR', action.text())
+        removeininovalue('TOOLBAR', action.toolTip())
 
     def addToToolbar(self, selected=""):
         '''Adds custom action to the toolbar selected by user'''
@@ -565,11 +565,12 @@ class Ui_MainWindow(QWidget):
                 icon = iconProvider.icon(fileInfo)
 
                 dir, file = path.split(selected)
+                fl, ext = path.splitext(file)
                 actionTemp = QtWidgets.QAction(MainWindow)
                 actionTemp.triggered.connect(lambda: self.Open(selected))
-                actionTemp.setText(selected)
+                actionTemp.setText(fl)
                 actionTemp.setIcon(icon)
-                actionTemp.setToolTip(file)
+                actionTemp.setToolTip(selected)
                 self.toolBar.addAction(actionTemp)
                 setininovalue('TOOLBAR', selected)
         except Exception as err:
@@ -1019,7 +1020,7 @@ class Ui_MainWindow(QWidget):
     def makeTempAction(self, action):
         '''Temp function for bypassing actions with same names problem'''
         temp = QAction(action)
-        temp.setText(action.toolTip())
+        temp.setText(action.text())
         temp.setIcon(action.icon())
         temp.triggered.connect(lambda: self.RemoveFromToolbar(action))
         return temp
