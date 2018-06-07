@@ -22,7 +22,6 @@ def installMod(ui, modPath, pstart, pend):
             if(path.exists(manager + "/extracted")):
                 files.rmtree(manager + "/extracted")
             os.mkdir(manager + "/extracted")
-            # patoolib.extract_archive(modPath, outdir=manager + "/extracted", verbosity=-1) -- old way
             subprocess.call('7-Zip\\7z x "'+modPath+'" -o"'+manager+'/extracted"')
             modPath = manager + "/extracted"
 
@@ -71,8 +70,8 @@ def installMod(ui, modPath, pstart, pend):
 
                                 if (file == "input.xml"):
                                     temp = re.search('id="Hidden".+id="PCInput"', filetext, re.DOTALL)
-                                    hiddentext = temp.group(0)
-                                    if (hiddentext):
+                                    if (temp):
+                                        hiddentext = temp.group(0)
                                         hiddentext = re.sub('<!--.*-->','',hiddentext)
                                         hiddentext = re.sub('<!--.*-->','',hiddentext,0,re.DOTALL)
                                         xmlkeys = xmlpattern.findall(hiddentext)
