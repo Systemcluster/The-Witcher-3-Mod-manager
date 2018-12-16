@@ -26,6 +26,7 @@ class Ui_MainWindow(QWidget):
             MainWindow.setStatusTip("")
             MainWindow.setAutoFillBackground(False)
             MainWindow.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+            MainWindow.setAcceptDrops(True)
             self.centralwidget = QtWidgets.QWidget(MainWindow)
             self.centralwidget.setObjectName("centralwidget")
             self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -772,9 +773,13 @@ class Ui_MainWindow(QWidget):
 
     def InstallMods(self):
         '''Installs selected mods'''
+        self.clear()
+        file = getFile(getini('PATHS', 'lastpath'), "*.zip *.rar *.7z")
+        self.InstallModFiles(file)
+
+    def InstallModFiles(self, file):
+        '''Installs passed list of mods'''
         try:
-            self.clear()
-            file = getFile(getini('PATHS', 'lastpath'), "*.zip *.rar *.7z")
             if (file != None):
                 prgrs = 0
                 prgrsmax = len(file)
@@ -1070,6 +1075,27 @@ class Ui_MainWindow(QWidget):
                 self.RunScriptMerger()
 
 
+class CustomMainWindow(QtWidgets.QMainWindow):
+    def __init__(self, ui):
+        super().__init__()
+        self.ui = ui
+
+    def dragEnterEvent(self, event):
+        lines = event.mimeData().text().splitlines()
+        if not lines:
+            event.ignore()
+            return
+        for line in lines:
+            _, ext = os.path.splitext(line)
+            if ext not in ['.rar', '.7z', '.zip']:
+                event.ignore()
+                return
+        event.accept()
+
+    def dropEvent(self, event):
+        files = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
+        self.ui.InstallModFiles(files)
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
@@ -1080,8 +1106,8 @@ if __name__ == "__main__":
         translator.load("translations/" + language)
         app.installTranslator(translator)
 
-    MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
+    MainWindow = CustomMainWindow(ui)
     ui.setupUi(MainWindow)
     app.setWindowIcon(getIcon("w3a.ico"))
     MainWindow.show()
