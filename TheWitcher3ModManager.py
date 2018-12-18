@@ -682,11 +682,14 @@ class Ui_MainWindow(QWidget):
 
     def modToggled(self, item, column):
         '''Triggered when the mod check state is changed. Enables or disables the mod based on the current check state'''
-        if item.checkState(column) == QtCore.Qt.Checked:
-            self.modList[item.text(1)].enable()
-        elif item.checkState(column) == QtCore.Qt.Unchecked:
-            self.modList[item.text(1)].disable()
-        self.RefreshLoadOrder()
+        try:
+            if item.checkState(column) == QtCore.Qt.Checked:
+                self.modList[item.text(1)].enable()
+            elif item.checkState(column) == QtCore.Qt.Unchecked:
+                self.modList[item.text(1)].disable()
+            self.RefreshLoadOrder()
+        except Exception as err:
+            self.output(str(err))
 
     def doubleClick(self, item, column):
         '''Triggered when double clicked on the mod'''
