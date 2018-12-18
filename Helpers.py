@@ -13,12 +13,12 @@ priority = configparser.ConfigParser()
 priority.optionxform = str
 buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
 ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
-documents = str(buf.value).replace('\\', '/')
+documents = str(os.path.normpath(buf.value)).replace('\\', '/')
 
 def initconfig():
     '''Creates or reads existing configuration'''
     config.read('config.ini')
-    priority.read(documents+'The Witcher 3/mods.settings')
+    priority.read(documents+'/The Witcher 3/mods.settings')
 
 def getini(section, option):
     '''Gets option value from configuration if exists'''
