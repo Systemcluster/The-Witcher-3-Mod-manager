@@ -1,3 +1,4 @@
+import os
 import os.path as path
 import subprocess
 import webbrowser
@@ -151,6 +152,8 @@ class Ui_MainWindow(QWidget):
             self.actionRename.setObjectName("actionRename")
             self.actionDetails = QtWidgets.QAction(MainWindow)
             self.actionDetails.setObjectName("actionDetails")
+            self.actionOpenFolder = QtWidgets.QAction(MainWindow)
+            self.actionOpenFolder.setObjectName("actionOpenFolder")
             self.actionMain_Web_Page = QtWidgets.QAction(MainWindow)
             self.actionGitHub = QtWidgets.QAction(MainWindow)
             self.actionMain_Web_Page.setObjectName("actionMain_Web_Page")
@@ -172,6 +175,8 @@ class Ui_MainWindow(QWidget):
             self.menuFile.addAction(self.actionInstall_Mods)
             self.menuFile.addAction(self.actionUninstall_Mods)
             self.menuFile.addAction(self.actionEnable_Disable_Mods)
+            self.menuFile.addSeparator()
+            self.menuFile.addAction(self.actionOpenFolder)
             self.menuFile.addSeparator()
             self.menuFile.addAction(self.actionRefresh_Mod_List)
             self.menuFile.addAction(self.actionSelect_All_Mods)
@@ -265,6 +270,8 @@ class Ui_MainWindow(QWidget):
         self.actionRename.setShortcut("F2")
         self.actionDetails.setShortcut("F3")
         self.actionDetails.setText(_translate("MainWindow", "Details"))
+        self.actionOpenFolder.setShortcut("Ctrl+L")
+        self.actionOpenFolder.setText(_translate("MainWindow", "Open Folder"))
         self.actionSetPriority.setText(_translate("MainWindow", "Set Priority"))
         self.actionUnsetPriority.setText(_translate("MainWindow", "Remove Priority"))
         self.menuEdit.addAction(self.actionDetails)
@@ -319,6 +326,7 @@ class Ui_MainWindow(QWidget):
         self.actionClearOutput.triggered.connect(self.clear)
         self.actionRename.triggered.connect(self.rename)
         self.actionDetails.triggered.connect(self.details)
+        self.actionOpenFolder.triggered.connect(self.openFolder)
         self.actionSetPriority.triggered.connect(self.setPriority)
         self.actionUnsetPriority.triggered.connect(self.unsetPriority)
         self.actionRestore_Columns.triggered.connect(self.Restore_Columns)
@@ -522,6 +530,8 @@ class Ui_MainWindow(QWidget):
         menu.addAction(self.actionSetPriority)
         menu.addAction(self.actionUnsetPriority)
         menu.addSeparator()
+        menu.addAction(self.actionOpenFolder)
+        menu.addSeparator()
         menu.addAction(self.actionRename)
         menu.addAction(self.actionUninstall_Mods)
         menu.addAction(self.actionEnable_Disable_Mods)
@@ -657,6 +667,18 @@ class Ui_MainWindow(QWidget):
                 ui.setupUi(self.Details, str(mod))
                 self.Details.show()
                 app.exec()
+
+    def openFolder(self):
+        selected = self.getSelectedMods()
+        if (selected):
+            try:
+                for modname in selected:
+                    mod = self.modList[modname]
+                    for file in mod.files:
+                        path = getini('PATHS', 'mod') + ("/~" if not mod.enabled else "/") + file
+                        os.startfile(path, "explore")
+            except Exception as err:
+                self.output(str(err))
 
     def modToggled(self, item, column):
         '''Triggered when the mod check state is changed. Enables or disables the mod based on the current check state'''
