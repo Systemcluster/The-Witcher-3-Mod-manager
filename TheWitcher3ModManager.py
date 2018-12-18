@@ -1103,13 +1103,14 @@ class CustomMainWindow(QtWidgets.QMainWindow):
         self.ui = ui
 
     def dragEnterEvent(self, event):
-        lines = event.mimeData().text().splitlines()
-        if not lines:
+        urls = event.mimeData().urls()
+        if not urls:
             event.ignore()
             return
-        for line in lines:
-            _, ext = os.path.splitext(line)
-            if ext not in ['.rar', '.7z', '.zip']:
+        for url in urls:
+            path = url.toLocalFile()
+            _, ext = os.path.splitext(path)
+            if ext not in ['.rar', '.7z', '.zip'] and not os.path.isdir(path):
                 event.ignore()
                 return
         event.accept()
