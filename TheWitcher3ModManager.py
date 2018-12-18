@@ -156,6 +156,10 @@ class Ui_MainWindow(QWidget):
             self.actionDetails.setObjectName("actionDetails")
             self.actionOpenFolder = QtWidgets.QAction(MainWindow)
             self.actionOpenFolder.setObjectName("actionOpenFolder")
+            self.actionIncreasePriority = QtWidgets.QAction(MainWindow)
+            self.actionIncreasePriority.setObjectName("actionIncreasePriority")
+            self.actionDecreasePriority = QtWidgets.QAction(MainWindow)
+            self.actionDecreasePriority.setObjectName("actionDecreasePriority")
             self.actionMain_Web_Page = QtWidgets.QAction(MainWindow)
             self.actionGitHub = QtWidgets.QAction(MainWindow)
             self.actionMain_Web_Page.setObjectName("actionMain_Web_Page")
@@ -277,13 +281,22 @@ class Ui_MainWindow(QWidget):
         self.actionDetails.setText(_translate("MainWindow", "Details"))
         self.actionOpenFolder.setShortcut("Ctrl+L")
         self.actionOpenFolder.setText(_translate("MainWindow", "Open Folder"))
+        self.actionIncreasePriority.setShortcut("Ctrl+Up")
+        self.actionIncreasePriority.setText(_translate("MainWindow", "Increase Priority"))
+        self.actionDecreasePriority.setShortcut("Ctrl+Down")
+        self.actionDecreasePriority.setText(_translate("MainWindow", "Decrease Priority"))
+        self.actionSetPriority.setShortcut("Ctrl+P")
         self.actionSetPriority.setText(_translate("MainWindow", "Set Priority"))
+        self.actionUnsetPriority.setShortcut("Ctrl+U")
         self.actionUnsetPriority.setText(_translate("MainWindow", "Remove Priority"))
         self.menuEdit.addAction(self.actionDetails)
         self.menuEdit.addAction(self.actionRename)
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSetPriority)
         self.menuEdit.addAction(self.actionUnsetPriority)
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionIncreasePriority)
+        self.menuEdit.addAction(self.actionDecreasePriority)
 
         self.treeWidget.header().resizeSection(0, int(getini('WINDOW', 'section0')) if getini('WINDOW',
                                                                                               'section0') else 60)
@@ -333,6 +346,8 @@ class Ui_MainWindow(QWidget):
         self.actionRename.triggered.connect(self.rename)
         self.actionDetails.triggered.connect(self.details)
         self.actionOpenFolder.triggered.connect(self.openFolder)
+        self.actionIncreasePriority.triggered.connect(self.increasePriority)
+        self.actionDecreasePriority.triggered.connect(self.decreasePriority)
         self.actionSetPriority.triggered.connect(self.setPriority)
         self.actionUnsetPriority.triggered.connect(self.unsetPriority)
         self.actionRestore_Columns.triggered.connect(self.Restore_Columns)
@@ -723,6 +738,39 @@ class Ui_MainWindow(QWidget):
         except Exception as err:
             self.output(str(err))
 
+    def increaseLoadOrderPriority(self):
+        '''Increases the priority of the selected mods in the load order list'''
+        items = self.loadOrder.selectedItems()
+        if items:
+            item = items[0]
+            selected = item.text(0)
+            selectedvalue = item.text(1)
+            if (selectedvalue):
+                value = int(selectedvalue)
+            else:
+                value = 0
+            value = value + 1
+            setpriority(str(selected), str(value))
+            item.setText(1, str(value))
+            prioritywrite()
+
+    def decreaseLoadOrderPriority(self):
+        '''Decreases the priority of the selected mods in the load order list'''
+        items = self.loadOrder.selectedItems()
+        if items:
+            item = items[0]
+            selected = item.text(0)
+            selectedvalue = item.text(1)
+            if (selectedvalue):
+                value = max(-1, int(selectedvalue) - 1)
+                if value < 0:
+                    priority.remove_section(str(selected))
+                    item.setText(1, "")
+                else:
+                    setpriority(str(selected), str(value))
+                    item.setText(0, str(value))
+                prioritywrite()
+
     def AlertPopupChanged(self):
         '''Triggered when option to alert popup is changed. Saves the change'''
         if (self.actionAlert_to_run_Script_Merger.isChecked()):
@@ -782,6 +830,33 @@ class Ui_MainWindow(QWidget):
                 mod.priority = None
                 for data in mod.files:
                     priority.remove_section(data)
+            prioritywrite()
+            self.RefreshList()
+
+    def increasePriority(self):
+        '''Increases the priority of the selected mods'''
+        selected = self.getSelectedMods()
+        if (selected):
+            for modname in selected:
+                mod = self.modList[modname]
+                new_priority = int(mod.priority) + 1 if mod.priority and mod.priority.isdecimal() else 0
+                mod.setPriority(str(new_priority))
+            prioritywrite()
+            self.RefreshList()
+
+    def decreasePriority(self):
+        '''Decreases the priority of the selected mods'''
+        selected = self.getSelectedMods()
+        if (selected):
+            for modname in selected:
+                mod = self.modList[modname]
+                new_priority = int(mod.priority) - 1 if mod.priority and mod.priority.isdecimal() else -1
+                if new_priority < 0:
+                    mod.priority = None
+                    for data in mod.files:
+                        priority.remove_section(data)
+                else:
+                    mod.setPriority(str(new_priority))
             prioritywrite()
             self.RefreshList()
 
@@ -941,6 +1016,7 @@ class Ui_MainWindow(QWidget):
     def RefreshList(self):
         '''Refreshes mod list'''
         try:
+            selected = self.getSelectedMods()
             self.treeWidget.clear()
             moddata = []
             for mod in self.modList.values():
@@ -955,6 +1031,11 @@ class Ui_MainWindow(QWidget):
                 self.addToList(mod.enabled, mod.name, mod.getPriority(), len(mod.files), len(mod.dlcs),
                                len(mod.menus), len(mod.xmlkeys), len(mod.hidden), len(mod.inputsettings),
                                userstr, modsize, mod.date)
+            for item in selected:
+                rows = self.treeWidget.findItems(item, Qt.MatchEndsWith, 1)
+                if (rows):
+                    for row in rows:
+                        row.setSelected(True)
             self.RefreshLoadOrder()
             saveXML(self.modList)
         except Exception as err:
@@ -962,6 +1043,7 @@ class Ui_MainWindow(QWidget):
 
     def RefreshLoadOrder(self):
         '''Refreshes right panel list - load order'''
+        selected = self.getSelectedFiles()
         self.loadOrder.clear()
         dirs = []
         for data in os.listdir(getini('PATHS', 'mod')):
@@ -985,6 +1067,11 @@ class Ui_MainWindow(QWidget):
                 item = QTreeWidgetItem(list)
                 item.setTextAlignment(1, Qt.AlignCenter)
                 self.loadOrder.addTopLevelItem(item)
+        for item in selected:
+            rows = self.loadOrder.findItems(item.replace("~", ""), Qt.MatchEndsWith, 0)
+            if (rows):
+                for row in rows:
+                    row.setSelected(True)
 
     def setProgress(self, currentProgress):
         '''Sets the progress to currentProgress'''
@@ -1051,6 +1138,15 @@ class Ui_MainWindow(QWidget):
             for selected in getSelected:
                 baseNode = selected
                 array.append(baseNode.text(1))
+        return array
+
+    def getSelectedFiles(self):
+        array = []
+        getSelected = self.loadOrder.selectedItems()
+        if getSelected:
+            for selected in getSelected:
+                baseNode = selected
+                array.append(baseNode.text(0))
         return array
 
     def addMod(self, name, mod):
