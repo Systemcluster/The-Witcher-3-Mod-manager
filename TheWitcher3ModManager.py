@@ -360,9 +360,9 @@ class Ui_MainWindow(QWidget):
         self.textEdit.setContextMenuPolicy(Qt.CustomContextMenu)
         self.textEdit.customContextMenuRequested.connect(self.openEditMenu)
         self.treeWidget.itemChanged.connect(self.modToggled)
-        self.treeWidget.itemDoubleClicked.connect(self.doubleClick)
+        self.treeWidget.itemDoubleClicked.connect(self.modDoubleClicked)
         self.treeWidget.header().setStretchLastSection(False)
-        self.loadOrder.itemDoubleClicked.connect(self.loadOrderClicked)
+        self.loadOrder.itemDoubleClicked.connect(self.loadOrderDoubleClicked)
         self.onStart()
 
     def onStart(self):
@@ -712,11 +712,11 @@ class Ui_MainWindow(QWidget):
         except Exception as err:
             self.output(str(err))
 
-    def doubleClick(self, item, column):
+    def modDoubleClicked(self, item, column):
         '''Triggered when double clicked on the mod'''
-        self.EnableDisableMods()
+        self.setPriority()
 
-    def loadOrderClicked(self, item, column):
+    def loadOrderDoubleClicked(self, item, column):
         '''Triggered when double clicked on the mod on the right panel. Sets priority'''
         try:
             selected = item.text(0)
