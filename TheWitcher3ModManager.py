@@ -13,7 +13,7 @@ _translate = QtCore.QCoreApplication.translate
 
 
 class Ui_MainWindow(QWidget):
-    '''Main Gui Window'''
+    '''Main Gui Window Widget'''
 
     def setupUi(self, MainWindow):
         '''GUI initialization'''
@@ -1064,7 +1064,7 @@ class Ui_MainWindow(QWidget):
                 else:
                     res = str(dir[1])
                 list = [dir[0], res]
-                item = QTreeWidgetItem(list)
+                item = CustomTreeWidgetItem(list)
                 item.setTextAlignment(1, Qt.AlignCenter)
                 self.loadOrder.addTopLevelItem(item)
         for item in selected:
@@ -1111,7 +1111,7 @@ class Ui_MainWindow(QWidget):
             sizestr = f"{size:.1f}" + 'MB'
         list = ['', str(name), str(priority), datastr, dlcstr, menustr, keystr, hiddenstr, inkeystr, str(settings),
                 sizestr, str(date)]
-        item = QtWidgets.QTreeWidgetItem(list)
+        item = CustomTreeWidgetItem(list)
         item.setTextAlignment(2, Qt.AlignCenter)
         item.setTextAlignment(3, Qt.AlignCenter)
         item.setTextAlignment(4, Qt.AlignCenter)
@@ -1206,7 +1206,26 @@ class Ui_MainWindow(QWidget):
                 self.RunScriptMerger()
 
 
+class CustomTreeWidgetItem(QtWidgets.QTreeWidgetItem):
+    '''Tree Widget Item for proper ordering'''
+
+    def __init__(self, parent=None):
+        QtWidgets.QTreeWidgetItem.__init__(self, parent)
+
+    def __lt__(self, otherItem):
+        column = self.treeWidget().sortColumn()
+        if (not self.text(column) and not otherItem.text(column)):
+            return self.checkState(column) < otherItem.checkState(column)
+        try:
+            left = int(self.text(column)) if self.text(column) != "-" else sys.maxsize
+            right = int(otherItem.text(column)) if otherItem.text(column) != "-" else sys.maxsize
+            return left < right
+        except ValueError:
+            return self.text(column).lower() < otherItem.text(column).lower()
+
+
 class CustomMainWindow(QtWidgets.QMainWindow):
+    '''Main Window for drag-and-drop integration'''
     def __init__(self, ui):
         super().__init__()
         self.ui = ui
@@ -1227,6 +1246,7 @@ class CustomMainWindow(QtWidgets.QMainWindow):
     def dropEvent(self, event):
         files = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
         self.ui.InstallModFiles(files)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
