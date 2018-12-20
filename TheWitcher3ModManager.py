@@ -715,7 +715,7 @@ class Ui_MainWindow(QWidget):
             else:
                 value = 0
             data, ok = QInputDialog.getInt(self, _translate("MainWindow", "Set Priority"),
-                                           _translate("MainWindow", "Enter new priority") + ": ")
+                                           _translate("MainWindow", "Enter new priority") + ": ", value)
             if (ok):
                 setpriority(str(selected), str(data))
                 prioritywrite()
@@ -753,8 +753,12 @@ class Ui_MainWindow(QWidget):
         try:
             selected = self.getSelectedMods()
             if (selected):
+                old_priority = self.modList[selected[0]].priority
+                if not old_priority or not old_priority.isdecimal():
+                    old_priority = 0
                 data, ok = QInputDialog.getInt(self, _translate("MainWindow", "Set Priority"),
-                                               _translate("MainWindow", "Enter new priority") + ": ")
+                                               _translate("MainWindow", "Enter new priority") + ": ",
+                                               old_priority)
                 if (ok):
                     value = str(data)
                     for modname in selected:
