@@ -1,3 +1,6 @@
+'''Mod Class'''
+#pylint: disable=invalid-name
+
 import os.path as path
 import os
 from Helpers import *
@@ -5,7 +8,7 @@ from PyQt5.Qt import QMessageBox
 
 class Mod(object):
     '''Mod objects containing all mod data'''
-    def __init__(self, *args):
+    def __init__(self):
         self.name = ''
         self.files = []
         self.dlcs = []

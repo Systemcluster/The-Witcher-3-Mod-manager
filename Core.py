@@ -1,9 +1,12 @@
+'''Core functionality'''
+#pylint: disable=invalid-name,W0614,W0401,W0702,W0703
+
 import os.path as path
+import subprocess
+from time import gmtime, strftime
 from PyQt5.Qt import *
 from Helpers import *
 from ModClass import Mod, Key
-from time import gmtime, strftime
-import subprocess
 
 xmlpattern = re.compile("<Var.+\/>", re.UNICODE)
 inputpattern = re.compile(r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
@@ -15,10 +18,10 @@ def installMod(ui, modPath, pstart, pend):
     mod = Mod()
     installed = os.listdir(getini('PATHS', 'mod'))
     try:
-        moddir, modname = path.split(modPath)
+        _, modname = path.split(modPath)
         mod.setName(modname)
         mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        if (re.match(".+\.(zip|rar|7z)$",path.basename(modPath))):
+        if (re.match(".+\.(zip|rar|7z)$", path.basename(modPath))):
             if(path.exists("extracted")):
                 files.rmtree("extracted")
             os.mkdir("extracted")
@@ -29,7 +32,7 @@ def installMod(ui, modPath, pstart, pend):
 
         ui.setProgress(pstart + progress * 0.4)
         for subdir, drs, fls in os.walk(modPath):
-            dir, name = path.split(subdir)
+            _, name = path.split(subdir)
             if ("content" in (dr.lower() for dr in drs)):
                 if (re.match("^mod.*", name, re.IGNORECASE)):
                     if (name in installed and ask):
@@ -69,7 +72,8 @@ def installMod(ui, modPath, pstart, pend):
                                 encodingwrong = False
 
                                 if (file == "input.xml"):
-                                    temp = re.search('id="Hidden".+id="PCInput"', filetext, re.DOTALL)
+                                    temp = re.search(
+                                        'id="Hidden".+id="PCInput"', filetext, re.DOTALL)
                                     if (temp):
                                         hiddentext = temp.group(0)
                                         hiddentext = re.sub('<!--.*-->','',hiddentext)
@@ -79,7 +83,9 @@ def installMod(ui, modPath, pstart, pend):
                                             key = re.sub("\s+", " ", key)
                                             mod.hidden.append(key)
 
-                                    temp = re.search('id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->', filetext, re.DOTALL)
+                                    temp = re.search(
+                                        'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->',
+                                        filetext, re.DOTALL)
                                     filetext = temp.group(0)
                                     filetext = re.sub('<!--.*-->','',filetext)
                                     filetext = re.sub('<!--.*-->','',filetext,0,re.DOTALL)

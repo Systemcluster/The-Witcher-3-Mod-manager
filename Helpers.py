@@ -1,3 +1,6 @@
+'''Global Helpers'''
+#pylint: disable=invalid-name
+
 import configparser
 import os
 import shutil as files
@@ -55,10 +58,10 @@ def setininovalue(section, value):
 
 def getininovalue(section):
     '''Gets option that has no value from configuration'''
-    list = []
+    valuelist = []
     for value in config.items(section):
-        list.append(value[0])
-    return list
+        valuelist.append(value[0])
+    return valuelist
 
 def removeininovalue(section, value):
     '''Removes all options that have no values from configuration'''
@@ -161,7 +164,7 @@ def saveXML(modlist):
 def get_size(start_path = '.'):
     '''Calculates the size of the selected folder'''
     total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
+    for dirpath, _, filenames in os.walk(start_path):
         for f in filenames:
             fp = os.path.join(dirpath, f)
             total_size += os.path.getsize(fp)
@@ -187,10 +190,10 @@ class Ui_Details(object):
         _translate = QtCore.QCoreApplication.translate
         Details.setWindowTitle(_translate("Details", "Details"))
 
-def getIcon(str):
+def getIcon(filename):
     '''Gets icon from the res folder'''
     icon = QtGui.QIcon()
-    icon.addFile('res/' + str)
+    icon.addFile('res/' + filename)
     return icon
 
 def getKey(item):

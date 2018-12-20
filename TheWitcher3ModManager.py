@@ -1,11 +1,16 @@
+'''Witcher 3 Mod Manager main module'''
+#pylint: disable=invalid-name
+
 import os
 import os.path as path
 import subprocess
 import webbrowser
+from platform import python_version
 
 from PyQt5.Qt import *
 
 import Core
+import Globals
 from Helpers import *
 from ModClass import Mod
 
@@ -969,13 +974,14 @@ class Ui_MainWindow(QWidget):
         '''Opens about window'''
         try:
             QMessageBox.about(self, _translate("MainWindow", "About"),
-                              _translate("MainWindow", "The Witcher 3 Mod Manager\n"
-                                                       "Version: 0.4 BETA\n"
-                                                       "Author: Stefan Kostic (stefan3372)\n"
-                                                       "Written in: Python v3.6.3\n"
-                                                       "Gui: PyQt5\n"
-                                                       "\n"
-                                                       "Thank you for using The Witcher 3 Mod Manager!"))
+                _translate("MainWindow",
+                    ""+Globals.TITLE+"\n"
+                    "Version: "+Globals.VERSION+"\n"
+                    "Author: "+Globals.AUTHOR+"\n"
+                    "Written in: Python "+python_version()+"\n"
+                    "Gui: PyQt5\n"
+                    "\n"
+                    "Thank you for using "+Globals.TITLE+"!"))
         except Exception as err:
             self.output(str(err))
 
@@ -1029,8 +1035,8 @@ class Ui_MainWindow(QWidget):
                 if (mod.usersettings):
                     userstr = _translate("MainWindow", 'Yes')
                 self.addToList(mod.enabled, mod.name, mod.getPriority(), len(mod.files), len(mod.dlcs),
-                               len(mod.menus), len(mod.xmlkeys), len(mod.hidden), len(mod.inputsettings),
-                               userstr, modsize, mod.date)
+                    len(mod.menus), len(mod.xmlkeys), len(mod.hidden), len(mod.inputsettings),
+                    userstr, modsize, mod.date)
             for item in selected:
                 rows = self.treeWidget.findItems(item, Qt.MatchEndsWith, 1)
                 if (rows):
@@ -1174,29 +1180,29 @@ class Ui_MainWindow(QWidget):
     def MessageRebindedKeys(self, key, temp):
         '''Shows dialog to let user decide what to do if rebinded key is found'''
         return QMessageBox.question(self, _translate("MainWindow", "Rebinded key found"),
-                                    _translate("MainWindow", "Rebinded key found") + "\n" +
-                                    _translate("MainWindow", "Original key") + ": \n" + str(key) + "\n" +
-                                    _translate("MainWindow", "Current key") + ": " + str(temp) + "\n\n" +
-                                    _translate("MainWindow", "Do you wish to keep your current key?"),
-                                    QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
-                                    QMessageBox.Yes)
+            _translate("MainWindow", "Rebinded key found") + "\n" +
+            _translate("MainWindow", "Original key") + ": \n" + str(key) + "\n" +
+            _translate("MainWindow", "Current key") + ": " + str(temp) + "\n\n" +
+            _translate("MainWindow", "Do you wish to keep your current key?"),
+            QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
+            QMessageBox.Yes)
 
     def MessageOverwrite(self, modname):
         '''Shows dialog to let user decide what to do if mod is already installed'''
         return QMessageBox.question(self, _translate("MainWindow", "Mod allready installed"),
-                                    "'" + modname + "' " + _translate("MainWindow",
-                                                                      "is already installed\nDo you want to remove old one first?"),
-                                    QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
-                                    QMessageBox.No)
+            "'" + modname + "' " + _translate("MainWindow",
+                "is already installed\nDo you want to remove old one first?"),
+            QMessageBox.Yes | QMessageBox.YesToAll | QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
+            QMessageBox.No)
 
     def MessageAlertScript(self):
         '''Shows dialog to let user know he/she should run script merger after each change in the mod list'''
         return QMessageBox.question(self, _translate("MainWindow", "Run Script Merger"), _translate("MainWindow",
-                                                                                                    "After changing the mod list in any way you should run script merger to merge the mods and ensure their compatibility and remove previously merged scripts\n"
-                                                                                                    "Do you want to run it now?\n"
-                                                                                                    "\n"
-                                                                                                    "Note: You can disable these alerts in the settings..."),
-                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            "After changing the mod list in any way you should run script merger to merge the mods and ensure their compatibility and remove previously merged scripts\n"
+            "Do you want to run it now?\n"
+            "\n"
+            "Note: You can disable these alerts in the settings..."),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
     def AlertRunScriptMerger(self):
         '''Shows previous dialog based on settings'''

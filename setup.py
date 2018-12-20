@@ -1,33 +1,37 @@
+'''Witcher 3 Mod Manager cx_Freeze setup script'''
+
 from cx_Freeze import setup, Executable
-files =["res/", "translations/", "7-Zip/"]
-shortcut_table = [
-    ("DesktopShortcut",        # Shortcut
-     "DesktopFolder",          # Directory_
-     "The Witcher 3 Mod Manager",     # Name
-     "TARGETDIR",              # Component_
-     "[TARGETDIR]TheWitcher3ModManager.exe",   # Target
-     None,                     # Arguments
-     None,                     # Description
-     None,                     # Hotkey
-     None,                     # Icon
-     None,                     # IconIndex
-     None,                     # ShowCmd
-     'TARGETDIR'               # WkDir
-     ),
+import Globals
 
-    ]
+FILES = ["res/", "translations/", "7-Zip/"]
+SHORTCUT_TABLE = [
+    (
+        "DesktopShortcut",        # Shortcut
+        "DesktopFolder",          # Directory_
+        Globals.TITLE,            # Name
+        "TARGETDIR",              # Component_
+        "[TARGETDIR]TheWitcher3ModManager.exe",   # Target
+        None,                     # Arguments
+        None,                     # Description
+        None,                     # Hotkey
+        None,                     # Icon
+        None,                     # IconIndex
+        None,                     # ShowCmd
+        'TARGETDIR'               # WkDir
+    ),
+]
 
-msi_data = {"Shortcut": shortcut_table}
-bdist_msi_options = {'data': msi_data}
+MSI_DATA = {"Shortcut": SHORTCUT_TABLE}
+BDIST_MSI_OPTIONS = {'data': MSI_DATA}
 
 setup(
-    name='The Witcher 3 Mod Manager',
-    version='0.6.2',
+    name=Globals.TITLE,
+    version=Globals.VERSION,
     url='https://rd.nexusmods.com/witcher3/mods/2678',
     license='Open-source',
-    options={"build_exe": {"include_files":files}, "bdist_msi": bdist_msi_options},
+    options={"build_exe": {"include_files":FILES}, "bdist_msi": BDIST_MSI_OPTIONS},
     author='stefan3372',
     author_email='stekos@live.com',
-    description='The Witcher 3 Mod Manager',
-    executables=[Executable("TheWitcher3ModManager.py", icon='res/w3a.ico', base = "Win32GUI")]
+    description=Globals.TITLE,
+    executables=[Executable("TheWitcher3ModManager.py", icon='res/w3a.ico', base="Win32GUI")]
 )
