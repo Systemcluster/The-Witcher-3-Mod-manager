@@ -1,7 +1,0 @@
-Added Turkish and Polish languages
-
-Removed the use of default extraction tool, added native 7-Zip
-
-In main window column widths are now configurable and saved on exit
-
-Added text under icons
