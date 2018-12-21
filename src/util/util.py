@@ -1,15 +1,17 @@
 '''Global Helpers'''
-#pylint: disable=invalid-name
+#pylint: disable=invalid-name,superfluous-parens
 
-import configparser
 import os
-import shutil as files
 import sys
-import xml.etree.ElementTree as XML
-import ctypes.wintypes
-from distutils import dir_util as dirs
 import re
-from PyQt5 import QtWidgets, QtCore, QtGui
+import configparser
+import ctypes.wintypes
+import xml.etree.ElementTree as XML
+from shutil import copytree
+from distutils import dir_util
+
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QFileDialog, QTreeView, QHBoxLayout, QPlainTextEdit
 
 config = configparser.ConfigParser(allow_no_value=True, delimiters='=')
 priority = configparser.ConfigParser()
@@ -25,7 +27,7 @@ def initconfig():
 
 def getini(section, option):
     '''Gets option value from configuration if exists'''
-    if (config.has_option(section,option)):
+    if (config.has_option(section, option)):
         return config.get(section, option)
     else:
         return ""
@@ -39,16 +41,16 @@ def getpriority(modfile):
 
 def setpriority(modfile, value):
     '''Sets mod priority'''
-    if (priority.has_section(modfile) == False):
+    if (not priority.has_section(modfile)):
         priority.add_section(modfile)
         priority.set(modfile, 'Enabled', '1')
     priority.set(modfile, 'Priority', value)
 
 def setini(section, option, value):
     '''Sets option value to configuration'''
-    if (config.has_section(section) == False):
+    if (not config.has_section(section)):
         config.add_section(section)
-    config.set(section,option,value)
+    config.set(section, option, value)
     iniwrite()
 
 def setininovalue(section, value):
@@ -75,6 +77,7 @@ def iniwrite():
         config.write(configfile)
 
 def savewindowsettings(ui, window):
+    '''Saves the window settings in the ini file'''
     setini('WINDOW', 'width', str(window.width()))
     setini('WINDOW', 'height', str(window.height()))
     setini('WINDOW', 'section0', str(ui.treeWidget.header().sectionSize(0)))
@@ -108,24 +111,28 @@ def restart_program():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
-def copyfolder(src, dest):
-    if (not os.path.exists(dest)):
-        files.copytree(src, dest)
+def copyfolder(src, dst):
+    '''Copy folder from src to dst'''
+    if (not os.path.exists(dst)):
+        copytree(src, dst)
     else:
-        dirs.copy_tree(src, dest)
+        dir_util.copy_tree(src, dst)
 
 
-class FileDialog(QtWidgets.QFileDialog):
+class FileDialog(QFileDialog):
+    '''Custom FileDialog'''
     def __init__(self, *args):
         super(FileDialog, self).__init__(*args)
-        self.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        self.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        self.tree = self.findChild(QtWidgets.QTreeView)
+        self.setOption(QFileDialog.DontUseNativeDialog, True)
+        self.setFileMode(QFileDialog.ExistingFiles)
+        self.tree = self.findChild(QTreeView)
         self.resize(800, 800)
         self.selectedFiles = None
+        self.horizontalLayout = None
         self.exec_()
 
     def accept(self):
+        '''Accept selected files'''
         inds = self.tree.selectionModel().selectedRows(0)
         self.selectedFiles = []
         for i in inds:
@@ -139,7 +146,7 @@ def getFile(directory="", extensions="", title="Select Files or Folders"):
 def indent(elem, level=0):
     '''Beautify the xml'''
     i = "\n" + level*"    "
-    if len(elem):
+    if elem:
         if not elem.text or not elem.text.strip():
             elem.text = i + "    "
         if not elem.tail or not elem.tail.strip():
@@ -161,7 +168,7 @@ def saveXML(modlist):
     tree = XML.ElementTree(root)
     tree.write('installed.xml')
 
-def get_size(start_path = '.'):
+def get_size(start_path='.'):
     '''Calculates the size of the selected folder'''
     total_size = 0
     for dirpath, _, filenames in os.walk(start_path):
@@ -170,14 +177,20 @@ def get_size(start_path = '.'):
             total_size += os.path.getsize(fp)
     return total_size
 
-class Ui_Details(object):
+class DetailsDialog:
     '''Dialog showing mod details'''
+
+    def __init__(self):
+        self.horizontalLayout = None
+        self.plainTextEdit = None
+
     def setupUi(self, Details, text):
+        '''Setup UI'''
         Details.setObjectName("Details")
         Details.resize(700, 800)
-        self.horizontalLayout = QtWidgets.QHBoxLayout(Details)
+        self.horizontalLayout = QHBoxLayout(Details)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.plainTextEdit = QtWidgets.QPlainTextEdit(Details)
+        self.plainTextEdit = QPlainTextEdit(Details)
         self.plainTextEdit.setObjectName("plainTextEdit")
         self.plainTextEdit.setPlainText(text)
         self.plainTextEdit.setReadOnly(True)
@@ -187,6 +200,7 @@ class Ui_Details(object):
         QtCore.QMetaObject.connectSlotsByName(Details)
 
     def retranslateUi(self, Details):
+        '''Retranslate UI'''
         _translate = QtCore.QCoreApplication.translate
         Details.setWindowTitle(_translate("Details", "Details"))
 

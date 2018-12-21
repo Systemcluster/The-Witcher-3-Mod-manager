@@ -1,27 +1,33 @@
 '''Mod Class'''
-#pylint: disable=invalid-name
+#pylint: disable=invalid-name,wildcard-import,unused-wildcard-import,superfluous-parens
 
-import os.path as path
-import os
-from Helpers import *
+import re
+from os import path, rename, walk
+from dataclasses import dataclass
+
 from PyQt5.Qt import QMessageBox
 
-class Mod(object):
+from src.util.util import *
+from src.domain.key import Key
+
+@dataclass
+class Mod:
     '''Mod objects containing all mod data'''
-    def __init__(self):
-        self.name = ''
-        self.files = []
-        self.dlcs = []
-        self.menus = []
-        self.xmlkeys = []
-        self.usersettings = []
-        self.inputsettings = []
-        self.hidden = []
-        self.enabled = True
-        self.date = '-'
-        self.priority = None
+
+    name: ''
+    files: []
+    dlcs: []
+    menus: []
+    xmlkeys: []
+    usersettings: []
+    inputsettings: []
+    hidden: []
+    enabled: True
+    date: '-'
+    priority: None
+
     def getPriority(self):
-        if(self.priority == None):
+        if(self.priority is None):
             return '-'
         else:
             return str(self.priority)
@@ -36,9 +42,9 @@ class Mod(object):
         for match in re.finditer(r"-[0-9]+-.+", name):
             lenght = match.span()[0]
         name = name[0:lenght]
-        if (re.search(".*\.(zip|rar)$", name)):
+        if (re.search(r".*\.(zip|rar)$", name)):
             name = name[:-4]
-        elif(re.search(".*\.7z$", name)):
+        elif (re.search(r".*\.7z$", name)):
             name = name[:-3]
         self.name = name
     def enable(self):
@@ -46,31 +52,41 @@ class Mod(object):
             self.addXmlKeys()
             for menu in self.menus:
                 if path.exists(getini('PATHS', 'menu') + "/" + menu + ".disabled"):
-                    os.rename(getini('PATHS', 'menu') + "/" + menu + ".disabled", getini('PATHS', 'menu') + "/" + menu)
+                    rename(
+                        getini('PATHS', 'menu') + "/" + menu + ".disabled",
+                        getini('PATHS', 'menu') + "/" + menu)
             for dlc in self.dlcs:
                 if path.exists(getini('PATHS', 'dlc') + "/" + dlc):
-                    for subdir, drs, fls in os.walk(getini('PATHS', 'dlc') + "/" + dlc):
+                    for subdir, _, fls in walk(getini('PATHS', 'dlc') + "/" + dlc):
                         for file in fls:
                             if (path.exists(subdir + "/" + file)):
-                                os.rename(subdir + "/" + file, subdir + "/" + file[:-9])
+                                rename(subdir + "/" + file, subdir + "/" + file[:-9])
             for data in self.files:
                 if path.exists(getini('PATHS', 'mod') + "/~" + data):
-                    os.rename(getini('PATHS', 'mod') + "/~" + data, getini('PATHS', 'mod') + "/" + data)
+                    rename(
+                        getini('PATHS', 'mod') + "/~" + data,
+                        getini('PATHS', 'mod') + "/" + data)
             self.enabled = True
     def disable(self):
         if (self.enabled):
             self.removeXmlKeys()
             for menu in self.menus:
                 if path.exists(getini('PATHS', 'menu') + "/" + menu):
-                    os.rename(getini('PATHS', 'menu') + "/" + menu, getini('PATHS', 'menu') + "/" + menu + ".disabled")
+                    rename(
+                        getini('PATHS', 'menu') + "/" + menu,
+                        getini('PATHS', 'menu') + "/" + menu + ".disabled")
             for dlc in self.dlcs:
                 if path.exists(getini('PATHS', 'dlc') + "/" + dlc):
-                    for subdir, drs, fls in os.walk(getini('PATHS', 'dlc') + "/" + dlc):
+                    for subdir, _, fls in walk(getini('PATHS', 'dlc') + "/" + dlc):
                         for file in fls:
-                            os.rename(path.join(subdir, file), path.join(subdir, file) + ".disabled")
+                            rename(
+                                path.join(subdir, file),
+                                path.join(subdir, file) + ".disabled")
             for data in self.files:
                 if path.exists(getini('PATHS', 'mod') + "/" + data):
-                    os.rename(getini('PATHS', 'mod') + "/" + data, getini('PATHS', 'mod') + "/~" + data)
+                    rename(
+                        getini('PATHS', 'mod') + "/" + data,
+                        getini('PATHS', 'mod') + "/~" + data)
             self.enabled = False
     def populateFromXml(self, root):
         self.date = root.get('date')
@@ -94,8 +110,7 @@ class Mod(object):
         for data in root.findall('hidden'):
             self.hidden.append(data.text)
         for data in root.findall('key'):
-            key = Key()
-            key.populate(data.get('context'), data.text)
+            key = Key(data.get('context'), data.text)
             self.inputsettings.append(key)
         for data in root.findall('settings'):
             self.usersettings.append(data.text)
@@ -106,7 +121,7 @@ class Mod(object):
                 if (priority.has_section(data)):
                     self.setPriority(priority.get(data, 'Priority'))
     def writeToXml(self, root):
-        mod = XML.SubElement(root,'mod')
+        mod = XML.SubElement(root, 'mod')
         mod.set('name', self.name)
         mod.set('enabled', str(self.enabled))
         mod.set('date', self.date)
@@ -141,7 +156,9 @@ class Mod(object):
                 text = userfile.read()
             for xml in self.xmlkeys:
                 if (not xml in text):
-                    text = text.replace('<!-- [BASE_CharacterMovement] -->', xml+'\n<!-- [BASE_CharacterMovement] -->')
+                    text = text.replace(
+                        '<!-- [BASE_CharacterMovement] -->',
+                        xml+'\n<!-- [BASE_CharacterMovement] -->')
             with open(getini('PATHS', 'menu') + "/input.xml", 'w') as userfile:
                 text = userfile.write(text)
         if (self.hidden):
@@ -150,7 +167,9 @@ class Mod(object):
                 text = userfile.read()
             for xml in self.hidden:
                 if (not xml in text):
-                    text = text.replace('</VisibleVars>', xml+'\n</VisibleVars>')
+                    text = text.replace(
+                        '</VisibleVars>',
+                        xml+'\n</VisibleVars>')
             with open(getini('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
     def addInputKeys(self, ui):
@@ -163,19 +182,22 @@ class Mod(object):
             keep = True
             for key in self.inputsettings:
                 keycontext = key.context[1:-1]
-                context = re.search("\[" + keycontext + "\]\n(.+\n)+", text)
+                context = re.search(r"\[" + keycontext + r"\]\n(.+\n)+", text)
                 if (not context):
                     text = '['+keycontext+']\n\n' + text
                     contexttext = '['+keycontext+']\n'
                 else:
                     contexttext = str(context.group(0))
                 if (key.duration or key.axis):
-                    foundkeys = re.findall(".*Action="+key.action+",.*", contexttext)
+                    foundkeys = re.findall(r".*Action="+key.action+r",.*", contexttext)
                 else:
-                    foundkeys = re.findall(".*Action="+key.action+"\)", contexttext)
+                    foundkeys = re.findall(r".*Action="+key.action+r"\)", contexttext)
                 if (not foundkeys):
                     added += 1
-                    text = re.sub("\[" + keycontext + "\]\n", "[" + keycontext + "]\n"+str(key)+"\n", text)
+                    text = re.sub(
+                        r"\[" + keycontext + r"\]\n",
+                        r"[" + keycontext + r"]\n"+str(key)+"\n",
+                        text)
                 else:
                     shdadd = True
                     for foundkey in foundkeys:
@@ -184,9 +206,9 @@ class Mod(object):
                             break
                     if (shdadd):
                         for foundkey in foundkeys:
-                            temp = Key()
-                            temp.populate('', foundkey)
-                            if (temp.type == key.type and temp.axis == key.axis and temp.duration == key.duration):
+                            temp = Key('', foundkey)
+                            if (temp.type == key.type and temp.axis == key.axis and
+                                    temp.duration == key.duration):
                                 shdadd = False
                                 if (ask):
                                     msg = ui.MessageRebindedKeys(key, temp)
@@ -211,7 +233,10 @@ class Mod(object):
                                     contexttext = newcontexttext
                         if (shdadd):
                             added += 1
-                            text = re.sub("\[" + keycontext + "\]\n", "[" + keycontext + "]\n" + str(key) + "\n", text)
+                            text = re.sub(
+                                r"\[" + keycontext + r"\]\n",
+                                r"[" + keycontext + r"]\n" + str(key) + r"\n",
+                                text)
             with open(getini('PATHS', 'settings') + "/input.settings", 'w') as userfile:
                 text = userfile.write(text)
     def addUserSettings(self):
@@ -242,7 +267,8 @@ class Mod(object):
             with open(getini('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
     def __str__(self):
-        string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + "\nPRIORITY: " + self.getPriority() + "\n"
+        string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
+            "\nPRIORITY: " + self.getPriority() + "\n"
         if (self.files):
             string += "\nDATA:\n"
             for file in self.files:
@@ -278,40 +304,3 @@ class Mod(object):
             string += "\nUSER SETTINGS:\n"
             string += self.usersettings[0] + "\n"
         return string
-
-class Key(object):
-    '''Key objects representing keys from input.settings'''
-    def __init__(self, *args):
-        self.context = ''
-        self.key = ''
-        self.action = ''
-        self.duration = ''
-        self.axis = ''
-        self.type = ''
-    def populate(self, context, key):
-        self.context = context
-        self.key, action = key.split('=(')
-        if ("Pad" in self.key):
-            self.type = 'controller'
-        elif ('PS4' in self.key):
-            self.type = 'PS4'
-        else:
-            self.type = 'keyboard'
-        action = action[:-1]
-        values = action.split(',')
-        self.action = values[0][7:]
-        if (len(values) > 1):
-            if ("Axis" in values[1]):
-                self.axis = values[2][6:]
-            elif ("Duration" in values[1]):
-                self.duration = values[2][9:]
-    def __str__(self):
-        str = ""
-        str += self.key + "=(Action=" + self.action
-        if (self.duration or self.axis):
-            if (self.duration):
-                str += ",State=Duration,IdleTime=" + self.duration
-            else:
-                str += ",State=Axis,Value=" + self.axis
-        str += ")"
-        return str
