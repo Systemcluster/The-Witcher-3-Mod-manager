@@ -1,5 +1,5 @@
 '''Witcher 3 Mod Manager cx_Freeze setup script'''
-#pylint: disable=wildcard-import,unused-wildcard-import
+# pylint: disable=wildcard-import,unused-wildcard-import
 
 from cx_Freeze import setup, Executable
 from src.globals.constants import *
@@ -28,7 +28,7 @@ BDIST_MSI_OPTIONS = {'data': MSI_DATA}
 setup(
     name=TITLE,
     version=VERSION,
-    url=URL,
+    url=URL_WEB,
     license='Open-source',
     options={"build_exe": {"include_files":FILES}, "bdist_msi": BDIST_MSI_OPTIONS},
     author=AUTHORS[0],

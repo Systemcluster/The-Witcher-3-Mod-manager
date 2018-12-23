@@ -1,23 +1,24 @@
 '''XML helper functions'''
-#pylint: disable=invalid-name,superfluous-parens
+# pylint: disable=invalid-name,superfluous-parens,missing-docstring
 
 import xml.etree.ElementTree as XML
+from typing import Dict
 
+from src.domain.mod import Mod
 from src.domain.key import Key
 
-
-def writeAllModsToXMLFile(modlist, file):
+def writeAllModsToXMLFile(modlist: Dict[str, Mod], filename: str):
     root = XML.Element('installed')
     for mod in modlist.values():
         root = mod.writeToXml(root)
     indent(root)
     tree = XML.ElementTree(root)
-    tree.write(file)
+    tree.write(filename)
 
-
-def indent(elem, level=0):
+def indent(elem: XML.ElementTree, level: int = 0):
+    # pylint: disable=len-as-condition
     i = "\n" + level * "    "
-    if not elem:
+    if len(elem):
         if not elem.text or not elem.text.strip():
             elem.text = i + "    "
         if not elem.tail or not elem.tail.strip():
@@ -30,8 +31,7 @@ def indent(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-
-def populateFromXml(mod, root):
+def populateFromXml(mod: Mod, root: XML.ElementTree):
     mod.date = root.get('date')
     enabled = root.get('enabled')
     if (enabled == 'True'):
@@ -59,8 +59,7 @@ def populateFromXml(mod, root):
         mod.usersettings.append(data.text)
     mod.loadPriority()
 
-
-def writeToXml(mod, root):
+def writeToXml(mod: Mod, root: XML.ElementTree) -> XML.ElementTree:
     xmlData = XML.SubElement(root, 'mod')
     xmlData.set('name', mod.name)
     xmlData.set('enabled', str(mod.enabled))

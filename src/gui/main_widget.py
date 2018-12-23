@@ -1,16 +1,18 @@
-'''Main GUI components'''
-#pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import
+'''Main Widget'''
+# pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring
 
 from os import path
 from platform import python_version
 from shutil import rmtree
 import subprocess
 import webbrowser
-import sys
 
+import xml.etree.ElementTree as XML
+
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QCoreApplication, QSize, QFileInfo, QRect, QMetaObject
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QMainWindow, QWidget, QTreeWidget, QTreeWidgetItem, \
+from PyQt5.QtWidgets import QWidget, QTreeWidget, \
     QPushButton, QHBoxLayout, QVBoxLayout, QFileDialog, QAction, QInputDialog, QLineEdit, \
     QFileIconProvider, QAbstractItemView, QTextEdit, QSizePolicy, QMenu, QProgressBar, \
     QMenuBar, QToolBar, QActionGroup, QMessageBox
@@ -18,71 +20,29 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QTreeWidget, QTreeWidgetItem, 
 from src.globals.constants import *
 from src.globals import data
 from src.util.util import *
+from src.util.syntax import *
 from src.domain.mod import Mod
 from src.core.mod import *
+from src.gui.tree_widget import CustomTreeWidgetItem
+from src.gui.details_dialog import DetailsDialog
 
 TRANSLATE = QCoreApplication.translate
-
-
-class CustomTreeWidgetItem(QTreeWidgetItem):
-    '''Tree Widget Item for proper ordering'''
-    #pylint: disable=too-few-public-methods
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def __lt__(self, otherItem):
-        column = self.treeWidget().sortColumn()
-        if (not self.text(column) and not otherItem.text(column)):
-            return self.checkState(column) < otherItem.checkState(column)
-        try:
-            left = int(self.text(column)) if self.text(column) != "-" else sys.maxsize
-            right = int(otherItem.text(column)) if otherItem.text(column) != "-" else sys.maxsize
-            return left < right
-        except ValueError:
-            return self.text(column).lower() < otherItem.text(column).lower()
-
-
-class CustomMainWindow(QMainWindow):
-    '''Main Window for drag-and-drop integration'''
-
-    def __init__(self, parent=None, dropCallback=None):
-        super().__init__(parent)
-        self.dropCallback = dropCallback
-
-    def dragEnterEvent(self, event):
-        '''Qt dragEnterEvent override'''
-        urls = event.mimeData().urls()
-        if not urls:
-            event.ignore()
-            return
-        for url in urls:
-            filepath = url.toLocalFile()
-            _, ext = path.splitext(filepath)
-            if ext not in ['.rar', '.7z', '.zip'] and not path.isdir(filepath):
-                event.ignore()
-                return
-        event.accept()
-
-    def dropEvent(self, event):
-        '''Qt dropEvent override'''
-        if self.dropCallback:
-            filelist = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
-            self.dropCallback(filelist)
 
 
 class CustomMainWidget(QWidget):
     '''Main  Widget'''
 
-    def __init__(self, parent, mainWindow):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.mainWindow = mainWindow
+        self.mainWindow = parent
 
         try:
             self.mainWindow.setObjectName("MainWindow")
 
-            wini = int(getini('WINDOW', 'width')) if getini('WINDOW', 'width') else 1024
-            hini = int(getini('WINDOW', 'height')) if getini('WINDOW', 'height') else 720
+            wini = int(data.config.get('WINDOW', 'width')) \
+                if data.config.get('WINDOW', 'width') else 1024
+            hini = int(data.config.get('WINDOW', 'height')) \
+                if data.config.get('WINDOW', 'height') else 720
 
             self.mainWindow.resize(wini, hini)
             self.mainWindow.setCursor(QCursor(Qt.ArrowCursor))
@@ -296,7 +256,7 @@ class CustomMainWidget(QWidget):
             QMetaObject.connectSlotsByName(self.mainWindow)
 
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
 
     def retranslateUi(self):
@@ -445,13 +405,13 @@ class CustomMainWidget(QWidget):
         self.menuEdit.addAction(self.actionDecreasePriority)
 
         self.treeWidget.header().resizeSection(
-            0, int(getini('WINDOW', 'section0'))
-            if getini('WINDOW', 'section0') else 60)
+            0, int(data.config.get('WINDOW', 'section0'))
+            if data.config.get('WINDOW', 'section0') else 60)
 
         def resizeSection(section, size):
             return self.treeWidget.header().resizeSection(section, size)
         def getSection(section):
-            return getini('WINDOW', 'section'+section)
+            return data.config.get('WINDOW', 'section'+str(section))
         def resizeSectionWithDefault(section, default):
             resizeSection(section, int(getSection(section)) if getSection(section) else default)
         resizeSectionWithDefault(1, 200)
@@ -520,111 +480,68 @@ class CustomMainWidget(QWidget):
 
     def onStart(self):
         '''Initial configuration'''
-        gamepath = getini('PATHS', 'gamepath')
-        while (True):
-            if (not gamepath):
-                gamepath = str(
-                    QFileDialog.getOpenFileName(
-                        None,
-                        TRANSLATE("MainWindow", "Select witcher3.exe"),
-                        "witcher3.exe",
-                        "*.exe"
-                    )[0]
-                )
-            if (not gamepath):
-                sys.exit()
-            if (self.checkGamePath(gamepath)):
-                setini('PATHS', 'gamepath', gamepath)
-                self.configurePaths()
-                self.configureSettings()
-                self.configureMods()
-                self.configureWindow()
-                self.configureToolbar()
-                break
-            else:
-                QMessageBox.critical(
-                    self,
-                    TRANSLATE("MainWindow", "Selected file not correct"),
-                    TRANSLATE("MainWindow", "'witcher3.exe' file not selected"),
-                    QMessageBox.Ok,
-                    QMessageBox.Ok)
-                gamepath = ''
+        self.configureSettings()
+        self.configureMods()
+        self.configureWindow()
+        self.configureToolbar()
 
     def Run(self, option):
         '''Run game or script merger'''
         try:
-            os.startfile(getini('PATHS', option))
+            os.startfile(data.config.get('PATHS', option))
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
-    def Open(self, file):
+    def Open(self, filename):
         '''Open or run any kind of folder/file or executable'''
         try:
-            filename, ext = path.splitext(file)
+            _, ext = path.splitext(filename)
             if (ext == ".exe" or ext == ".bat"):
                 directory, _ = path.split(filename)
-                subprocess.Popen(filename, cwd=directory)
+                subprocess.Popen(directory, cwd=directory)
             else:
                 os.startfile(filename)
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     # Settings
     def checkGamePath(self, gamepath=""):
         '''Checks to see if given gamepath is correct'''
         if (not gamepath):
-            gamepath = getini('PATHS', 'gamepath')
+            gamepath = data.config.get('PATHS', 'game')
         return path.exists(gamepath) and path.exists(path.dirname(gamepath) + "/../../content")
 
-    def configurePaths(self):
-        '''Generates all needed paths based on game path'''
-        gamepath = getini('PATHS', 'gamepath')
-        for _ in range(3):
-            gamepath, _ = path.split(gamepath)
-        if (not path.exists(gamepath + "/mods")):
-            os.mkdir(gamepath + "/mods")
-        setini('PATHS', 'mod', gamepath + "/mods")
-        setini('PATHS', 'dlc', gamepath + "/dlc")
-        setini('PATHS', 'menu', gamepath + "/bin/config/r4game/user_config_matrix/pc")
-        setini('PATHS', 'settings', documents + "/The Witcher 3")
-        if (not path.exists(documents + "/The Witcher 3 Mod Manager")):
-            os.mkdir(documents + "/The Witcher 3 Mod Manager")
-        if (not getini('PATHS', 'scriptmerger')):
-            setini('PATHS', 'scriptmerger', '')
-
     def configureWindow(self):
-        setini('WINDOW', 'width', "1024")
-        setini('WINDOW', 'height', "720")
-        setini('WINDOW', 'section0', '60')
-        setini('WINDOW', 'section1', '200')
-        setini('WINDOW', 'section2', '50')
-        setini('WINDOW', 'section3', '39')
-        setini('WINDOW', 'section4', '39')
-        setini('WINDOW', 'section5', '39')
-        setini('WINDOW', 'section6', '39')
-        setini('WINDOW', 'section7', '45')
-        setini('WINDOW', 'section8', '39')
-        setini('WINDOW', 'section9', '50')
-        setini('WINDOW', 'section10', '45')
-        setini('WINDOW', 'section11', '120')
+        data.config.set('WINDOW', 'width', "1024")
+        data.config.set('WINDOW', 'height', "720")
+        data.config.set('WINDOW', 'section0', '60')
+        data.config.set('WINDOW', 'section1', '200')
+        data.config.set('WINDOW', 'section2', '50')
+        data.config.set('WINDOW', 'section3', '39')
+        data.config.set('WINDOW', 'section4', '39')
+        data.config.set('WINDOW', 'section5', '39')
+        data.config.set('WINDOW', 'section6', '39')
+        data.config.set('WINDOW', 'section7', '45')
+        data.config.set('WINDOW', 'section8', '39')
+        data.config.set('WINDOW', 'section9', '50')
+        data.config.set('WINDOW', 'section10', '45')
+        data.config.set('WINDOW', 'section11', '120')
 
     def configureSettings(self):
         '''Generates default settings if they are not present'''
-        if (not getini('SETTINGS', 'AllowPopups')):
-            setini('SETTINGS', 'AllowPopups', str(1))
-        if (getini('SETTINGS', 'AllowPopups') == "1"):
+        if (not data.config.get('SETTINGS', 'AllowPopups')):
+            data.config.set('SETTINGS', 'AllowPopups', str(1))
+        if (data.config.get('SETTINGS', 'AllowPopups') == "1"):
             self.actionAlert_to_run_Script_Merger.setChecked(True)
-        if (not getini('SETTINGS', 'language')):
-            setini('SETTINGS', 'language', 'English.qm')
-        if (not data.config.has_section('TOOLBAR')):
-            data.config.add_section('TOOLBAR')
+        if (not data.config.get('SETTINGS', 'language')):
+            data.config.set('SETTINGS', 'language', 'English.qm')
         self.CheckLanguage()
 
     def configureMods(self):
         '''Reads all mods data from xml and creates inner mod structure'''
         self.modList = {}
-        if (path.exists('installed.xml')):
-            tree = XML.parse('installed.xml')
+        if (path.exists(data.config.configPath + '/installed.xml')):
+            tree = XML.parse(data.config.configPath + '/installed.xml')
             root = tree.getroot()
             for xmlmod in root.findall('mod'):
                 mod = Mod()
@@ -670,7 +587,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: self.Open(getini('PATHS', 'menu') + '/input.xml'))
+            lambda: self.Open(data.config.get('PATHS', 'menu') + '/input.xml'))
         actionTemp.setText('Input Xml')
         actionTemp.setIcon(getIcon("xml.ico"))
         actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open input.xml file'))
@@ -678,7 +595,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: self.Open(getini('PATHS', 'settings') + '/input.settings'))
+            lambda: self.Open(data.config.get('PATHS', 'settings') + '/input.settings'))
         actionTemp.setText('Input Settings')
         actionTemp.setIcon(getIcon("input.ico"))
         actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open input.settings file'))
@@ -686,7 +603,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: self.Open(getini('PATHS', 'settings') + '/user.settings'))
+            lambda: self.Open(data.config.get('PATHS', 'settings') + '/user.settings'))
         actionTemp.setText('User Settings')
         actionTemp.setIcon(getIcon("user.ico"))
         actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open user.settings file'))
@@ -694,7 +611,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: self.Open(getini('PATHS', 'settings') + '/mods.settings'))
+            lambda: self.Open(data.config.get('PATHS', 'settings') + '/mods.settings'))
         actionTemp.setText('Mods Settings')
         actionTemp.setIcon(getIcon("modset.ico"))
         actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open mods.settings file'))
@@ -702,7 +619,7 @@ class CustomMainWidget(QWidget):
 
         self.toolBar.addSeparator()
 
-        for custom in getininovalue('TOOLBAR'):
+        for custom in data.config.getOptions('TOOLBAR'):
             self.addToToolbar(custom)
         self.actionAddToToolbar = QAction(self.mainWindow)
         self.actionAddToToolbar.triggered.connect(self.addToToolbar)
@@ -746,7 +663,7 @@ class CustomMainWidget(QWidget):
     def RemoveFromToolbar(self, action):
         '''Creates menu for removing actions from toolbar'''
         self.toolBar.removeAction(action)
-        removeininovalue('TOOLBAR', action.toolTip())
+        data.config.removeOption('TOOLBAR', action.toolTip())
 
     def addToToolbar(self, selected=""):
         '''Adds custom action to the toolbar selected by user'''
@@ -769,28 +686,28 @@ class CustomMainWidget(QWidget):
                 actionTemp.setIcon(icon)
                 actionTemp.setToolTip(selected)
                 self.toolBar.addAction(actionTemp)
-                setininovalue('TOOLBAR', selected)
+                data.config.setnovalue('TOOLBAR', selected)
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def Restore_Columns(self):
-        setini('WINDOW', 'section0', '60')
-        setini('WINDOW', 'section1', '200')
-        setini('WINDOW', 'section2', '50')
-        setini('WINDOW', 'section3', '39')
-        setini('WINDOW', 'section4', '39')
-        setini('WINDOW', 'section5', '39')
-        setini('WINDOW', 'section6', '39')
-        setini('WINDOW', 'section7', '45')
-        setini('WINDOW', 'section8', '39')
-        setini('WINDOW', 'section9', '50')
-        setini('WINDOW', 'section10', '45')
-        setini('WINDOW', 'section11', '120')
+        data.config.set('WINDOW', 'section0', '60')
+        data.config.set('WINDOW', 'section1', '200')
+        data.config.set('WINDOW', 'section2', '50')
+        data.config.set('WINDOW', 'section3', '39')
+        data.config.set('WINDOW', 'section4', '39')
+        data.config.set('WINDOW', 'section5', '39')
+        data.config.set('WINDOW', 'section6', '39')
+        data.config.set('WINDOW', 'section7', '45')
+        data.config.set('WINDOW', 'section8', '39')
+        data.config.set('WINDOW', 'section9', '50')
+        data.config.set('WINDOW', 'section10', '45')
+        data.config.set('WINDOW', 'section11', '120')
 
         def resizeSection(section, size):
             return self.treeWidget.header().resizeSection(section, size)
         def getSection(section):
-            return getini('WINDOW', 'section'+section)
+            return data.config.get('WINDOW', 'section'+str(section))
         def resizeSectionWithDefault(section, default):
             resizeSection(section, int(getSection(section)) if getSection(section) else default)
         resizeSectionWithDefault(0, 60)
@@ -841,20 +758,10 @@ class CustomMainWidget(QWidget):
     def details(self):
         '''Shows details of the selected mod'''
         selected = self.getSelectedMods()
-        if (selected):
-            if (len(selected) > 1):
-                QMessageBox.critical(
-                    self,
-                    TRANSLATE("MainWindow", "Error"),
-                    TRANSLATE("MainWindow", "Select only one mod to display")
-                )
-            else:
-                mod = self.modList[selected[0]]
-                details = QWidget()
-                ui = DetailsDialog()
-                ui.setupUi(details, str(mod))
-                details.show()
-                data.app.exec()
+        if selected:
+            for mod in selected:
+                __details = DetailsDialog(self, str(self.modList[mod]))
+                __details.show()
 
     def openFolder(self):
         selected = self.getSelectedMods()
@@ -863,10 +770,11 @@ class CustomMainWidget(QWidget):
                 for modname in selected:
                     mod = self.modList[modname]
                     for file in mod.files:
-                        moddir = getini('PATHS', 'mod') + ("/~" if not mod.enabled else "/") + file
+                        moddir = data.config.get('PATHS', 'mod') + \
+                            ("/~" if not mod.enabled else "/") + file
                         os.startfile(moddir, "explore")
             except Exception as err:
-                self.output(str(err))
+                self.output(formatUserError(err))
 
     def modToggled(self, item, column):
         '''Triggered when the mod check state is changed.
@@ -878,7 +786,7 @@ class CustomMainWidget(QWidget):
                 self.modList[item.text(1)].disable()
             self.RefreshLoadOrder()
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def modDoubleClicked(self):
         '''Triggered when double clicked on the mod'''
@@ -899,16 +807,16 @@ class CustomMainWidget(QWidget):
                 value = int(selectedvalue)
             else:
                 value = 0
-            data, ok = QInputDialog.getInt(
+            priority, ok = QInputDialog.getInt(
                 self,
                 TRANSLATE("MainWindow", "Set Priority"),
                 TRANSLATE("MainWindow", "Enter new priority") + ": ", value)
             if (ok):
-                setpriority(str(selected), str(data))
-                prioritywrite()
+                data.config.setPriority(str(selected), str(priority))
+                data.config.write()
                 self.RefreshList()
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def increaseLoadOrderPriority(self):
         '''Increases the priority of the selected mods in the load order list'''
@@ -922,9 +830,9 @@ class CustomMainWidget(QWidget):
             else:
                 value = 0
             value = value + 1
-            setpriority(str(selected), str(value))
+            data.config.setPriority(str(selected), str(value))
             item.setText(1, str(value))
-            prioritywrite()
+            data.config.write()
 
     def decreaseLoadOrderPriority(self):
         '''Decreases the priority of the selected mods in the load order list'''
@@ -936,23 +844,23 @@ class CustomMainWidget(QWidget):
             if (selectedvalue):
                 value = max(-1, int(selectedvalue) - 1)
                 if value < 0:
-                    priority.remove_section(str(selected))
+                    data.config.removeSection(str(selected))
                     item.setText(1, "")
                 else:
-                    setpriority(str(selected), str(value))
+                    data.config.setPriority(str(selected), str(value))
                     item.setText(0, str(value))
-                prioritywrite()
+                data.config.write()
 
     def AlertPopupChanged(self):
         '''Triggered when option to alert popup is changed. Saves the change'''
         if (self.actionAlert_to_run_Script_Merger.isChecked()):
-            setini('SETTINGS', 'AllowPopups', "1")
+            data.config.set('SETTINGS', 'AllowPopups', "1")
         else:
-            setini('SETTINGS', 'AllowPopups', "0")
+            data.config.set('SETTINGS', 'AllowPopups', "0")
 
     def ChangeLanguage(self, language):
         '''Triggered when language is changed. Saves the change and restarts the program'''
-        setini('SETTINGS', 'language', str(language))
+        data.config.set('SETTINGS', 'language', str(language))
         button = QMessageBox.question(
             self,
             TRANSLATE("MainWindow", "Change language"),
@@ -965,7 +873,7 @@ class CustomMainWidget(QWidget):
     def CheckLanguage(self):
         '''Checks which language is selected, and checks it'''
 
-        language = getini('SETTINGS', 'language')
+        language = data.config.get('SETTINGS', 'language')
         for lang in self.menuSelect_Language.actions():
             if (language == lang.text() + ".qm"):
                 lang.setChecked(True)
@@ -979,13 +887,15 @@ class CustomMainWidget(QWidget):
                 old_priority = self.modList[selected[0]].priority
                 if not old_priority or not old_priority.isdecimal():
                     old_priority = 0
-                data, ok = QInputDialog.getInt(
+                else:
+                    old_priority = int(old_priority)
+                priority, ok = QInputDialog.getInt(
                     self,
                     TRANSLATE("MainWindow", "Set Priority"),
                     TRANSLATE("MainWindow", "Enter new priority") + ": ",
                     old_priority)
                 if (ok):
-                    value = str(data)
+                    value = str(priority)
                     for modname in selected:
                         mod = self.modList[modname]
                         if mod.enabled:
@@ -994,11 +904,11 @@ class CustomMainWidget(QWidget):
                             self.output(TRANSLATE(
                                 "MainWindow",
                                 "You cannot set priority to disabled mod") + \
-                                " '" + modname + "'")
-                    prioritywrite()
+                                    " '" + modname + "'")
+                    data.config.write()
                     self.RefreshList()
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def unsetPriority(self):
         '''Removes priority of the selected mods'''
@@ -1007,9 +917,9 @@ class CustomMainWidget(QWidget):
             for modname in selected:
                 mod = self.modList[modname]
                 mod.priority = None
-                for data in mod.files:
-                    priority.remove_section(data)
-            prioritywrite()
+                for modfile in mod.files:
+                    data.config.removeSection(modfile)
+            data.config.write()
             self.RefreshList()
 
     def increasePriority(self):
@@ -1021,7 +931,7 @@ class CustomMainWidget(QWidget):
                 new_priority = int(mod.priority) + 1 \
                     if mod.priority and mod.priority.isdecimal() else 0
                 mod.setPriority(str(new_priority))
-            prioritywrite()
+            data.config.write()
             self.RefreshList()
 
     def decreasePriority(self):
@@ -1034,20 +944,20 @@ class CustomMainWidget(QWidget):
                     if mod.priority and mod.priority.isdecimal() else -1
                 if new_priority < 0:
                     mod.priority = None
-                    for data in mod.files:
-                        priority.remove_section(data)
+                    for modfile in mod.files:
+                        data.config.removeSection(modfile)
                 else:
                     mod.setPriority(str(new_priority))
-            prioritywrite()
+            data.config.write()
             self.RefreshList()
 
     def ChangeGamePath(self):
         '''Changes game path'''
         gamepath = str(QFileDialog.getOpenFileName(
             self, TRANSLATE("MainWindow", "Select witcher3.exe"),
-            getini('PATHS', 'gamepath'), "*.exe")[0])
+            data.config.get('PATHS', 'game'), "*.exe")[0])
         if (self.checkGamePath(gamepath)):
-            setini('PATHS', 'gamepath', gamepath)
+            data.config.set('PATHS', 'game', gamepath)
             self.configurePaths()
             self.RefreshList()
         else:
@@ -1062,20 +972,20 @@ class CustomMainWidget(QWidget):
             QFileDialog.getOpenFileName(
                 self,
                 TRANSLATE("MainWindow", "Select script merger"),
-                getini('PATHS', 'scriptmerger'), "*.exe")[0])
+                data.config.get('PATHS', 'scriptmerger'), "*.exe")[0])
         if (mergerpath):
-            setini('PATHS', 'scriptmerger', mergerpath)
+            data.config.set('PATHS', 'scriptmerger', mergerpath)
 
     def InstallMods(self):
         '''Installs selected mods'''
         self.clear()
-        file = getFile(getini('PATHS', 'lastpath'), "*.zip *.rar *.7z")
+        file = getFile(data.config.get('PATHS', 'lastpath'), "*.zip *.rar *.7z")
         self.InstallModFiles(file)
 
     def InstallModFiles(self, file):
         '''Installs passed list of mods'''
         try:
-            if not file:
+            if file:
                 prgrs = 0
                 prgrsmax = len(file)
                 for mod in file:
@@ -1085,7 +995,7 @@ class CustomMainWidget(QWidget):
                     prgrs += 1
                     self.setProgress(100 * prgrs / prgrsmax)
                 lastpath, _ = path.split(file[0])
-                setini('PATHS', 'lastpath', lastpath)
+                data.config.set('PATHS', 'lastpath', lastpath)
                 self.setProgress(0)
                 self.RefreshList()
                 if (path.exists("extracted")):
@@ -1095,7 +1005,7 @@ class CustomMainWidget(QWidget):
                 self.output(TRANSLATE("MainWindow", "Installation canceled"))
         except Exception as err:
             self.setProgress(0)
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def UninstallMods(self):
         '''Uninstalls selected mods'''
@@ -1116,7 +1026,7 @@ class CustomMainWidget(QWidget):
                             uninstall(self.modList[modname])
                             del self.modList[modname]
                         except Exception as err:
-                            self.output(str(err))
+                            self.output(formatUserError(err))
                         prgrs += 1
                         self.setProgress(100 * prgrs / prgrsmax)
                     self.RefreshList()
@@ -1124,32 +1034,32 @@ class CustomMainWidget(QWidget):
                     self.AlertRunScriptMerger()
         except Exception as err:
             self.setProgress(0)
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def RunTheGame(self):
         '''Runs the game'''
         try:
-            gamepath = getini('PATHS', 'gamepath')
+            gamepath = data.config.get('PATHS', 'game')
             directory, _ = path.split(gamepath)
             subprocess.Popen([gamepath], cwd=directory)
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def RunScriptMerger(self):
         '''Runs script merger'''
         try:
-            scriptmergerpath = getini('PATHS', 'scriptmerger')
+            scriptmergerpath = data.config.get('PATHS', 'scriptmerger')
             if (scriptmergerpath):
                 directory, _ = path.split(scriptmergerpath)
                 subprocess.Popen([scriptmergerpath], cwd=directory)
             else:
                 self.ChangeScriptMergerPath()
-                scriptmergerpath = getini('PATHS', 'scriptmerger')
+                scriptmergerpath = data.config.get('PATHS', 'scriptmerger')
                 if (scriptmergerpath):
                     directory, _ = path.split(scriptmergerpath)
                     subprocess.Popen([scriptmergerpath], cwd=directory)
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def About(self):
         '''Opens about window'''
@@ -1161,21 +1071,22 @@ class CustomMainWidget(QWidget):
                     "MainWindow",
                     ""+TITLE+"\n"
                     "Version: "+VERSION+"\n"
-                    "Author: "+(",".join(AUTHORS))+"\n"
+                    "Authors: "+(", ".join(AUTHORS))+"\n"
+                    "\n"
                     "Written in: Python "+python_version()+"\n"
-                    "Gui: PyQt5\n"
+                    "GUI: PyQt5 "+QtCore.PYQT_VERSION_STR+"\n"
                     "\n"
                     "Thank you for using "+TITLE+"!"))
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def MainWebPage(self):
         '''Opens nexus web page'''
-        webbrowser.open('https://rd.nexusmods.com/witcher3/mods/2678')
+        webbrowser.open(URL_WEB)
 
     def OpenGitHub(self):
         '''Opens github'''
-        webbrowser.open('https://github.com/stefan3372/The-WItcher-3-Mod-manager.git')
+        webbrowser.open(URL_GIT)
 
     def SelectAllMods(self):
         '''Selects all mods in the list'''
@@ -1200,7 +1111,7 @@ class CustomMainWidget(QWidget):
             self.setProgress(0)
         except Exception as err:
             self.setProgress(0)
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     # Helpers
     def RefreshList(self):
@@ -1212,9 +1123,9 @@ class CustomMainWidget(QWidget):
             for mod in self.modList.values():
                 moddata += mod.files
                 modsize = 0
-                for data in mod.files:
-                    modsize += get_size(getini('PATHS', 'mod') + "/" + data)
-                    modsize += get_size(getini('PATHS', 'mod') + "/~" + data)
+                for modfile in mod.files:
+                    modsize += getSize(data.config.get('PATHS', 'mod') + "/" + modfile)
+                    modsize += getSize(data.config.get('PATHS', 'mod') + "/~" + modfile)
                 userstr = TRANSLATE("MainWindow", 'No')
                 if (mod.usersettings):
                     userstr = TRANSLATE("MainWindow", 'Yes')
@@ -1238,19 +1149,19 @@ class CustomMainWidget(QWidget):
                     for row in rows:
                         row.setSelected(True)
             self.RefreshLoadOrder()
-            saveXML(self.modList)
+            writeAllModsToXMLFile(self.modList, data.config.configPath + '/installed.xml')
         except Exception as err:
-            self.output(str(err))
+            self.output(formatUserError(err))
 
     def RefreshLoadOrder(self):
         '''Refreshes right panel list - load order'''
         selected = self.getSelectedFiles()
         self.loadOrder.clear()
         dirs = []
-        for data in os.listdir(getini('PATHS', 'mod')):
+        for data_ in os.listdir(data.config.get('PATHS', 'mod')):
             templist = []
-            templist.append(data)
-            prt = getpriority(data)
+            templist.append(data_)
+            prt = data.config.getPriority(data_)
             if (prt):
                 temp = int(prt)
             else:
@@ -1283,7 +1194,7 @@ class CustomMainWidget(QWidget):
             on,
             name,
             prio,
-            data,
+            data_,
             dlc,
             menu,
             keys,
@@ -1293,10 +1204,10 @@ class CustomMainWidget(QWidget):
             size,
             date):
         '''Adds mod data to the list'''
-        if (data == 0):
+        if (data_ == 0):
             datastr = '-'
         else:
-            datastr = str(data)
+            datastr = str(data_)
         if (dlc == 0):
             dlcstr = '-'
         else:
@@ -1401,10 +1312,10 @@ class CustomMainWidget(QWidget):
         return QMessageBox.question(
             self,
             TRANSLATE("MainWindow", "Rebinded key found"),
-            TRANSLATE("MainWindow", "Rebinded key found") + "\n" +
-            TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" +
-            TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" +
-            TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
+            TRANSLATE("MainWindow", "Rebinded key found") + "\n" + \
+                TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" + \
+                TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" + \
+                TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
             QMessageBox.Yes | QMessageBox.YesToAll | \
             QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
             QMessageBox.Yes)
@@ -1422,14 +1333,15 @@ class CustomMainWidget(QWidget):
             QMessageBox.No)
 
     def MessageAlertScript(self):
-        '''Shows dialog to let user know he/she should run script merger after each change in the mod list'''
+        '''Shows dialog to let user know he/she should run script merger \
+            after each change in the mod list'''
         return QMessageBox.question(
             self,
             TRANSLATE("MainWindow", "Run Script Merger"),
             TRANSLATE(
                 "MainWindow",
-                "After changing the mod list in any way you should run script merger to merge \
-                the mods and ensure their compatibility and remove previously merged scripts\n"
+                "After changing the mod list in any way you should run script merger to merge "+\
+                    "the mods and ensure their compatibility and remove previously merged scripts\n"
                 "Do you want to run it now?\n"
                 "\n"
                 "Note: You can disable these alerts in the settings..."),
@@ -1437,7 +1349,7 @@ class CustomMainWidget(QWidget):
 
     def AlertRunScriptMerger(self):
         '''Shows previous dialog based on settings'''
-        if (getini('SETTINGS', 'allowpopups') == "1"):
+        if (data.config.get('SETTINGS', 'allowpopups') == "1"):
             res = self.MessageAlertScript()
             if (res == QMessageBox.Yes):
                 self.RunScriptMerger()

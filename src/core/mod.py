@@ -1,10 +1,9 @@
 '''Core functionality'''
-#pylint: disable=invalid-name,superfluous-parens,bare-except,broad-except,wildcard-import,unused-wildcard-import
+# pylint: disable=invalid-name,superfluous-parens,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring
 
 from os import path, listdir, walk, remove
 from time import gmtime, strftime
 from shutil import rmtree
-import subprocess
 
 from PyQt5.QtWidgets import QMessageBox
 
@@ -17,24 +16,19 @@ from src.core.fetcher import *
 
 def installMod(ui, modPath, progressStart, progressEnd):
     '''Installs mod from given path. If given mod is an archive first extracts it'''
-    #pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
 
     progress = progressEnd - progressStart
     mod = Mod()
-    installed = listdir(config.get('PATHS', 'mod'))
+    installed = listdir(data.config.get('PATHS', 'mod'))
     try:
         _, modname = path.split(modPath)
         mod.setName(modname)
         mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        if (re.match(r".+\.(zip|rar|7z)$", path.basename(modPath))):
-            if(path.exists("extracted")):
-                files.rmtree("extracted")
-            mkdir("extracted")
-            subprocess.call(r'tools\7zip\7z x "'+modPath+'" -o"'+'extracted"')
-            modPath = "extracted"
+        if (isArchive(modPath)):
+            modPath = extractArchive(modPath)
 
         ask = True
-
         ui.setProgress(progressStart + progress * 0.4)
         for subdir, drs, fls in walk(modPath):
             _, name = path.split(subdir)
@@ -43,38 +37,38 @@ def installMod(ui, modPath, progressStart, progressEnd):
                     if (name in installed and ask):
                         res = ui.MessageOverwrite(name)
                         if res == QMessageBox.Yes:
-                            files.rmtree(config.get('PATHS', 'mod')+"/"+name)
+                            files.rmtree(data.config.get('PATHS', 'mod')+"/"+name)
                         elif res == QMessageBox.YesToAll:
-                            files.rmtree(config.get('PATHS', 'mod')+"/"+name)
+                            files.rmtree(data.config.get('PATHS', 'mod')+"/"+name)
                             ask = False
                         elif res == QMessageBox.NoToAll:
                             ask = False
                         elif res == QMessageBox.Cancel:
                             uninstall(mod)
                             return
-                    copyfolder(subdir, config.get('PATHS', 'mod')+"/"+name)
-                    mod.files.approgressEnd(name)
+                    copyfolder(subdir, data.config.get('PATHS', 'mod')+"/"+name)
+                    mod.files.append(name)
                 else:
-                    copyfolder(subdir, config.get('PATHS', 'dlc')+"/"+name)
-                    mod.dlcs.approgressEnd(name)
+                    copyfolder(subdir, data.config.get('PATHS', 'dlc')+"/"+name)
+                    mod.dlcs.append(name)
                 if ("content" in drs):
                     drs.remove("content")
                 elif "Content" in drs:
                     drs.remove("Content")
             for file in fls:
                 if (re.match(r".*\.xml$", file) and not re.match(r"^input\.xml$", file)):
-                    files.copy(subdir+"/"+file, config.get('PATHS', 'menu')+"/"+file)
-                    mod.menus.approgressEnd(file)
+                    files.copy(subdir+"/"+file, data.config.get('PATHS', 'menu')+"/"+file)
+                    mod.menus.append(file)
                 elif(re.match(r"(.*\.txt)|(input\.xml)$", file)):
-                    encodingwrong = True
+                    encodingWrong = True
                     encode = 'utf-8'
-                    while(encodingwrong):
+                    while(encodingWrong):
                         try:
                             if (encode == 'utf-16'):
-                                encodingwrong = False
+                                encodingWrong = False
                             with open(subdir+"/"+file, 'r', encoding=encode) as myfile:
                                 filetext = myfile.read()
-                                encodingwrong = False
+                                encodingWrong = False
 
                                 if (file == "input.xml"):
                                     temp = re.search(
@@ -90,7 +84,7 @@ def installMod(ui, modPath, progressStart, progressEnd):
                                         xmlkeys = XMLPATTERN.findall(hiddentext)
                                         for key in xmlkeys:
                                             key = re.sub(r"\s+", " ", key)
-                                            mod.hidden.approgressEnd(key)
+                                            mod.hidden.append(key)
 
                                     temp = re.search(INPUT_XML_PATTERN, filetext, re.DOTALL)
                                     filetext = temp.group(0)
@@ -102,11 +96,11 @@ def installMod(ui, modPath, progressStart, progressEnd):
                                     if ("hidden" in file):
                                         for key in xmlkeys:
                                             key = re.sub(r"\s+", " ", key)
-                                            mod.hidden.approgressEnd(key)
+                                            mod.hidden.append(key)
                                     else:
                                         for key in xmlkeys:
                                             key = re.sub(r"\s+", " ", key)
-                                            mod.xmlkeys.approgressEnd(key)
+                                            mod.xmlkeys.append(key)
 
                                 inputsettings = INPUTPATTERN.search(filetext)
                                 if (inputsettings):
@@ -120,12 +114,12 @@ def installMod(ui, modPath, progressStart, progressEnd):
                                             cntx = key
                                         else:
                                             newkey = Key(cntx, key)
-                                            mod.inputsettings.approgressEnd(newkey)
+                                            mod.inputsettings.append(newkey)
 
                                 usersettings = USERPATTERN.search(filetext)
                                 if (usersettings):
                                     res = re.sub(r"\n+", r"\n", usersettings.group(0))
-                                    mod.usersettings.approgressEnd(str(res))
+                                    mod.usersettings.append(str(res))
                         except:
                             encode = 'utf-16'
         ui.setProgress(progressStart + progress * 0.7)
@@ -149,8 +143,8 @@ def installMod(ui, modPath, progressStart, progressEnd):
                 break
         if (not exists):
             ui.addMod(mod.name, mod)
-    except Exception as er:
-        ui.output(str(er))
+    except Exception as err:
+        ui.output(formatUserError(err))
         uninstall(mod)
 
 
@@ -167,19 +161,19 @@ def uninstall(mod):
 def removeData(mod):
     '''Removes mod data'''
     for file in mod.files:
-        if path.exists(data.config.get('CONTEXT_PATHS', 'mod') + "/" + file):
-            rmtree(data.config.get('CONTEXT_PATHS', 'mod') + "/" + file)
+        if path.exists(data.config.get('PATHS', 'mod') + "/" + file):
+            rmtree(data.config.get('PATHS', 'mod') + "/" + file)
 
 
 def removeDlcs(mod):
     '''Removes dlc data'''
     for dlc in mod.dlcs:
-        if path.exists(data.config.get('CONTEXT_PATHS', 'dlc') + "/" + dlc):
-            rmtree(data.config.get('CONTEXT_PATHS', 'dlc') + "/" + dlc)
+        if path.exists(data.config.get('PATHS', 'dlc') + "/" + dlc):
+            rmtree(data.config.get('PATHS', 'dlc') + "/" + dlc)
 
 
 def removeMenues(mod):
     '''Removes menu data'''
     for menu in mod.menus:
-        if path.exists(data.config.get('CONTEXT_PATHS', 'menu') + "/" + menu):
-            remove(data.config.get('CONTEXT_PATHS', 'menu') + "/" + menu)
+        if path.exists(data.config.get('PATHS', 'menu') + "/" + menu):
+            remove(data.config.get('PATHS', 'menu') + "/" + menu)
