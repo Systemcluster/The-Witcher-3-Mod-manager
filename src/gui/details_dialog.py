@@ -5,7 +5,8 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPlainTextEdit
 
-TRANSLATE = QtCore.QCoreApplication.translate
+from src.globals.constants import TRANSLATE
+
 
 class DetailsDialog(QWidget):
     '''Dialog showing mod details'''

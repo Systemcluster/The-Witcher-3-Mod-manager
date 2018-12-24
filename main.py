@@ -7,7 +7,7 @@ from os import path, environ
 from argparse import ArgumentParser
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
-from PyQt5.QtCore import QTranslator, QCoreApplication
+from PyQt5.QtCore import QTranslator
 
 from src.gui.main_window import CustomMainWindow
 from src.gui.main_widget import CustomMainWidget
@@ -15,8 +15,6 @@ from src.util.util import getIcon, getVersionString, normalizePath
 from src.util.syntax import writeAllModsToXMLFile
 from src.configuration.config import Configuration
 from src.globals import data
-
-TRANSLATE = QCoreApplication.translate
 
 
 def __getDocuments():

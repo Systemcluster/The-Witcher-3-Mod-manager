@@ -1,5 +1,5 @@
 '''Main Widget'''
-# pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring
+# pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring,too-many-lines
 
 from os import path
 from platform import python_version
@@ -10,7 +10,7 @@ import webbrowser
 import xml.etree.ElementTree as XML
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QCoreApplication, QSize, QFileInfo, QRect, QMetaObject
+from PyQt5.QtCore import Qt, QSize, QFileInfo, QRect, QMetaObject
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QTreeWidget, \
     QPushButton, QHBoxLayout, QVBoxLayout, QFileDialog, QAction, QInputDialog, QLineEdit, \
@@ -24,8 +24,7 @@ from src.util.syntax import *
 from src.domain.mod import Mod
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.gui.details_dialog import DetailsDialog
-
-TRANSLATE = QCoreApplication.translate
+from src.gui.alerts import MessageAlertScript
 
 
 class CustomMainWidget(QWidget):
@@ -1308,49 +1307,9 @@ class CustomMainWidget(QWidget):
         action.triggered.connect(lambda: self.ChangeLanguage(ts))
         return action
 
-    def MessageRebindedKeys(self, key, temp):
-        '''Shows dialog to let user decide what to do if rebinded key is found'''
-        return QMessageBox.question(
-            self,
-            TRANSLATE("MainWindow", "Rebinded key found"),
-            TRANSLATE("MainWindow", "Rebinded key found") + "\n" + \
-                TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" + \
-                TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" + \
-                TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
-            QMessageBox.Yes | QMessageBox.YesToAll | \
-            QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
-            QMessageBox.Yes)
-
-    def MessageOverwrite(self, modname):
-        '''Shows dialog to let user decide what to do if mod is already installed'''
-        return QMessageBox.question(
-            self,
-            TRANSLATE("MainWindow", "Mod allready installed"),
-            "'" + modname + "' " + TRANSLATE(
-                "MainWindow",
-                "is already installed\nDo you want to remove old one first?"),
-            QMessageBox.Yes | QMessageBox.YesToAll | \
-                QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
-            QMessageBox.No)
-
-    def MessageAlertScript(self):
-        '''Shows dialog to let user know he/she should run script merger \
-            after each change in the mod list'''
-        return QMessageBox.question(
-            self,
-            TRANSLATE("MainWindow", "Run Script Merger"),
-            TRANSLATE(
-                "MainWindow",
-                "After changing the mod list in any way you should run script merger to merge "+\
-                    "the mods and ensure their compatibility and remove previously merged scripts\n"
-                "Do you want to run it now?\n"
-                "\n"
-                "Note: You can disable these alerts in the settings..."),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
     def AlertRunScriptMerger(self):
         '''Shows previous dialog based on settings'''
         if (data.config.get('SETTINGS', 'allowpopups') == "1"):
-            res = self.MessageAlertScript()
+            res = MessageAlertScript()
             if (res == QMessageBox.Yes):
                 self.RunScriptMerger()

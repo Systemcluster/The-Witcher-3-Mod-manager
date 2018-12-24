@@ -12,6 +12,7 @@ from PyQt5.Qt import QMessageBox
 from src.util.util import *
 from src.domain.key import Key
 from src.globals import data
+from src.gui.alerts import MessageRebindedKeys
 
 class Mod:
     '''Mod objects containing all mod data'''
@@ -188,16 +189,13 @@ class Mod:
             with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
-    def addInputKeys(self, ui = None):
+    def addInputKeys(self):
         added = 0
         if (self.inputsettings):
             text = ''
             with open(data.config.get('PATHS', 'settings') + "/input.settings", 'r') as userfile:
                 text = userfile.read()
-            if ui:
-                ask = True
-            else:
-                ask = False
+            ask = True
             keep = True
             for key in iter(self.inputsettings):
                 keycontext = key.context[1:-1]
@@ -230,7 +228,7 @@ class Mod:
                                     temp.duration == key.duration):
                                 shdadd = False
                                 if (ask):
-                                    msg = ui.MessageRebindedKeys(key, temp)
+                                    msg = MessageRebindedKeys(key, temp)
                                     if msg == QMessageBox.SaveAll:
                                         shdadd = True
                                         break

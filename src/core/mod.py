@@ -6,13 +6,12 @@ from time import gmtime, strftime
 from shutil import rmtree
 
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import QCoreApplication
 from src.globals import data
 from src.util.util import *
 from src.core.fetcher import *
 from src.gui.main_widget import CustomMainWidget
-
-TRANSLATE = QCoreApplication.translate
+from src.gui.alerts import MessageOverwrite
+from src.globals.constants import TRANSLATE
 
 
 def install(modPath: str, ui: CustomMainWidget = None,
@@ -40,7 +39,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
             _, name = path.split(directory)
             category = "mod" if isDataFolder(name) else "dlc"
             if (name in installed_mods and ask) or (name in installed_dlcs and ask):
-                res = ui.MessageOverwrite(name)
+                res = MessageOverwrite(name)
                 if res == QMessageBox.Yes:
                     files.rmtree(data.config.get('PATHS', category)+"/"+name)
                 elif res == QMessageBox.YesToAll:
@@ -65,7 +64,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
         mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         mod.setName(modname)
         mod.addXmlKeys()
-        mod.addInputKeys(ui)
+        mod.addInputKeys()
         mod.addUserSettings()
         mod.checkPriority()
 
