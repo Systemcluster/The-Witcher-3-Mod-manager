@@ -22,7 +22,6 @@ from src.globals import data
 from src.util.util import *
 from src.util.syntax import *
 from src.domain.mod import Mod
-from src.core.mod import *
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.gui.details_dialog import DetailsDialog
 
@@ -30,7 +29,7 @@ TRANSLATE = QCoreApplication.translate
 
 
 class CustomMainWidget(QWidget):
-    '''Main  Widget'''
+    '''Main Widget'''
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -918,7 +917,7 @@ class CustomMainWidget(QWidget):
                 mod = self.modList[modname]
                 mod.priority = None
                 for modfile in mod.files:
-                    data.config.removeSection(modfile)
+                    data.config.removePriority(modfile)
             data.config.write()
             self.RefreshList()
 
@@ -945,7 +944,7 @@ class CustomMainWidget(QWidget):
                 if new_priority < 0:
                     mod.priority = None
                     for modfile in mod.files:
-                        data.config.removeSection(modfile)
+                        data.config.removePriority(modfile)
                 else:
                     mod.setPriority(str(new_priority))
             data.config.write()
@@ -984,6 +983,7 @@ class CustomMainWidget(QWidget):
 
     def InstallModFiles(self, file):
         '''Installs passed list of mods'''
+        from src.core.mod import install
         try:
             if file:
                 prgrs = 0
@@ -991,7 +991,7 @@ class CustomMainWidget(QWidget):
                 for mod in file:
                     prgsbefore = 100 * prgrs / prgrsmax
                     prgsafter = 100 * (prgrs + 1) / prgrsmax
-                    installMod(self, mod, prgsbefore, prgsafter)
+                    install(mod, self, prgsbefore, prgsafter)
                     prgrs += 1
                     self.setProgress(100 * prgrs / prgrsmax)
                 lastpath, _ = path.split(file[0])
@@ -1009,6 +1009,7 @@ class CustomMainWidget(QWidget):
 
     def UninstallMods(self):
         '''Uninstalls selected mods'''
+        from src.core.mod import uninstall
         try:
             selected = self.getSelectedMods()
             if (selected):
@@ -1023,7 +1024,7 @@ class CustomMainWidget(QWidget):
                     prgrsmax = len(selected)
                     for modname in selected:
                         try:
-                            uninstall(self.modList[modname])
+                            uninstall(self.modList[modname], self)
                             del self.modList[modname]
                         except Exception as err:
                             self.output(formatUserError(err))
@@ -1074,7 +1075,7 @@ class CustomMainWidget(QWidget):
                     "Authors: "+(", ".join(AUTHORS))+"\n"
                     "\n"
                     "Written in: Python "+python_version()+"\n"
-                    "GUI: PyQt5 "+QtCore.PYQT_VERSION_STR+"\n"
+                    "GUI: PyQt "+QtCore.PYQT_VERSION_STR+"\n"
                     "\n"
                     "Thank you for using "+TITLE+"!"))
         except Exception as err:
@@ -1329,7 +1330,7 @@ class CustomMainWidget(QWidget):
                 "MainWindow",
                 "is already installed\nDo you want to remove old one first?"),
             QMessageBox.Yes | QMessageBox.YesToAll | \
-            QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
+                QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
             QMessageBox.No)
 
     def MessageAlertScript(self):

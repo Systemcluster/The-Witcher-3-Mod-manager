@@ -15,15 +15,17 @@ from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
 
 def formatUserError(error: str) -> str:
+    print(traceback.format_exc(), error, file=sys.stderr)
     if data.debug:
-        print(traceback.format_exc(), error, file=sys.stderr)
         return traceback.format_exc() + str(error)
     else:
         return str(error)
 
-def getVersionString():
+def getVersionString() -> str:
     return TITLE + " " + VERSION
 
+def normalizePath(path: str) -> str:
+    return os.path.normpath(str(path)).replace('\\', '/')
 
 def restart_program():
     '''Restarts the program'''
@@ -37,7 +39,6 @@ def copyfolder(src, dst):
         copytree(src, dst)
     else:
         dir_util.copy_tree(src, dst)
-
 
 
 def getFile(directory="", extensions="", title="Select Files or Folders"):

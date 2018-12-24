@@ -27,7 +27,7 @@ class Key:
             elif ("Duration" in values[1]):
                 self.duration = values[2][9:]
 
-    def __str__(self):
+    def __repr__(self):
         string = ""
         string += self.key + "=(Action=" + self.action
         if (self.duration or self.axis):

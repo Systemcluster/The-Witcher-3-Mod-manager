@@ -60,7 +60,6 @@ class Configuration:
         if not self.config.has_section('TOOLBAR'):
             self.config.add_section('TOOLBAR')
 
-        # self.config.optionxform = str # only for priority
 
     def write(self, space_around_delimiters=True):
         with open(self.configPath + "/config.ini", 'w') as file:
@@ -75,19 +74,18 @@ class Configuration:
     def get(self, section, option):
         if self.config.has_option(section, option):
             return self.config.get(section, option)
-        else:
-            return None
+        return None
 
     def set(self, section, option, value):
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
 
+
     def getPriority(self, section):
         if section in self.priority.sections():
             return self.priority.get(section, 'priority')
-        else:
-            return None
+        return None
 
     def setPriority(self, section, option):
         if not self.priority.has_section(section):
@@ -95,27 +93,27 @@ class Configuration:
             self.priority.set(section, 'enabled', '1')
         self.priority.set(section, 'priority', option)
 
+    def removePriority(self, section):
+        if self.priority.has_section(section):
+            self.priority.remove_section(section)
+        self.write()
+
+    def getOptions(self, section):
+        if self.config.has_section(section):
+            return list(map(lambda x: x[0], self.config.items(section)))
+        return []
+
     def setOption(self, section, option):
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option)
         self.write()
 
-    def getOptions(self, section):
-        if self.config.has_section(section):
-            return list(map(lambda x: x[0], self.config.items(section)))
-        else:
-            return []
-
     def removeOption(self, section, value):
         if self.config.has_section(section):
             self.config.remove_option(section, value)
         self.write()
 
-    def removeSection(self, section):
-        if self.config.has_section(section):
-            self.config.remove_section(section)
-        self.write()
 
     @property
     def scriptmerger(self):
@@ -172,6 +170,7 @@ class Configuration:
     @language.setter
     def language(self, value):
         self.set('SETTINGS', 'language', value)
+
 
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
         self.set('WINDOW', 'width', str(window.width()))

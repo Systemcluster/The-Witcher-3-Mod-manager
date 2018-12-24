@@ -40,7 +40,8 @@ class Mod:
             data.config.setPriority(filedata, value)
         self.priority = str(value)
 
-    def setName(self, name):
+    @staticmethod
+    def formatName(name: str) -> str:
         if (re.match("^mod.*", name)):
             name = name[3:]
         lenght = len(name)
@@ -51,7 +52,10 @@ class Mod:
             name = name[:-4]
         elif (re.search(r".*\.7z$", name)):
             name = name[:-3]
-        self.name = name
+        return name
+
+    def setName(self, name: str):
+        self.name = self.formatName(name)
 
     def enable(self):
         if (not self.enabled):
@@ -184,13 +188,16 @@ class Mod:
             with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
-    def addInputKeys(self, ui):
+    def addInputKeys(self, ui = None):
         added = 0
         if (self.inputsettings):
             text = ''
             with open(data.config.get('PATHS', 'settings') + "/input.settings", 'r') as userfile:
                 text = userfile.read()
-            ask = True
+            if ui:
+                ask = True
+            else:
+                ask = False
             keep = True
             for key in iter(self.inputsettings):
                 keycontext = key.context[1:-1]
@@ -281,7 +288,7 @@ class Mod:
             with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
-    def __str__(self):
+    def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
             "\nPRIORITY: " + self.getPriority() + "\n"
         if (self.files):

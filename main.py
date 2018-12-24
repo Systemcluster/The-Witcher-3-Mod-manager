@@ -3,7 +3,7 @@
 
 import sys
 from ctypes import create_unicode_buffer, wintypes, windll
-from os import path
+from os import path, environ
 from argparse import ArgumentParser
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
@@ -11,7 +11,7 @@ from PyQt5.QtCore import QTranslator, QCoreApplication
 
 from src.gui.main_window import CustomMainWindow
 from src.gui.main_widget import CustomMainWidget
-from src.util.util import getIcon, getVersionString
+from src.util.util import getIcon, getVersionString, normalizePath
 from src.util.syntax import writeAllModsToXMLFile
 from src.configuration.config import Configuration
 from src.globals import data
@@ -22,8 +22,7 @@ TRANSLATE = QCoreApplication.translate
 def __getDocuments():
     buf = create_unicode_buffer(wintypes.MAX_PATH)
     windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
-    return str(buf.value).replace('\\', '/')
-
+    return normalizePath(buf.value)
 
 def __translateToChosenLanguage():
     language = data.config.language
@@ -32,8 +31,11 @@ def __translateToChosenLanguage():
         translator.load("translations/" + language)
         data.app.installTranslator(translator)
 
-
 if __name__ == "__main__":
+    # correct screen scaling without generating warnings
+    del environ["QT_DEVICE_PIXEL_RATIO"]
+    environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
     parser = ArgumentParser(description=getVersionString())
     parser.add_argument(
         "-d", "--debug", dest="debug", action="store_true", default=False,
