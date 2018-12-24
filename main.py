@@ -22,16 +22,21 @@ def __getDocuments():
     windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
     return normalizePath(buf.value)
 
+translator: QTranslator = QTranslator()
 def __translateToChosenLanguage():
     language = data.config.language
     if (language and path.exists("translations/" + language)):
-        translator = QTranslator()
+        print("loading translation", language)
         translator.load("translations/" + language)
-        data.app.installTranslator(translator)
+        if not data.app.installTranslator(translator):
+            print("loading translation failed", file=sys.stderr)
+    else:
+        print("chosen language not found:", language, file=sys.stderr)
 
 if __name__ == "__main__":
-    # correct screen scaling without generating warnings
-    del environ["QT_DEVICE_PIXEL_RATIO"]
+    # correct screen scaling
+    if "QT_DEVICE_PIXEL_RATIO" in environ:
+        del environ["QT_DEVICE_PIXEL_RATIO"]
     environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     parser = ArgumentParser(description=getVersionString())
@@ -43,7 +48,6 @@ if __name__ == "__main__":
         help="show version information and exit")
     args = parser.parse_args()
     data.debug = args.debug
-
     if args.version:
         print(getVersionString())
         sys.exit()

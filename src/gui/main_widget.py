@@ -3,7 +3,6 @@
 
 from os import path
 from platform import python_version
-from shutil import rmtree
 import subprocess
 import webbrowser
 
@@ -264,65 +263,39 @@ class CustomMainWidget(QWidget):
             TRANSLATE("MainWindow", TITLE))
 
         self.treeWidget.setSortingEnabled(True)
-        self.treeWidget.headerItem().setText(
-            0, TRANSLATE("MainWindow", "Enabled"))
-        self.treeWidget.headerItem().setText(
-            1, TRANSLATE("MainWindow", "Mod Name"))
-        self.treeWidget.headerItem().setText(
-            2, TRANSLATE("MainWindow", "Priority"))
-        self.treeWidget.headerItem().setText(
-            3, TRANSLATE("MainWindow", "Data"))
-        self.treeWidget.headerItem().setText(
-            4, TRANSLATE("MainWindow", "DLC"))
-        self.treeWidget.headerItem().setText(
-            5, TRANSLATE("MainWindow", "Menu"))
-        self.treeWidget.headerItem().setText(
-            6, TRANSLATE("MainWindow", "Var"))
-        self.treeWidget.headerItem().setText(
-            7, TRANSLATE("MainWindow", "Hidden"))
-        self.treeWidget.headerItem().setText(
-            8, TRANSLATE("MainWindow", "Key"))
-        self.treeWidget.headerItem().setText(
-            9, TRANSLATE("MainWindow", "Settings"))
-        self.treeWidget.headerItem().setText(
-            10, TRANSLATE("MainWindow", "Size"))
-        self.treeWidget.headerItem().setText(
-            11, TRANSLATE("MainWindow", "Date Installed"))
+        self.treeWidget.headerItem().setText(0, TRANSLATE("MainWindow", "Enabled"))
+        self.treeWidget.headerItem().setText(1, TRANSLATE("MainWindow", "Mod Name"))
+        self.treeWidget.headerItem().setText(2, TRANSLATE("MainWindow", "Priority"))
+        self.treeWidget.headerItem().setText(3, TRANSLATE("MainWindow", "Data"))
+        self.treeWidget.headerItem().setText(4, TRANSLATE("MainWindow", "DLC"))
+        self.treeWidget.headerItem().setText(5, TRANSLATE("MainWindow", "Menu"))
+        self.treeWidget.headerItem().setText(6, TRANSLATE("MainWindow", "Var"))
+        self.treeWidget.headerItem().setText(7, TRANSLATE("MainWindow", "Hidden"))
+        self.treeWidget.headerItem().setText(8, TRANSLATE("MainWindow", "Key"))
+        self.treeWidget.headerItem().setText(9, TRANSLATE("MainWindow", "Settings"))
+        self.treeWidget.headerItem().setText(10, TRANSLATE("MainWindow", "Size"))
+        self.treeWidget.headerItem().setText(11, TRANSLATE("MainWindow", "Date Installed"))
 
         self.loadOrder.setSortingEnabled(False)
-        self.loadOrder.headerItem().setText(
-            0, TRANSLATE("MainWindow", "Load Order"))
-        self.loadOrder.headerItem().setText(
-            1, TRANSLATE("MainWindow", "Priority"))
+        self.loadOrder.headerItem().setText(0, TRANSLATE("MainWindow", "Load Order"))
+        self.loadOrder.headerItem().setText(1, TRANSLATE("MainWindow", "Priority"))
 
-        self.textEdit.setPlaceholderText(
-            TRANSLATE("MainWindow", "Output"))
+        self.textEdit.setPlaceholderText(TRANSLATE("MainWindow", "Output"))
         self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
 
-        self.pushButton_4.setText(
-            TRANSLATE("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(
-            TRANSLATE("MainWindow", "Run the Game"))
+        self.pushButton_4.setText(TRANSLATE("MainWindow", "Run Script Merger"))
+        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game"))
 
-        self.menuFile.setTitle(
-            TRANSLATE("MainWindow", "Mods"))
-        self.menuEdit.setTitle(
-            TRANSLATE("MainWindow", "Edit"))
-        self.menuSettings.setTitle(
-            TRANSLATE("MainWindow", "Settings"))
-        self.menuSelect_Language.setTitle(
-            TRANSLATE("MainWindow", "Select Language"))
-        self.menuConfigure_Settings.setTitle(
-            TRANSLATE("MainWindow", "Configure Settings"))
-        self.menuHelp.setTitle(
-            TRANSLATE("MainWindow", "Help"))
-        self.toolBar.setWindowTitle(
-            TRANSLATE("MainWindow", "toolBar"))
+        self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
+        self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
+        self.menuSettings.setTitle(TRANSLATE("MainWindow", "Settings"))
+        self.menuSelect_Language.setTitle(TRANSLATE("MainWindow", "Select Language"))
+        self.menuConfigure_Settings.setTitle(TRANSLATE("MainWindow", "Configure Settings"))
+        self.menuHelp.setTitle(TRANSLATE("MainWindow", "Help"))
+        self.toolBar.setWindowTitle(TRANSLATE("MainWindow", "toolBar"))
 
-        self.actionInstall_Mods.setText(
-            TRANSLATE("MainWindow", "Install Mods"))
+        self.actionInstall_Mods.setText(TRANSLATE("MainWindow", "Install Mods"))
         self.actionInstall_Mods.setToolTip(
-
             TRANSLATE("MainWindow", "Install one or more Mods from folders or archives"))
         self.actionInstall_Mods.setShortcut("Ctrl+E")
         self.actionRestore_Columns.setText(
@@ -474,10 +447,7 @@ class CustomMainWidget(QWidget):
 
         self.loadOrder.itemDoubleClicked.connect(self.loadOrderDoubleClicked)
 
-        self.onStart()
 
-    def onStart(self):
-        '''Initial configuration'''
         self.configureSettings()
         self.configureMods()
         self.configureWindow()
@@ -995,11 +965,9 @@ class CustomMainWidget(QWidget):
                     self.setProgress(100 * prgrs / prgrsmax)
                 lastpath, _ = path.split(file[0])
                 data.config.set('PATHS', 'lastpath', lastpath)
-                self.setProgress(0)
                 self.RefreshList()
-                if (path.exists("extracted")):
-                    rmtree("extracted")
                 self.AlertRunScriptMerger()
+                self.setProgress(0)
             else:
                 self.output(TRANSLATE("MainWindow", "Installation canceled"))
         except Exception as err:

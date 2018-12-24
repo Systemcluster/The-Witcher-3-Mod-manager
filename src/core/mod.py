@@ -94,6 +94,9 @@ def install(modPath: str, ui: CustomMainWidget = None,
             formatUserError(err)
         if mod:
             uninstall(mod)
+    finally:
+        if (path.exists(data.config.extracted)):
+            rmtree(data.config.extracted)
 
 def uninstall(mod: Mod, ui: CustomMainWidget = None):
     '''Uninstalls given mod'''
