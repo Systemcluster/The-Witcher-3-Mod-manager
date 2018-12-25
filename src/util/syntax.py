@@ -87,4 +87,4 @@ def writeToXml(mod: Mod, root: XML.ElementTree) -> XML.ElementTree:
             ky.set('context', key.context)
     if (mod.usersettings):
         XML.SubElement(xmlData, 'settings').text = mod.usersettings[0]
-        return root
+    return root

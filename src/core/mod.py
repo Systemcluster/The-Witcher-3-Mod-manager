@@ -17,7 +17,6 @@ from src.globals.constants import TRANSLATE
 def install(modPath: str, ui: CustomMainWidget = None,
             progressStart: int = 0, progressEnd: int = 0):
     '''Installs mod from given path. If given mod is an archive first extracts it'''
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
 
     modname = path.split(modPath)[1]
     progress = progressEnd - progressStart
@@ -34,23 +33,28 @@ def install(modPath: str, ui: CustomMainWidget = None,
             ui.setProgress(progressStart + progress * 0.3)
         else:
             ask = False
+        res = None
 
         for directory in directories:
             _, name = path.split(directory)
-            category = "mod" if isDataFolder(name) else "dlc"
-            if (name in installed_mods and ask) or (name in installed_dlcs and ask):
-                res = MessageOverwrite(name)
+            basepath = data.config.mods if isDataFolder(name) else data.config.dlc
+            datapath = basepath + "/" + name
+            if (name in installed_mods) or (name in installed_dlcs):
+                if ask:
+                    res = MessageOverwrite(name)
+
                 if res == QMessageBox.Yes:
-                    files.rmtree(data.config.get('PATHS', category)+"/"+name)
+                    files.rmtree(datapath)
                 elif res == QMessageBox.YesToAll:
-                    files.rmtree(data.config.get('PATHS', category)+"/"+name)
+                    files.rmtree(datapath)
                     ask = False
                 elif res == QMessageBox.NoToAll:
                     ask = False
                 elif res == QMessageBox.Cancel:
                     uninstall(mod)
                     return
-            copyfolder(directory, data.config.get('PATHS', category)+"/"+name)
+
+            copyfolder(directory, datapath)
 
         for xml in xmls:
             _, name = path.split(xml)
@@ -97,6 +101,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
     finally:
         if (path.exists(data.config.extracted)):
             rmtree(data.config.extracted)
+
 
 def uninstall(mod: Mod, ui: CustomMainWidget = None):
     '''Uninstalls given mod'''

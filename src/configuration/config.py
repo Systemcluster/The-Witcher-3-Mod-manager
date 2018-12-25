@@ -88,6 +88,10 @@ class Configuration:
             self.priority.remove_section(section)
         self.write()
 
+    def getWindowSection(self, section):
+        value = self.get('WINDOW', 'section'+str(section))
+        return int(value) if value else None
+
     def getOptions(self, section):
         if self.config.has_section(section):
             return list(map(lambda x: x[0], self.config.items(section)))

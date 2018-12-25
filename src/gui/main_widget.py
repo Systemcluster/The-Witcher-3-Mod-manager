@@ -379,11 +379,11 @@ class CustomMainWidget(QWidget):
         self.menuEdit.addAction(self.actionDecreasePriority)
 
     def configureUi(self):
-        for i in range(0, self.treeWidget.header().count()+1):
-            if not data.config.get('WINDOW', 'section'+str(i)):
+        for i in range(0, self.treeWidget.header().count()):
+            if not data.config.getWindowSection(i):
                 data.config.setDefaultWindow()
                 break
-        self.ResizeColumns()
+        self.resizeColumns()
 
         self.treeWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.treeWidget.header().setDefaultAlignment(Qt.AlignCenter)
@@ -415,7 +415,7 @@ class CustomMainWidget(QWidget):
         self.actionDecreasePriority.triggered.connect(self.decreasePriority)
         self.actionSetPriority.triggered.connect(self.setPriority)
         self.actionUnsetPriority.triggered.connect(self.unsetPriority)
-        self.actionRestoreColumns.triggered.connect(self.RestoreColumns)
+        self.actionRestoreColumns.triggered.connect(self.restoreColumns)
 
         self.pushButton_4.clicked.connect(self.RunScriptMerger)
         self.pushButton_5.clicked.connect(self.RunTheGame)
@@ -577,7 +577,7 @@ class CustomMainWidget(QWidget):
         menu.addAction(rem.menuAction())
         menu.exec_(self.toolBar.mapToGlobal(position))
 
-    def RemoveFromToolbar(self, action):
+    def removeFromToolbar(self, action):
         '''Creates menu for removing actions from toolbar'''
         self.toolBar.removeAction(action)
         data.config.removeOption('TOOLBAR', action.toolTip())
@@ -607,16 +607,13 @@ class CustomMainWidget(QWidget):
         except Exception as err:
             self.output(formatUserError(err))
 
-    def RestoreColumns(self):
+    def restoreColumns(self):
         data.config.setDefaultWindow()
-        self.ResizeColumns()
+        self.resizeColumns()
 
-    def ResizeColumns(self):
-        for i in range(0, self.treeWidget.header().count()+1):
-            self.treeWidget.header().resizeSection(
-                i,
-                int(data.config.get('WINDOW', 'section'+str(i)) or 60)
-            )
+    def resizeColumns(self):
+        for i in range(0, self.treeWidget.header().count()):
+            self.treeWidget.header().resizeSection(i, data.config.getWindowSection(i) or 60)
 
     def output(self, appendation):
         '''Prints appendation to the output text field'''
@@ -1171,7 +1168,7 @@ class CustomMainWidget(QWidget):
         temp = QAction(action)
         temp.setText(action.text())
         temp.setIcon(action.icon())
-        temp.triggered.connect(lambda: self.RemoveFromToolbar(action))
+        temp.triggered.connect(lambda: self.removeFromToolbar(action))
         return temp
 
     def makeLangAction(self, ts):
