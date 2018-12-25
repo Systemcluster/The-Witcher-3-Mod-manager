@@ -1,20 +1,21 @@
 '''Witcher 3 Mod Manager main module'''
-# pylint: disable=invalid-name,missing-docstring,bare-except,broad-except
+# pylint: disable=invalid-name,missing-docstring,bare-except,broad-except,wildcard-import,unused-wildcard-import
 
 import sys
 from ctypes import create_unicode_buffer, wintypes, windll
 from os import path, environ
 from argparse import ArgumentParser
 
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTranslator
 
 from src.gui.main_window import CustomMainWindow
 from src.gui.main_widget import CustomMainWidget
-from src.util.util import getIcon, getVersionString, normalizePath
+from src.util.util import *
 from src.util.syntax import writeAllModsToXMLFile
 from src.configuration.config import Configuration
 from src.globals import data
+from src.globals.constants import TRANSLATE
 
 
 def __getDocuments():
@@ -53,26 +54,13 @@ if __name__ == "__main__":
         sys.exit()
 
     data.app = QApplication(sys.argv)
-    documents = __getDocuments()
-
-    gamePath = ""
-    while not data.config:
-        try:
-            data.config = Configuration(documents, gamePath)
-        except Exception as err:
-            print(str(err))
-            gamePath = str(QFileDialog.getOpenFileName(
-                None, "Select witcher3.exe", "witcher3.exe", "*.exe")[0])
-            if not gamePath:
-                QMessageBox.critical(
-                    None,
-                    "Selected file not correct",
-                    "'witcher3.exe' file not selected",
-                    QMessageBox.Ok,
-                    QMessageBox.Ok)
-                sys.exit()
+    data.config = Configuration(__getDocuments())
 
     __translateToChosenLanguage()
+
+    if not Configuration.getCorrectGamePath(data.config.game):
+        if not reconfigureGamePath():
+            sys.exit()
 
     mainWindow = CustomMainWindow()
     mainWidget = CustomMainWidget(mainWindow)
@@ -83,6 +71,6 @@ if __name__ == "__main__":
     ret = data.app.exec_()
     data.config.saveWindowSettings(mainWidget, mainWindow)
     data.config.write()
-    writeAllModsToXMLFile(mainWidget.modList, data.config.configPath + '/installed.xml')
+    writeAllModsToXMLFile(mainWidget.modList, data.config.configuration + '/installed.xml')
 
     sys.exit(ret)

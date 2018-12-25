@@ -27,8 +27,8 @@ def install(modPath: str, ui: CustomMainWidget = None,
     mod = None
     try:
         mod, directories, xmls = fetchMod(modPath)
-        installed_mods = listdir(data.config.get('PATHS', 'mod'))
-        installed_dlcs = listdir(data.config.get('PATHS', 'dlc'))
+        installed_mods = listdir(data.config.mods)
+        installed_dlcs = listdir(data.config.dlc)
         if ui:
             ask = True
             ui.setProgress(progressStart + progress * 0.3)
@@ -54,7 +54,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
 
         for xml in xmls:
             _, name = path.split(xml)
-            files.copy(xml, data.config.get('PATHS', 'menu')+"/"+name)
+            files.copy(xml, data.config.menu+"/"+name)
 
         if ui:
             ui.setProgress(progressStart + progress * 0.7)
@@ -113,19 +113,19 @@ def uninstall(mod: Mod, ui: CustomMainWidget = None):
 def removeData(mod):
     '''Removes mod data'''
     for file in mod.files:
-        if path.exists(data.config.get('PATHS', 'mod') + "/" + file):
-            rmtree(data.config.get('PATHS', 'mod') + "/" + file)
+        if path.exists(data.config.mods + "/" + file):
+            rmtree(data.config.mods + "/" + file)
 
 
 def removeDlcs(mod):
     '''Removes dlc data'''
     for dlc in mod.dlcs:
-        if path.exists(data.config.get('PATHS', 'dlc') + "/" + dlc):
-            rmtree(data.config.get('PATHS', 'dlc') + "/" + dlc)
+        if path.exists(data.config.dlc + "/" + dlc):
+            rmtree(data.config.dlc + "/" + dlc)
 
 
 def removeMenues(mod):
     '''Removes menu data'''
     for menu in mod.menus:
-        if path.exists(data.config.get('PATHS', 'menu') + "/" + menu):
-            remove(data.config.get('PATHS', 'menu') + "/" + menu)
+        if path.exists(data.config.menu + "/" + menu):
+            remove(data.config.menu + "/" + menu)

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QFileDialog, QTreeView
 class FileDialog(QFileDialog):
     '''Custom FileDialog'''
     def __init__(self, *args):
-        super(FileDialog, self).__init__(*args)
+        super().__init__(*args)
         self.setOption(QFileDialog.DontUseNativeDialog, True)
         self.setFileMode(QFileDialog.ExistingFiles)
         self.tree = self.findChild(QTreeView)

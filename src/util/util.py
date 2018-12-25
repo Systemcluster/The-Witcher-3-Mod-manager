@@ -9,6 +9,7 @@ from distutils import dir_util
 import traceback
 
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from src.globals import data
 from src.globals.constants import *
@@ -27,7 +28,35 @@ def getVersionString() -> str:
 def normalizePath(path: str) -> str:
     return os.path.normpath(str(path)).replace('\\', '/')
 
-def restart_program():
+def reconfigureGamePath() -> bool:
+    gamePath = str(QFileDialog.getOpenFileName(
+        None,
+        TRANSLATE("MainWindow", "Select witcher3.exe"),
+        data.config.gameexe or "witcher3.exe",
+        "*.exe")[0])
+    try:
+        data.config.game = gamePath
+    except ValueError as err:
+        print(str(err), file=sys.stderr)
+        QMessageBox.critical(
+            None,
+            TRANSLATE("MainWindow", "Selected file not correct"),
+            TRANSLATE("MainWindow", "'witcher3.exe' file not selected"),
+            QMessageBox.Ok,
+            QMessageBox.Ok)
+        return False
+    return True
+
+def reconfigureScriptMergerPath() -> bool:
+    mergerPath = str(QFileDialog.getOpenFileName(
+        None,
+        TRANSLATE("MainWindow", "Select script merger .exe"),
+        data.config.scriptmerger or '',
+        "*.exe")[0])
+    if mergerPath:
+        data.config.scriptmerger = mergerPath
+
+def restartProgram():
     '''Restarts the program'''
     data.config.write()
     python = sys.executable

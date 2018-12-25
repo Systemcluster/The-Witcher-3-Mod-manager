@@ -62,43 +62,43 @@ class Mod:
         if (not self.enabled):
             self.addXmlKeys()
             for menu in iter(self.menus):
-                if path.exists(data.config.get('PATHS', 'menu') + "/" + menu + ".disabled"):
+                if path.exists(data.config.menu + "/" + menu + ".disabled"):
                     rename(
-                        data.config.get('PATHS', 'menu') + "/" + menu + ".disabled",
-                        data.config.get('PATHS', 'menu') + "/" + menu)
+                        data.config.menu + "/" + menu + ".disabled",
+                        data.config.menu + "/" + menu)
             for dlc in iter(self.dlcs):
-                if path.exists(data.config.get('PATHS', 'dlc') + "/" + dlc):
-                    for subdir, _, fls in walk(data.config.get('PATHS', 'dlc') + "/" + dlc):
+                if path.exists(data.config.dlc + "/" + dlc):
+                    for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
                         for file in fls:
                             if (path.exists(subdir + "/" + file)):
                                 rename(subdir + "/" + file, subdir + "/" + file[:-9])
             for filedata in iter(self.files):
-                if path.exists(data.config.get('PATHS', 'mod') + "/~" + filedata):
+                if path.exists(data.config.mods + "/~" + filedata):
                     rename(
-                        data.config.get('PATHS', 'mod') + "/~" + filedata,
-                        data.config.get('PATHS', 'mod') + "/" + filedata)
+                        data.config.mods + "/~" + filedata,
+                        data.config.mods + "/" + filedata)
             self.enabled = True
 
     def disable(self):
         if (self.enabled):
             self.removeXmlKeys()
             for menu in iter(self.menus):
-                if path.exists(data.config.get('PATHS', 'menu') + "/" + menu):
+                if path.exists(data.config.menu + "/" + menu):
                     rename(
-                        data.config.get('PATHS', 'menu') + "/" + menu,
-                        data.config.get('PATHS', 'menu') + "/" + menu + ".disabled")
+                        data.config.menu + "/" + menu,
+                        data.config.menu + "/" + menu + ".disabled")
             for dlc in iter(self.dlcs):
-                if path.exists(data.config.get('PATHS', 'dlc') + "/" + dlc):
-                    for subdir, _, fls in walk(data.config.get('PATHS', 'dlc') + "/" + dlc):
+                if path.exists(data.config.dlc + "/" + dlc):
+                    for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
                         for file in fls:
                             rename(
                                 path.join(subdir, file),
                                 path.join(subdir, file) + ".disabled")
             for filedata in iter(self.files):
-                if path.exists(data.config.get('PATHS', 'mod') + "/" + filedata):
+                if path.exists(data.config.mods + "/" + filedata):
                     rename(
-                        data.config.get('PATHS', 'mod') + "/" + filedata,
-                        data.config.get('PATHS', 'mod') + "/~" + filedata)
+                        data.config.mods + "/" + filedata,
+                        data.config.mods + "/~" + filedata)
             self.enabled = False
 
     def populateFromXml(self, root: XML.ElementTree):
@@ -168,32 +168,32 @@ class Mod:
     def addXmlKeys(self):
         if (self.xmlkeys):
             text = ''
-            with open(data.config.get('PATHS', 'menu') + "/input.xml", 'r') as userfile:
+            with open(data.config.menu + "/input.xml", 'r') as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if (not xml in text):
                     text = text.replace(
                         '<!-- [BASE_CharacterMovement] -->',
                         xml+'\n<!-- [BASE_CharacterMovement] -->')
-            with open(data.config.get('PATHS', 'menu') + "/input.xml", 'w') as userfile:
+            with open(data.config.menu + "/input.xml", 'w') as userfile:
                 text = userfile.write(text)
         if (self.hidden):
             text = ''
-            with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'r') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if (not xml in text):
                     text = text.replace(
                         '</VisibleVars>',
                         xml+'\n</VisibleVars>')
-            with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
     def addInputKeys(self):
         added = 0
         if (self.inputsettings):
             text = ''
-            with open(data.config.get('PATHS', 'settings') + "/input.settings", 'r') as userfile:
+            with open(data.config.settings + "/input.settings", 'r') as userfile:
                 text = userfile.read()
             ask = True
             keep = True
@@ -254,36 +254,36 @@ class Mod:
                                 r"\[" + keycontext + r"\]\n",
                                 r"[" + keycontext + r"]\n" + str(key) + r"\n",
                                 text)
-            with open(data.config.get('PATHS', 'settings') + "/input.settings", 'w') as userfile:
+            with open(data.config.settings + "/input.settings", 'w') as userfile:
                 text = userfile.write(text)
 
     def addUserSettings(self):
         if (self.usersettings):
             text = ''
-            with open(data.config.get('PATHS', 'settings') + "/user.settings", 'r') as userfile:
+            with open(data.config.settings + "/user.settings", 'r') as userfile:
                 text = userfile.read()
-            with open(data.config.get('PATHS', 'settings')+"/user.settings", 'w') as userfile:
+            with open(data.config.settings+"/user.settings", 'w') as userfile:
                 text = self.usersettings[0] + "\n" + text
                 userfile.write(text)
 
     def removeXmlKeys(self):
         if (self.xmlkeys):
             text = ''
-            with open(data.config.get('PATHS', 'menu') + "/input.xml", 'r') as userfile:
+            with open(data.config.menu + "/input.xml", 'r') as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if xml in text:
                     text = text.replace(xml+"\n", '')
-            with open(data.config.get('PATHS', 'menu') + "/input.xml", 'w') as userfile:
+            with open(data.config.menu + "/input.xml", 'w') as userfile:
                 text = userfile.write(text)
         if (self.hidden):
             text = ''
-            with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'r') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if xml in text:
                     text = text.replace(xml+"\n", '')
-            with open(data.config.get('PATHS', 'menu') + "/hidden.xml", 'w') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
     def __repr__(self):
