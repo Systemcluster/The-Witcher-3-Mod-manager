@@ -4,12 +4,12 @@
 from cx_Freeze import setup, Executable
 from src.globals.constants import *
 
-FILES = ["res/", "translations/", "7-Zip/"]
+FILES = ["res/", "translations/", "tools/"]
 SHORTCUT_TABLE = [
     (
         "DesktopShortcut",        # Shortcut
         "DesktopFolder",          # Directory_
-        TITLE,            # Name
+        TITLE,                    # Name
         "TARGETDIR",              # Component_
         "[TARGETDIR]TheWitcher3ModManager.exe",   # Target
         None,                     # Arguments
@@ -30,9 +30,20 @@ setup(
     version=VERSION,
     url=URL_WEB,
     license='Open-source',
-    options={"build_exe": {"include_files":FILES}, "bdist_msi": BDIST_MSI_OPTIONS},
+    options={
+        "build_exe": {
+            "include_files": FILES,
+            "optimize": 2,
+            "zip_include_packages": ["src"]
+        },
+        "bdist_msi": BDIST_MSI_OPTIONS},
     author=AUTHORS[0],
     author_email=AUTHORS_MAIL[0],
     description=TITLE,
-    executables=[Executable("TheWitcher3ModManager.py", icon='res/w3a.ico', base="Win32GUI")]
+    executables=[Executable(
+        "main.py",
+        targetName="TheWitcher3ModManager.exe",
+        icon='res/w3a.ico',
+        base="Win32GUI"
+    )]
 )
