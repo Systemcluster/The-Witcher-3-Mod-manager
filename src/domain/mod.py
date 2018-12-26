@@ -5,8 +5,6 @@ import re
 from os import path, rename, walk
 from time import strftime, gmtime
 
-import xml.etree.ElementTree as XML
-
 from PyQt5.Qt import QMessageBox
 
 from src.util.util import *
@@ -15,7 +13,7 @@ from src.globals import data
 from src.gui.alerts import MessageRebindedKeys
 
 class Mod:
-    '''Mod objects containing all mod data'''
+    '''Mod object containing all mod data'''
 
     def __init__(self, name=''):
         self.name: str = name
@@ -117,69 +115,11 @@ class Mod:
                         data.config.mods + "/~" + filedata)
             self.enabled = False
 
-    def populateFromXml(self, root: XML.ElementTree):
-        self.date = root.get('date')
-        enabled = root.get('enabled')
-        if (enabled == 'True'):
-            self.enabled = True
-        else:
-            self.enabled = False
-        self.name = root.get('name')
-        prt = root.get('priority')
-        if (not prt == 'Not Set'):
-            self.priority = prt
-        for data_ in root.findall('data'):
-            self.files.append(data_.text)
-        for data_ in root.findall('dlc'):
-            self.dlcs.append(data_.text)
-        for data_ in root.findall('menu'):
-            self.menus.append(data_.text)
-        for data_ in root.findall('xmlkey'):
-            self.xmlkeys.append(data_.text)
-        for data_ in root.findall('hidden'):
-            self.hidden.append(data_.text)
-        for data_ in root.findall('key'):
-            key = Key(data_.get('context'), data_.text)
-            self.inputsettings.append(key)
-        for data_ in root.findall('settings'):
-            self.usersettings.append(data_.text)
-        self.checkPriority()
-
     def checkPriority(self):
         if (not self.priority):
             for filedata in iter(self.files):
                 if (data.config.priority.has_section(filedata)):
                     self.setPriority(data.config.getPriority(filedata))
-
-    def writeToXml(self, root: XML.ElementTree):
-        mod = XML.SubElement(root, 'mod')
-        mod.set('name', self.name)
-        mod.set('enabled', str(self.enabled))
-        mod.set('date', self.date)
-        mod.set('priority', self.getPriority())
-        if (self.files):
-            for file in iter(self.files):
-                XML.SubElement(mod, 'data').text = file
-        if (self.dlcs):
-            for dlc in iter(self.dlcs):
-                XML.SubElement(mod, 'dlc').text = dlc
-        if (self.menus):
-            for menu in iter(self.menus):
-                XML.SubElement(mod, 'menu').text = menu
-        if (self.xmlkeys):
-            for xml in iter(self.xmlkeys):
-                XML.SubElement(mod, 'xmlkey').text = xml
-        if (self.hidden):
-            for xml in iter(self.hidden):
-                XML.SubElement(mod, 'hidden').text = xml
-        if (self.inputsettings):
-            for key in iter(self.inputsettings):
-                ky = XML.SubElement(mod, 'key')
-                ky.text = str(key)
-                ky.set('context', key.context)
-        if (self.usersettings):
-            XML.SubElement(mod, 'settings').text = self.usersettings[0]
-        return root
 
     def addXmlKeys(self):
         if (self.xmlkeys):

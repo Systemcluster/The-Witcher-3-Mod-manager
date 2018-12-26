@@ -6,14 +6,15 @@ from ctypes import create_unicode_buffer, wintypes, windll
 from os import path, environ
 from argparse import ArgumentParser
 
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QTranslator
 
 from src.gui.main_window import CustomMainWindow
 from src.gui.main_widget import CustomMainWidget
+from src.gui.alerts import *
 from src.util.util import *
-from src.util.syntax import writeAllModsToXMLFile
 from src.configuration.config import Configuration
+from src.core.model import Model
 from src.globals import data
 from src.globals.constants import TRANSLATE
 
@@ -62,8 +63,17 @@ if __name__ == "__main__":
         if not reconfigureGamePath():
             sys.exit()
 
+    try:
+        modModel = Model()
+    except IOError as err:
+        print(err, file=sys.stderr)
+        if MessageAlertOtherInstance() == QMessageBox.Yes:
+            modModel = Model(ignorelock=True)
+        else:
+            sys.exit(1)
+
     mainWindow = CustomMainWindow()
-    mainWidget = CustomMainWidget(mainWindow)
+    mainWidget = CustomMainWidget(mainWindow, modModel)
     mainWindow.dropCallback = mainWidget.installModFiles
     data.app.setWindowIcon(getIcon("w3a.ico"))
     mainWindow.show()
@@ -71,6 +81,6 @@ if __name__ == "__main__":
     ret = data.app.exec_()
     data.config.saveWindowSettings(mainWidget, mainWindow)
     data.config.write()
-    writeAllModsToXMLFile(mainWidget.model.all(), data.config.configuration + '/installed.xml')
+    modModel.write()
 
     sys.exit(ret)

@@ -24,11 +24,11 @@ from src.gui.alerts import MessageAlertScript
 class CustomMainWidget(QWidget):
     '''Main Widget'''
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget, model: Model):
         super().__init__(parent)
 
         self.mainWindow = parent
-        self.model = Model()
+        self.model = model
 
         try:
             self.mainWindow.setObjectName("MainWindow")
@@ -946,7 +946,7 @@ class CustomMainWidget(QWidget):
                     for row in rows:
                         row.setSelected(True)
             self.refreshLoadOrder()
-            writeAllModsToXMLFile(self.model.all(), data.config.configuration + '/installed.xml')
+            self.model.write()
         except Exception as err:
             self.output(formatUserError(err))
 
