@@ -32,14 +32,30 @@ class Mod:
         self.source: str = ''
 
     def getPriority(self):
-        if(not self.priority):
+        if (not self.priority):
             return '-'
         return str(self.priority)
 
-    def setPriority(self, value):
+    def setPriority(self, value: str):
         for filedata in iter(self.files):
             data.config.setPriority(filedata, value)
         self.priority = str(value)
+
+    def removePriority(self):
+        self.priority = None
+        for modfile in self.files:
+            data.config.removePriority(modfile)
+
+    def increasePriority(self):
+        new_priority = int(self.priority) + 1 if self.priority and self.priority.isdecimal() else 0
+        self.setPriority(str(new_priority))
+
+    def decreasePriority(self):
+        new_priority = int(self.priority) - 1 if self.priority and self.priority.isdecimal() else -1
+        if new_priority < 0:
+            self.removePriority()
+        else:
+            self.setPriority(str(new_priority))
 
     @staticmethod
     def formatName(name: str) -> str:

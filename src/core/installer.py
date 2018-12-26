@@ -9,13 +9,14 @@ from PyQt5.QtWidgets import QMessageBox
 from src.globals import data
 from src.util.util import *
 from src.core.fetcher import *
+from src.core.model import Model
 from src.gui.main_widget import CustomMainWidget
 from src.gui.alerts import MessageOverwrite
 from src.globals.constants import TRANSLATE
 
 
-def install(modPath: str, ui: CustomMainWidget = None,
-            progressStart: int = 0, progressEnd: int = 0):
+def installMod(modPath: str, model: Model, ui: CustomMainWidget = None, \
+                progressStart: int = 0, progressEnd: int = 0):
     '''Installs mod from given path. If given mod is an archive first extracts it'''
 
     modname = path.split(modPath)[1]
@@ -51,7 +52,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
                 elif res == QMessageBox.NoToAll:
                     ask = False
                 elif res == QMessageBox.Cancel:
-                    uninstall(mod)
+                    uninstallMod(mod, model, ui)
                     return
 
             copyfolder(directory, datapath)
@@ -75,8 +76,8 @@ def install(modPath: str, ui: CustomMainWidget = None,
         if ui:
             ui.setProgress(progressStart + progress * 0.85)
         exists = False
-        for installed in ui.modList.values():
-            if (mod.files == installed.files):
+        for installed in model.all():
+            if mod.files == installed.files:
                 installed.usersettings = mod.usersettings
                 installed.hidden = mod.hidden
                 installed.xmlkeys = mod.xmlkeys
@@ -87,8 +88,7 @@ def install(modPath: str, ui: CustomMainWidget = None,
                 exists = True
                 break
         if not exists:
-            if ui:
-                ui.addMod(mod.name, mod)
+            model.add(mod.name, mod)
         if ui:
             ui.setProgress(progressStart + progress * 1.0)
     except Exception as err:
@@ -97,39 +97,42 @@ def install(modPath: str, ui: CustomMainWidget = None,
         else:
             formatUserError(err)
         if mod:
-            uninstall(mod)
+            uninstallMod(mod, model, ui)
     finally:
-        if (path.exists(data.config.extracted)):
+        if path.exists(data.config.extracted):
             rmtree(data.config.extracted)
 
-
-def uninstall(mod: Mod, ui: CustomMainWidget = None):
+def uninstallMod(mod: Mod, model: Model, ui: CustomMainWidget = None):
     '''Uninstalls given mod'''
-    if ui:
-        ui.output(TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
-    if not mod.enabled:
-        mod.enable()
-    mod.removeXmlKeys()
-    removeMenues(mod)
-    removeDlcs(mod)
-    removeData(mod)
+    try:
+        if ui:
+            ui.output(TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
+        if not mod.enabled:
+            mod.enable()
+        mod.removeXmlKeys()
+        removeModMenus(mod)
+        removeModDlcs(mod)
+        removeModData(mod)
+        model.remove(mod.name)
+    except Exception as err:
+        if ui:
+            ui.output(formatUserError(err))
+        else:
+            formatUserError(err)
 
-
-def removeData(mod):
+def removeModData(mod):
     '''Removes mod data'''
     for file in mod.files:
         if path.exists(data.config.mods + "/" + file):
             rmtree(data.config.mods + "/" + file)
 
-
-def removeDlcs(mod):
+def removeModDlcs(mod):
     '''Removes dlc data'''
     for dlc in mod.dlcs:
         if path.exists(data.config.dlc + "/" + dlc):
             rmtree(data.config.dlc + "/" + dlc)
 
-
-def removeMenues(mod):
+def removeModMenus(mod):
     '''Removes menu data'''
     for menu in mod.menus:
         if path.exists(data.config.menu + "/" + menu):

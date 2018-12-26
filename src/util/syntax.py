@@ -2,14 +2,14 @@
 # pylint: disable=invalid-name,superfluous-parens,missing-docstring
 
 import xml.etree.ElementTree as XML
-from typing import Dict
+from typing import List
 
 from src.domain.mod import Mod
 from src.domain.key import Key
 
-def writeAllModsToXMLFile(modlist: Dict[str, Mod], filename: str):
+def writeAllModsToXMLFile(modlist: List[Mod], filename: str):
     root = XML.Element('installed')
-    for mod in modlist.values():
+    for mod in modlist:
         root = mod.writeToXml(root)
     indent(root)
     tree = XML.ElementTree(root)

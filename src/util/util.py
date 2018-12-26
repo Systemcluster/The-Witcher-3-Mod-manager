@@ -4,16 +4,20 @@
 import os
 import sys
 import re
+import traceback
+import webbrowser
+import subprocess
 from shutil import copytree
 from distutils import dir_util
-import traceback
+from platform import python_version
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from src.globals import data
 from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
+
 
 def formatUserError(error: str) -> str:
     print(traceback.format_exc(), error, file=sys.stderr)
@@ -56,6 +60,36 @@ def reconfigureScriptMergerPath() -> bool:
     if mergerPath:
         data.config.scriptmerger = mergerPath
 
+def showAboutWindow():
+    QMessageBox.about(
+        None,
+        TRANSLATE("MainWindow", "About"),
+        TRANSLATE(
+            "MainWindow",
+            ""+TITLE+"\n"
+            "Version: "+VERSION+"\n"
+            "Authors: "+(", ".join(AUTHORS))+"\n"
+            "\n"
+            "Written in: Python "+python_version()+"\n"
+            "GUI: PyQt "+QtCore.PYQT_VERSION_STR+"\n"
+            "\n"
+            "Thank you for using "+TITLE+"!"))
+
+def openUrl(url: str):
+    webbrowser.open(url)
+
+def openFile(path: str):
+    if isExecutable(path):
+        directory, _ = os.path.split(path)
+        subprocess.Popen([path], cwd=directory)
+    else:
+        openFolder(path)
+
+def openFolder(path: str):
+    while path and not os.path.isdir(path):
+        path, _ = os.path.split(path)
+    os.startfile(path, "explore")
+
 def restartProgram():
     '''Restarts the program'''
     data.config.write()
@@ -68,7 +102,6 @@ def copyfolder(src, dst):
         copytree(src, dst)
     else:
         dir_util.copy_tree(src, dst)
-
 
 def getFile(directory="", extensions="", title="Select Files or Folders"):
     '''Opens custom dialog for selecting multiple folders or files'''
@@ -96,3 +129,7 @@ def getKey(item):
 def isData(name):
     '''Checks if given name represents correct mod folder or not'''
     return re.match(r"^(~|)mod.+$", name)
+
+def isExecutable(name: str) -> bool:
+    _, ext = os.path.splitext(name)
+    return ext in ('.exe', '.bat')

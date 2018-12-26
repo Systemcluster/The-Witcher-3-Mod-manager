@@ -64,13 +64,13 @@ if __name__ == "__main__":
 
     mainWindow = CustomMainWindow()
     mainWidget = CustomMainWidget(mainWindow)
-    mainWindow.dropCallback = mainWidget.InstallModFiles
+    mainWindow.dropCallback = mainWidget.installModFiles
     data.app.setWindowIcon(getIcon("w3a.ico"))
     mainWindow.show()
 
     ret = data.app.exec_()
     data.config.saveWindowSettings(mainWidget, mainWindow)
     data.config.write()
-    writeAllModsToXMLFile(mainWidget.modList, data.config.configuration + '/installed.xml')
+    writeAllModsToXMLFile(mainWidget.model.all(), data.config.configuration + '/installed.xml')
 
     sys.exit(ret)
