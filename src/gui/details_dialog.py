@@ -3,29 +3,49 @@
 # pylint: disable=invalid-name
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPlainTextEdit
+from PyQt5.QtGui import QTextDocument
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QTextEdit
 
 from src.globals.constants import TRANSLATE
+from src.domain.mod import Mod
 
 
 class DetailsDialog(QWidget):
     '''Dialog showing mod details'''
-    def __init__(self, parent, text):
+    def __init__(self, parent: QWidget, mod: Mod):
         super().__init__(parent)
 
         self.setWindowFlags(QtCore.Qt.Window)
         self.setObjectName("Details")
         self.resize(700, 800)
-        self.horizontalLayout = QHBoxLayout(self)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.plainTextEdit = QPlainTextEdit(self)
-        self.plainTextEdit.setObjectName("plainTextEdit")
-        self.plainTextEdit.setPlainText(text)
-        self.plainTextEdit.setReadOnly(True)
-        self.horizontalLayout.addWidget(self.plainTextEdit)
+        self.setMinimumSize(600, 600)
+        self.layout = QHBoxLayout(self)
+        self.layout.setObjectName("layout")
+        self.document = QTextDocument()
+        self.document.setPlainText(str(mod))
+        self.text = QTextEdit(self)
+        self.text.setObjectName("text")
+        self.text.setDocument(self.document)
+        self.text.setAutoFormatting(QTextEdit.AutoAll)
+        self.text.setReadOnly(True)
+        self.text.setLineWrapMode(QTextEdit.NoWrap)
+        self.layout.addWidget(self.text)
 
-        self.setWindowTitle(TRANSLATE("Details", "Details"))
+        self.setWindowTitle(mod.name + " " + TRANSLATE("Details", "Details"))
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def adjustWidth(self):
+        '''Fits size to content'''
+        self.resize(
+            self.document.idealWidth() + \
+                self.text.contentsMargins().left() + self.text.contentsMargins().right() + \
+                self.contentsMargins().left() + self.contentsMargins().right() + 50,
+            self.height())
+
+    def showEvent(self, event):
+        '''Qt show event'''
+        super().showEvent(event)
+        self.adjustWidth()
 
     def keyPressEvent(self, event):
         '''Qt KeyPressEvent override'''

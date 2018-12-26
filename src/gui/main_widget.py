@@ -620,7 +620,7 @@ class CustomMainWidget(QWidget):
         if selected:
             try:
                 for modname in selected:
-                    details = DetailsDialog(self, str(self.model.get(modname)))
+                    details = DetailsDialog(self, self.model.get(modname))
                     details.show()
             except Exception as err:
                 self.output(formatUserError(err))
