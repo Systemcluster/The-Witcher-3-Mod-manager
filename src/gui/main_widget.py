@@ -14,7 +14,6 @@ from src.globals.constants import *
 from src.globals import data
 from src.util.util import *
 from src.util.syntax import *
-from src.domain.mod import Mod
 from src.core.model import Model
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.gui.details_dialog import DetailsDialog
@@ -757,7 +756,7 @@ class CustomMainWidget(QWidget):
                 for modname in selected:
                     mod = self.model.get(modname)
                     if mod.enabled:
-                        mod.setPriority(str(priority))
+                        mod.priority = priority
                     else:
                         self.output(TRANSLATE(
                             "MainWindow",
@@ -773,7 +772,7 @@ class CustomMainWidget(QWidget):
         selected = self.getSelectedMods()
         if selected:
             for modname in selected:
-                self.model.get(modname).removePriority()
+                self.model.get(modname).priority = None
             data.config.write()
             self.refreshList()
 
@@ -929,7 +928,7 @@ class CustomMainWidget(QWidget):
                 self.addToList(
                     mod.enabled,
                     mod.name,
-                    mod.getPriority(),
+                    mod.priority,
                     len(mod.files),
                     len(mod.dlcs),
                     len(mod.menus),

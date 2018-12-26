@@ -67,7 +67,7 @@ def installMod(modPath: str, model: Model, ui: CustomMainWidget = None, \
             raise Exception('No data foind in ' + "'"+mod.name+"'")
 
         mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        mod.setName(modname)
+        mod.name = modname
         mod.addXmlKeys()
         mod.addInputKeys()
         mod.addUserSettings()

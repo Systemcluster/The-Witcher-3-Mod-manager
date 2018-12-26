@@ -115,7 +115,7 @@ class Model:
         elem.set('name', mod.name)
         elem.set('enabled', str(mod.enabled))
         elem.set('date', mod.date)
-        elem.set('priority', mod.getPriority())
+        elem.set('priority', mod.priority)
         if mod.files:
             for file in mod.files:
                 XML.SubElement(elem, 'data').text = file

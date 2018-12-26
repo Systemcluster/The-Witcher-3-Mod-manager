@@ -4,6 +4,8 @@
 import re
 from os import path, rename, walk
 from time import strftime, gmtime
+from dataclasses import dataclass, field
+from typing import Union, List
 
 from PyQt5.Qt import QMessageBox
 
@@ -12,48 +14,58 @@ from src.domain.key import Key
 from src.globals import data
 from src.gui.alerts import MessageRebindedKeys
 
+@dataclass
 class Mod:
     '''Mod object containing all mod data'''
 
-    def __init__(self, name=''):
-        self.name: str = name
-        self.files = []
-        self.dlcs = []
-        self.menus = []
-        self.xmlkeys = []
-        self.usersettings = []
-        self.inputsettings = []
-        self.hidden = []
-        self.enabled: bool = True
-        self.date: str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        self.priority: str = ''
-        self.source: str = ''
+    _name: str = ''
+    _priority: str = ''
+    enabled: bool = True
+    date: str = ''
+    source: str = ''
 
-    def getPriority(self):
-        if (not self.priority):
-            return '-'
-        return str(self.priority)
+    files: List[str] = field(default_factory=list)
+    dlcs: List[str] = field(default_factory=list)
+    menus: List[str] = field(default_factory=list)
+    xmlkeys: List[str] = field(default_factory=list)
+    usersettings: List[str] = field(default_factory=list)
+    inputsettings: List[object] = field(default_factory=list)
+    hidden: List[str] = field(default_factory=list)
 
-    def setPriority(self, value: str):
-        for filedata in iter(self.files):
-            data.config.setPriority(filedata, value)
-        self.priority = str(value)
+    def __post_init__(self):
+        self.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
-    def removePriority(self):
-        self.priority = None
-        for modfile in self.files:
-            data.config.removePriority(modfile)
+    @property
+    def name(self) -> str:
+        return self._name
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = self.formatName(value)
+
+    @property
+    def priority(self) -> str:
+        return self._priority if self._priority else '-'
+    @priority.setter
+    def priority(self, value: Union[str, int, None]):
+        if value is None or not str(value).isdecimal():
+            for modfile in iter(self.files):
+                data.config.removePriority(modfile)
+            self._priority = None
+        else:
+            for filedata in iter(self.files):
+                data.config.setPriority(filedata, value)
+            self._priority = str(int(value))
 
     def increasePriority(self):
         new_priority = int(self.priority) + 1 if self.priority and self.priority.isdecimal() else 0
-        self.setPriority(str(new_priority))
+        self.priority = new_priority
 
     def decreasePriority(self):
         new_priority = int(self.priority) - 1 if self.priority and self.priority.isdecimal() else -1
         if new_priority < 0:
-            self.removePriority()
+            self.priority = None
         else:
-            self.setPriority(str(new_priority))
+            self.priority = new_priority
 
     @staticmethod
     def formatName(name: str) -> str:
@@ -69,8 +81,6 @@ class Mod:
             name = name[:-3]
         return name
 
-    def setName(self, name: str):
-        self.name = self.formatName(name)
 
     def enable(self):
         if (not self.enabled):
@@ -119,7 +129,7 @@ class Mod:
         if (not self.priority):
             for filedata in iter(self.files):
                 if (data.config.priority.has_section(filedata)):
-                    self.setPriority(data.config.getPriority(filedata))
+                    self.priority = data.config.getPriority(filedata)
 
     def addXmlKeys(self):
         if (self.xmlkeys):
@@ -219,7 +229,7 @@ class Mod:
             with open(data.config.settings + "/user.settings", 'r') as userfile:
                 text = userfile.read()
             with open(data.config.settings+"/user.settings", 'w') as userfile:
-                text = self.usersettings[0] + "\n" + text
+                text = iter(self.usersettings)[0] + "\n" + text
                 userfile.write(text)
 
     def removeXmlKeys(self):
@@ -244,7 +254,7 @@ class Mod:
 
     def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
-            "\nPRIORITY: " + self.getPriority() + "\n"
+            "\nPRIORITY: " + self.priority + "\n"
         if (self.files):
             string += "\nDATA:\n"
             for file in iter(self.files):
@@ -278,5 +288,5 @@ class Mod:
 
         if (self.usersettings):
             string += "\nUSER SETTINGS:\n"
-            string += self.usersettings[0] + "\n"
+            string += iter(self.usersettings)[0] + "\n"
         return string
