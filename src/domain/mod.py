@@ -71,14 +71,22 @@ class Mod:
     def formatName(name: str) -> str:
         if (re.match("^mod.*", name)):
             name = name[3:]
+
         lenght = len(name)
         for match in re.finditer(r"-[0-9]+-.+", name):
             lenght = match.span()[0]
         name = name[0:lenght]
+
         if (re.search(r".*\.(zip|rar)$", name)):
             name = name[:-4]
         elif (re.search(r".*\.7z$", name)):
             name = name[:-3]
+
+        name = re.sub(r"([a-z]{2,})([A-Z1-9])", r"\1 \2", name)
+        name = re.sub(r"(_)", r" ", name)
+        name = re.sub(r"([a-zA-Z])-([0-9])", r"\1 \2", name)
+        name = re.sub(r"([0-9])-([a-zA-Z])", r"\1 \2", name)
+
         return name
 
 
