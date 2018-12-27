@@ -15,6 +15,7 @@ from src.globals import data
 from src.util.util import *
 from src.util.syntax import *
 from src.core.model import Model
+from src.core.installer import Installer
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.gui.details_dialog import DetailsDialog
 from src.gui.alerts import MessageAlertScript
@@ -814,14 +815,19 @@ class CustomMainWidget(QWidget):
         from src.core import installer
         try:
             if file:
-                prgrs = 0
-                prgrsmax = len(file)
+                progress = 0
+                progressMax = len(file)
+                installer = Installer(self.model, output=self.output)
                 for mod in file:
-                    prgsbefore = 100 * prgrs / prgrsmax
-                    prgsafter = 100 * (prgrs + 1) / prgrsmax
-                    installer.installMod(mod, self.model, self, prgsbefore, prgsafter)
-                    prgrs += 1
-                    self.setProgress(100 * prgrs / prgrsmax)
+                    progressStart = 100 * progress / progressMax
+                    progressEnd = 100 * (progress + 1) / progressMax
+                    progressCur = progressEnd - progressStart
+                    # pylint: disable=cell-var-from-loop
+                    installer.progress = lambda p: \
+                        self.setProgress(progressStart + progressCur * p)
+                    installer.installMod(mod)
+                    progress += 1
+                    self.setProgress(100 * progress / progressMax)
                 lastpath, _ = path.split(file[0])
                 data.config.lastpath = lastpath
                 self.refreshList()
@@ -846,12 +852,13 @@ class CustomMainWidget(QWidget):
                         TRANSLATE("MainWindow", " selected mods"),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
-                    prgrs = 0
-                    prgrsmax = len(selected)
+                    progress = 0
+                    progressMax = len(selected)
+                    installer = Installer(self.model, output=self.output)
                     for modname in selected:
-                        installer.uninstallMod(self.model.get(modname), self.model, self)
-                        prgrs += 1
-                        self.setProgress(100 * prgrs / prgrsmax)
+                        installer.uninstallMod(self.model.get(modname))
+                        progress += 1
+                        self.setProgress(100 * progress / progressMax)
                     self.refreshList()
                     self.setProgress(0)
                     self.alertRunScriptMerger()
@@ -893,15 +900,15 @@ class CustomMainWidget(QWidget):
         try:
             selected = self.treeWidget.selectedItems()
             self.setProgress(0)
-            prgrs = 0
-            prgrsmax = len(selected)
+            progress = 0
+            progressMax = len(selected)
             for item in selected:
                 if (item.checkState(0) == Qt.Checked):
                     item.setCheckState(0, Qt.Unchecked)
                 else:
                     item.setCheckState(0, Qt.Checked)
-                prgrs += 1
-                self.setProgress(100 * prgrs / prgrsmax)
+                progress += 1
+                self.setProgress(100 * progress / progressMax)
             self.refreshList()
             self.alertRunScriptMerger()
             self.setProgress(0)
