@@ -53,7 +53,7 @@ class Mod:
             self._priority = None
         else:
             for filedata in iter(self.files):
-                data.config.setPriority(filedata, value)
+                data.config.setPriority(filedata, str(int(value)))
             self._priority = str(int(value))
 
     def increasePriority(self):

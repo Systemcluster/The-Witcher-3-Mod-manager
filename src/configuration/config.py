@@ -51,7 +51,7 @@ class Configuration:
             self.config.add_section('TOOLBAR')
 
 
-    def write(self, space_around_delimiters=True):
+    def write(self, space_around_delimiters: bool = True):
         with open(self.__configPath + '/config.ini', 'w') as file:
             self.config.write(file, space_around_delimiters)
         with open(self.__userSettingsPath + '/mods.settings', 'w') as file:
@@ -61,51 +61,47 @@ class Configuration:
         with open(self.__configPath + '/config.ini', 'r') as file:
             return file.read()
 
-    def get(self, section, option):
+    def get(self, section: str, option: str):
         if self.config.has_option(section, option):
             return self.config.get(section, option)
         return None
 
-    def set(self, section, option, value):
+    def set(self, section: str, option: str, value):
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
 
 
-    def getPriority(self, section):
-        if section in self.priority.sections():
-            return self.priority.get(section, 'priority')
+    def getPriority(self, section: str):
+        if self.priority.has_section(section):
+            if self.priority.has_option(section, 'priority'):
+                return self.priority.get(section, 'priority')
+            return None
         return None
 
-    def setPriority(self, section, option):
+    def setPriority(self, section: str, option: str):
         if not self.priority.has_section(section):
             self.priority.add_section(section)
             self.priority.set(section, 'enabled', '1')
         self.priority.set(section, 'priority', option)
 
-    def removePriority(self, section):
+    def removePriority(self, section: str):
         if self.priority.has_section(section):
             self.priority.remove_section(section)
         self.write()
 
-    def getWindowSection(self, section):
+    def getWindowSection(self, section: str):
         value = self.get('WINDOW', 'section'+str(section))
         return int(value) if value else None
 
-    def getOptions(self, section):
+    def getOptions(self, section: str):
         if self.config.has_section(section):
             return list(map(lambda x: x[0], self.config.items(section)))
         return []
 
-    def setOption(self, section, option):
-        if not self.config.has_section(section):
-            self.config.add_section(section)
-        self.config.set(section, option)
-        self.write()
-
-    def removeOption(self, section, value):
+    def removeOption(self, section: str, option: str):
         if self.config.has_section(section):
-            self.config.remove_option(section, value)
+            self.config.remove_option(section, option)
         self.write()
 
 
