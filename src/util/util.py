@@ -10,6 +10,7 @@ import subprocess
 from shutil import copytree
 from distutils import dir_util
 from platform import python_version
+from ctypes import create_unicode_buffer, wintypes, windll
 
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -25,6 +26,11 @@ def formatUserError(error: str) -> str:
         return traceback.format_exc() + str(error)
     else:
         return str(error)
+
+def getDocumentsFolder() -> str:
+    buf = create_unicode_buffer(wintypes.MAX_PATH)
+    windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
+    return normalizePath(buf.value)
 
 def getVersionString() -> str:
     return TITLE + " " + VERSION
@@ -90,18 +96,18 @@ def openFolder(path: str):
         path, _ = os.path.split(path)
     os.startfile(path, "explore")
 
-def restartProgram():
-    '''Restarts the program'''
-    data.config.write()
-    python = sys.executable
-    os.execl(python, python, *sys.argv)
-
-def copyfolder(src, dst):
+def copyFolder(src, dst):
     '''Copy folder from src to dst'''
     if (not os.path.exists(dst)):
         copytree(src, dst)
     else:
         dir_util.copy_tree(src, dst)
+
+def restartProgram():
+    '''Restarts the program'''
+    data.config.write()
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 def getFile(directory="", extensions="", title="Select Files or Folders"):
     '''Opens custom dialog for selecting multiple folders or files'''
@@ -133,3 +139,16 @@ def isData(name):
 def isExecutable(name: str) -> bool:
     _, ext = os.path.splitext(name)
     return ext in ('.exe', '.bat')
+
+def translateToChosenLanguage() -> bool:
+    language = data.config.language
+    if (language and os.path.exists("translations/" + language)):
+        print("loading translation", language)
+        data.translator.load("translations/" + language)
+        if not data.app.installTranslator(data.translator):
+            print("loading translation failed", file=sys.stderr)
+            return False
+        return True
+    else:
+        print("chosen language not found:", language, file=sys.stderr)
+        return False

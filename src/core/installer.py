@@ -56,7 +56,7 @@ class Installer:
                     elif res == QMessageBox.Cancel:
                         self.uninstallMod(mod)
                         return
-                copyfolder(directory, datapath)
+                copyFolder(directory, datapath)
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
