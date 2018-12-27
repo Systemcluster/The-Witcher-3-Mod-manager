@@ -10,6 +10,7 @@ from typing import Tuple, List
 
 from src.globals import data
 from src.domain.key import Key
+from src.domain.usersetting import Usersetting
 from src.domain.mod import Mod
 from src.util.util import normalizePath
 
@@ -138,21 +139,26 @@ def fetchInputSettings(filetext: str) -> List[Key]:
         res = re.sub(r"(\r\n+)|(\n+)", "\n", inputsettings.group(0))
         arr = filter(lambda s: s != '', str(res).split('\n'))
         context = ''
-        for key in arr:
-            if key[0] == "[":
-                context = key
+        for line in arr:
+            if line[0] == "[":
+                context = line
             else:
-                newkey = Key(context, key)
-                found.append(newkey)
+                found.append(Key(context, line))
     return found
 
-# tested
-def fetchUserSettings(filetext: str) -> str:
+def fetchUserSettings(filetext: str) -> List[Usersetting]:
+    found = []
     usersettings = USERPATTERN.search(filetext)
     if (usersettings):
         res = re.sub(r"(\r\n+)|(\n+)", "\n", usersettings.group(0))
-        return str(res)
-    return ''
+        arr = filter(lambda s: s != '', str(res).split('\n'))
+        context = ''
+        for line in arr:
+            if line[0] == "[":
+                context = line
+            else:
+                found.append(Usersetting(context, line))
+    return found
 
 def fetchXmlKeys(filetext: str) -> List[str]:
     found = []

@@ -10,6 +10,7 @@ from fasteners import InterProcessLock
 from src.domain.mod import Mod
 from src.domain.key import Key
 from src.globals import data
+from src.core.fetcher import *
 from src.util.util import *
 from src.util.syntax import *
 
@@ -105,7 +106,14 @@ class Model:
             key = Key(elem.get('context'), elem.text)
             mod.inputsettings.append(key)
         for elem in root.findall('settings'):
-            mod.usersettings.append(elem.text)
+            # legacy usersetting storage format
+            settings = fetchUserSettings(elem.text)
+            for setting in iter(settings):
+                mod.usersettings.append(setting)
+        for elem in root.findall('setting'):
+            usersetting = Usersetting(elem.get('context'), elem.text)
+            mod.usersettings.append(usersetting)
+
         mod.checkPriority()
         return mod
 
@@ -137,5 +145,8 @@ class Model:
                 ky.text = str(key)
                 ky.set('context', key.context)
         if mod.usersettings:
-            XML.SubElement(elem, 'settings').text = mod.usersettings[0]
+            for usersetting in mod.usersettings:
+                us = XML.SubElement(elem, 'setting')
+                us.text = str(usersetting)
+                us.set('context', usersetting.context)
         return root

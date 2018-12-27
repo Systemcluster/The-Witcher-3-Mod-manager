@@ -6,6 +6,7 @@ from os import path, rename, walk
 from time import strftime, gmtime
 from dataclasses import dataclass, field
 from typing import Union, List
+from configparser import ConfigParser
 
 from PyQt5.Qt import QMessageBox
 
@@ -28,7 +29,7 @@ class Mod:
     dlcs: List[str] = field(default_factory=list)
     menus: List[str] = field(default_factory=list)
     xmlkeys: List[str] = field(default_factory=list)
-    usersettings: List[str] = field(default_factory=list)
+    usersettings: List[object] = field(default_factory=list)
     inputsettings: List[object] = field(default_factory=list)
     hidden: List[str] = field(default_factory=list)
 
@@ -92,7 +93,7 @@ class Mod:
 
     def enable(self):
         if (not self.enabled):
-            self.addXmlKeys()
+            self.installXmlKeys()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu + ".disabled"):
                     rename(
@@ -113,7 +114,7 @@ class Mod:
 
     def disable(self):
         if (self.enabled):
-            self.removeXmlKeys()
+            self.uninstallXmlKeys()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu):
                     rename(
@@ -139,7 +140,8 @@ class Mod:
                 if (data.config.priority.has_section(filedata)):
                     self.priority = data.config.getPriority(filedata)
 
-    def addXmlKeys(self):
+
+    def installXmlKeys(self):
         if (self.xmlkeys):
             text = ''
             with open(data.config.menu + "/input.xml", 'r') as userfile:
@@ -163,7 +165,27 @@ class Mod:
             with open(data.config.menu + "/hidden.xml", 'w') as userfile:
                 text = userfile.write(text)
 
-    def addInputKeys(self):
+    def uninstallXmlKeys(self):
+        if (self.xmlkeys):
+            text = ''
+            with open(data.config.menu + "/input.xml", 'r') as userfile:
+                text = userfile.read()
+            for xml in iter(self.xmlkeys):
+                if xml in text:
+                    text = text.replace(xml+"\n", '')
+            with open(data.config.menu + "/input.xml", 'w') as userfile:
+                text = userfile.write(text)
+        if (self.hidden):
+            text = ''
+            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
+                text = userfile.read()
+            for xml in iter(self.hidden):
+                if xml in text:
+                    text = text.replace(xml+"\n", '')
+            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
+                text = userfile.write(text)
+
+    def installInputKeys(self) -> int:
         added = 0
         if (self.inputsettings):
             text = ''
@@ -230,35 +252,34 @@ class Mod:
                                 text)
             with open(data.config.settings + "/input.settings", 'w') as userfile:
                 text = userfile.write(text)
+        return added
 
-    def addUserSettings(self):
-        if (self.usersettings):
-            text = ''
-            with open(data.config.settings + "/user.settings", 'r') as userfile:
-                text = userfile.read()
+    def installUserSettings(self) -> int:
+        added = 0
+        if self.usersettings:
+            config = ConfigParser(strict=False)
+            config.optionxform = str
+            config.read(data.config.settings + "/user.settings")
+            for setting in iter(self.usersettings):
+                if not config.has_section(setting.context):
+                    config.add_section(setting.context)
+                config.set(setting.context, setting.option, setting.value)
+                added += 1
             with open(data.config.settings+"/user.settings", 'w') as userfile:
-                text = iter(self.usersettings)[0] + "\n" + text
-                userfile.write(text)
+                config.write(userfile, space_around_delimiters=False)
+        return added
 
-    def removeXmlKeys(self):
-        if (self.xmlkeys):
-            text = ''
-            with open(data.config.menu + "/input.xml", 'r') as userfile:
-                text = userfile.read()
-            for xml in iter(self.xmlkeys):
-                if xml in text:
-                    text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/input.xml", 'w') as userfile:
-                text = userfile.write(text)
-        if (self.hidden):
-            text = ''
-            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
-                text = userfile.read()
-            for xml in iter(self.hidden):
-                if xml in text:
-                    text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
-                text = userfile.write(text)
+    def uninstallUserSettings(self):
+        if self.usersettings:
+            config = ConfigParser(strict=False)
+            config.optionxform = str
+            config.read(data.config.settings + "/user.settings")
+            for setting in iter(self.usersettings):
+                if config.has_section(setting.context):
+                    config.remove_option(setting.context, setting.option)
+            with open(data.config.settings+"/user.settings", 'w') as userfile:
+                config.write(userfile, space_around_delimiters=False)
+
 
     def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
@@ -286,15 +307,21 @@ class Mod:
         if (self.inputsettings):
             string += "\nINPUT KEYS:\n"
             context = ''
-            for key in iter(self.inputsettings):
-                if (key.context != context):
+            for elem in iter(self.inputsettings):
+                if (elem.context != context):
                     if (context != ''):
                         string += '\n'
-                    context = key.context
+                    context = elem.context
                     string += context + '\n'
-                string += str(key) + "\n"
-
+                string += str(elem) + "\n"
         if (self.usersettings):
             string += "\nUSER SETTINGS:\n"
-            string += iter(self.usersettings)[0] + "\n"
+            context = ''
+            for elem in iter(self.usersettings):
+                if (elem.context != context):
+                    if (context != ''):
+                        string += '\n'
+                    context = elem.context
+                    string += context + '\n'
+                string += str(elem) + "\n"
         return string

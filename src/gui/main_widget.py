@@ -167,6 +167,8 @@ class CustomMainWidget(QWidget):
             self.actionEnable_Disable_Mods.setObjectName("actionEnable_Disable_Mods")
             self.actionEnable_Disable_Mods.setIconText(
                 TRANSLATE('MainWindow', "Toggle"))
+            self.actionReinstall_Mods = QAction(self.mainWindow)
+            self.actionReinstall_Mods.setObjectName("actionReinstall_Mods")
             self.actionRefresh_Mod_List = QAction(self.mainWindow)
             self.actionRefresh_Mod_List.setObjectName("actionRefresh_Mod_List")
             self.actionRefresh_Load_Order = QAction(self.mainWindow)
@@ -218,6 +220,7 @@ class CustomMainWidget(QWidget):
             self.menuFile.addSeparator()
             self.menuFile.addAction(self.actionOpenFolder)
             self.menuFile.addSeparator()
+            self.menuFile.addAction(self.actionReinstall_Mods)
             self.menuFile.addAction(self.actionRefresh_Mod_List)
             self.menuFile.addAction(self.actionRefresh_Load_Order)
             self.menuFile.addAction(self.actionSelect_All_Mods)
@@ -314,6 +317,8 @@ class CustomMainWidget(QWidget):
         self.actionRefresh_Mod_List.setText(
             TRANSLATE("MainWindow", "Refresh Mod List"))
         self.actionRefresh_Mod_List.setShortcut("F5")
+        self.actionReinstall_Mods.setText(
+            TRANSLATE("MainWindow", "Reinstall"))
         self.actionRefresh_Load_Order.setText(
             TRANSLATE("MainWindow", "Refresh Load Order"))
         self.actionRefresh_Load_Order.setShortcut("F6")
@@ -391,6 +396,7 @@ class CustomMainWidget(QWidget):
 
         self.actionInstall_Mods.triggered.connect(self.installMods)
         self.actionUninstall_Mods.triggered.connect(self.uninstallMods)
+        self.actionReinstall_Mods.triggered.connect(self.reinstallMods)
         self.actionAbout.triggered.connect(showAboutWindow)
         self.actionEnable_Disable_Mods.triggered.connect(self.enableDisableMods)
         self.actionRefresh_Mod_List.triggered.connect(self.refreshList)
@@ -525,6 +531,7 @@ class CustomMainWidget(QWidget):
         menu.addAction(self.actionOpenFolder)
         menu.addSeparator()
         menu.addAction(self.actionRename)
+        menu.addAction(self.actionReinstall_Mods)
         menu.addAction(self.actionUninstall_Mods)
         menu.addAction(self.actionEnable_Disable_Mods)
         menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
@@ -812,7 +819,6 @@ class CustomMainWidget(QWidget):
 
     def installModFiles(self, file):
         '''Installs passed list of mods'''
-        from src.core import installer
         try:
             if file:
                 progress = 0
@@ -841,7 +847,6 @@ class CustomMainWidget(QWidget):
 
     def uninstallMods(self):
         '''Uninstalls selected mods'''
-        from src.core import installer
         try:
             selected = self.getSelectedMods()
             if selected:
@@ -849,7 +854,7 @@ class CustomMainWidget(QWidget):
                     self, TRANSLATE("MainWindow", "Confirm"),
                     TRANSLATE("MainWindow", "Are you sure you want to uninstall ") \
                         + str(len(selected)) + \
-                        TRANSLATE("MainWindow", " selected mods"),
+                        TRANSLATE("MainWindow", " selected mods") + "?",
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
                     progress = 0
@@ -859,6 +864,32 @@ class CustomMainWidget(QWidget):
                         installer.uninstallMod(self.model.get(modname))
                         progress += 1
                         self.setProgress(100 * progress / progressMax)
+                    self.refreshList()
+                    self.setProgress(0)
+                    self.alertRunScriptMerger()
+        except Exception as err:
+            self.setProgress(0)
+            self.output(formatUserError(err))
+
+    def reinstallMods(self):
+        '''Reinstalls selected mods'''
+        try:
+            selected = self.getSelectedMods()
+            if selected:
+                clicked = QMessageBox.question(
+                    self, TRANSLATE("MainWindow", "Confirm"),
+                    TRANSLATE("MainWindow", "Are you sure you want to reinstall ") \
+                        + str(len(selected)) + \
+                        TRANSLATE("MainWindow", " selected mods") + "?\n\n" + \
+                        TRANSLATE("MainWindow", "This will override the mods settings with " + \
+                            "their defaults."),
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if clicked == QMessageBox.Yes:
+                    self.setProgress(20)
+                    installer = Installer(self.model, output=self.output)
+                    for modname in selected:
+                        installer.reinstallMod(self.model.get(modname))
+                    self.setProgress(100)
                     self.refreshList()
                     self.setProgress(0)
                     self.alertRunScriptMerger()

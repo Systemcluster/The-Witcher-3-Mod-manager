@@ -69,9 +69,9 @@ class Installer:
 
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
-            mod.addXmlKeys()
-            mod.addInputKeys()
-            mod.addUserSettings()
+            mod.installXmlKeys()
+            mod.installInputKeys()
+            mod.installUserSettings()
             mod.checkPriority()
 
             self.progress(0.9)
@@ -107,11 +107,27 @@ class Installer:
             self.output(TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
-            mod.removeXmlKeys()
+            mod.uninstallXmlKeys()
+            mod.uninstallUserSettings()
             self.removeModMenus(mod)
             self.removeModDlcs(mod)
             self.removeModData(mod)
             self.model.remove(mod.name)
+            return True
+        except Exception as err:
+            self.output(formatUserError(err))
+            return False
+
+    def reinstallMod(self, mod: Mod) -> bool:
+        try:
+            self.output(TRANSLATE("MainWindow", "Reinstalling") + " " + mod.name)
+            if not mod.enabled:
+                mod.enable()
+            mod.uninstallUserSettings()
+            mod.installUserSettings()
+            mod.uninstallXmlKeys()
+            mod.installXmlKeys()
+            # TODO: re-fetch and copy xml files
             return True
         except Exception as err:
             self.output(formatUserError(err))
