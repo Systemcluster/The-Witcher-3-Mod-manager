@@ -581,7 +581,7 @@ class CustomMainWidget(QWidget):
                 actionTemp.setIcon(icon)
                 actionTemp.setToolTip(selected)
                 self.toolBar.addAction(actionTemp)
-                data.config.setnovalue('TOOLBAR', selected)
+                data.config.setOption('TOOLBAR', selected)
         except Exception as err:
             self.output(formatUserError(err))
 

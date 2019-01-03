@@ -20,7 +20,7 @@ USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
 
-def fetchMod(modPath: str) -> Tuple[Mod, List[str]]:
+def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     if isArchive(modPath):
         modPath = extractArchive(modPath)
     if isValidModFolder(modPath):
