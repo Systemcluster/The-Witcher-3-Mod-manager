@@ -33,6 +33,8 @@ class Configuration:
 
         if not path.exists(self.__configPath):
             os.mkdir(self.__configPath)
+        if not path.exists(self.__userSettingsPath):
+            os.mkdir(self.__userSettingsPath)
 
         self.config.read(self.__configPath + '/config.ini')
         self.priority.read(self.__userSettingsPath + '/mods.settings')

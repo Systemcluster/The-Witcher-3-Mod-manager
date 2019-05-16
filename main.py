@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     if not Configuration.getCorrectGamePath(data.config.game):
         if not reconfigureGamePath():
-            sys.exit()
+            sys.exit(1)
 
     try:
         modModel = Model()
