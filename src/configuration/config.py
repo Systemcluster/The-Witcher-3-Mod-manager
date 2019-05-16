@@ -30,6 +30,7 @@ class Configuration:
 
         self.config = configparser.ConfigParser(allow_no_value=True, delimiters='=')
         self.priority = configparser.ConfigParser(allow_no_value=True, delimiters='=')
+        self.priority.optionxform = str
 
         if not path.exists(self.__configPath):
             os.mkdir(self.__configPath)
@@ -57,6 +58,12 @@ class Configuration:
         with open(self.__configPath + '/config.ini', 'w') as file:
             self.config.write(file, space_around_delimiters)
         with open(self.__userSettingsPath + '/mods.settings', 'w') as file:
+            # proper-case all keys
+            for section in self.priority.sections():
+                for option in self.priority.options(section):
+                    value = self.priority.get(section, option)
+                    self.priority.remove_option(section, option)
+                    self.priority.set(section, f'{option[:1].upper()}{option[1:].lower()}', value)
             self.priority.write(file, space_around_delimiters)
 
     def read(self):
