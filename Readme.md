@@ -6,7 +6,7 @@ An application to simplify installing and managing mods for the game The Witcher
 
 The Witcher 3 Mod Manager is an application that simplifies installing and managing The Witcher 3 mods.
 
-This version is a fork of the original application by stefan3372. It includes a lot of additions and usability improvements; For a list of changes see [this pull request](https://github.com/stefan3372/The-WItcher-3-Mod-manager/pull/7).
+This version is a fork of the original application by stefan3372. It includes a lot of additions and usability improvements; For a list of changes see [the release notes](https://github.com/Systemcluster/The-Witcher-3-Mod-manager/releases).
 
 Please also check out the [original version](https://github.com/stefan3372/The-WItcher-3-Mod-manager)
 and its [release on Nexusmods](https://www.nexusmods.com/witcher3/mods/2678).
