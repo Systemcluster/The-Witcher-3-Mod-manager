@@ -41,16 +41,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(str(e))
 
-    # if we're a packaged executable on Windows, elevate rights and restart
-    if not re.fullmatch(r'^.*[/\\](python[0-9]*(\.exe)?)$', sys.executable, re.RegexFlag.IGNORECASE):
-        if os.name == 'nt':
-            import ctypes
-            if not ctypes.windll.shell32.IsUserAnAdmin():
-                print('Not running with admin privileges, elevating rights...')
-                ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable, \
-                    ' '.join(['"%s"' % (x,) for x in sys.argv[1:]]), None, 1)
-                sys.exit(0)
-
     data.app = QApplication(sys.argv)
     data.config = Configuration(getDocumentsFolder())
     translateToChosenLanguage()
