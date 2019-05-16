@@ -1,10 +1,19 @@
 '''Witcher 3 Mod Manager cx_Freeze setup script'''
 # pylint: disable=wildcard-import,unused-wildcard-import
 
+# NOTE: currently requires: pip install --upgrade git+https://github.com/anthony-tuininga/cx_Freeze.git@master
 from cx_Freeze import setup, Executable
 from src.globals.constants import *
 
-FILES = ["res/", "translations/", "tools/"]
+import distutils
+import opcode
+import os
+
+# opcode is not a virtualenv module, so we can use it to find the stdlib; this is the same
+# trick used by distutils itself it installs itself into the virtualenv
+distutils_path = os.path.join(os.path.dirname(opcode.__file__), 'distutils')
+
+FILES = ["res/", "translations/", "tools/", (distutils_path, 'lib/distutils')]
 SHORTCUT_TABLE = [
     (
         "DesktopShortcut",        # Shortcut
@@ -33,6 +42,7 @@ setup(
     options={
         "build_exe": {
             "include_files": FILES,
+            "excludes": ["distutils"],
             "optimize": 2,
             "zip_include_packages": ["src"]
         },
