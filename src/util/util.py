@@ -85,11 +85,23 @@ def openUrl(url: str):
     webbrowser.open(url)
 
 def openFile(path: str):
-    if isExecutable(path):
-        directory, _ = os.path.split(path)
-        subprocess.Popen([path], cwd=directory)
-    else:
-        openFolder(path)
+    try:
+        if isExecutable(path):
+            directory, _ = os.path.split(path)
+            subprocess.Popen([path], cwd=directory)
+        elif os.path.isfile(path):
+            os.startfile(path)
+        elif os.path.isdir(path):
+            openFolder(path)
+        else:
+            raise FileNotFoundError(path)
+    except Exception as e:
+        formatUserError(str(e))
+        QMessageBox.warning(
+            None,
+            TRANSLATE("MainWindow", "Error"),
+            TRANSLATE("MainWindow", "Couln't open the file:") + " " + path + "\n"
+                + TRANSLATE("MainWindow", "Does it exist?"))
 
 def openFolder(path: str):
     while path and not os.path.isdir(path):
