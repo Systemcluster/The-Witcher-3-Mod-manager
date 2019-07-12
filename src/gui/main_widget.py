@@ -29,6 +29,7 @@ class CustomMainWidget(QWidget):
 
         self.mainWindow = parent
         self.model = model
+        self.searchString = ""
 
         try:
             self.mainWindow.setObjectName("MainWindow")
@@ -51,6 +52,11 @@ class CustomMainWidget(QWidget):
 
             self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
             self.verticalLayout_2.setObjectName("verticalLayout_2")
+
+            self.searchWidget = QLineEdit(self.centralwidget)
+            self.searchWidget.setObjectName("searchWidget")
+            self.searchWidget.setPlaceholderText(TRANSLATE("MainWindow", "Search"))
+            self.verticalLayout_2.addWidget(self.searchWidget)
 
             self.treeWidget = QTreeWidget(self.centralwidget)
             self.treeWidget.setMinimumSize(QSize(750, 500))
@@ -438,6 +444,8 @@ class CustomMainWidget(QWidget):
         self.loadOrder.itemDoubleClicked.connect(self.loadOrderDoubleClicked)
 
         self.actionAlert_to_run_Script_Merger.setChecked(data.config.allowpopups == '1')
+
+        self.searchWidget.textChanged.connect(self.setSearchString)
 
 
     def openByConfigKey(self, option):
@@ -947,6 +955,10 @@ class CustomMainWidget(QWidget):
             self.setProgress(0)
             self.output(formatUserError(err))
 
+    def setSearchString(self, searchString):
+        self.searchString = searchString
+        self.refreshList()
+
     # Helpers
     def refreshList(self):
         '''Refreshes mod list'''
@@ -955,6 +967,9 @@ class CustomMainWidget(QWidget):
             self.treeWidget.clear()
             moddata = []
             for mod in self.model.all():
+                if len(self.searchString) > 0:
+                    if self.searchString not in mod.name:
+                        continue
                 moddata += mod.files
                 modsize = 0
                 for modfile in mod.files:
