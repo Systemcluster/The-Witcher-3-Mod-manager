@@ -1,7 +1,7 @@
 '''Core functionality'''
 # pylint: disable=invalid-name,superfluous-parens,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring
 
-from os import path, listdir, remove
+from os import path, listdir, remove, mkdir
 from time import gmtime, strftime
 from shutil import rmtree
 from dataclasses import dataclass
@@ -34,8 +34,14 @@ class Installer:
         mod = None
         try:
             mod, directories, xmls = fetchMod(modPath)
+
+            if not path.isdir(data.config.mods):
+                mkdir(data.config.mods)
+            if not path.isdir(data.config.dlc):
+                mkdir(data.config.dlc)
             installed_mods = listdir(data.config.mods)
             installed_dlcs = listdir(data.config.dlc)
+
             self.progress(0.2)
             res = None
 
