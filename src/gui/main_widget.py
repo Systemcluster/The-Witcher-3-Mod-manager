@@ -968,7 +968,7 @@ class CustomMainWidget(QWidget):
             moddata = []
             for mod in self.model.all():
                 if len(self.searchString) > 0:
-                    if self.searchString not in mod.name:
+                    if self.searchString.lower() not in mod.name.lower():
                         continue
                 moddata += mod.files
                 modsize = 0
