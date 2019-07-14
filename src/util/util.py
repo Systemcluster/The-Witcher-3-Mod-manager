@@ -11,6 +11,7 @@ from shutil import copytree
 from distutils import dir_util
 from platform import python_version
 from ctypes import create_unicode_buffer, wintypes, windll
+from configparser import ConfigParser
 
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -164,3 +165,27 @@ def translateToChosenLanguage() -> bool:
     else:
         print("chosen language not found:", language, file=sys.stderr)
         return False
+
+def fixUserSettingsDuplicateBrackets():
+    '''Fix invalid section names in user.settings'''
+    try:
+        config = ConfigParser(strict=False)
+        config.optionxform = str
+        config.read(data.config.settings + "/user.settings")
+        for section in config.sections():
+            newSection = section
+            while newSection[:1] == "[":
+                newSection = newSection[1:]
+            while newSection[-1:] == "]":
+                newSection = newSection[:-1]
+            if newSection != section:
+                items = config.items(section)
+                if not config.has_section(newSection):
+                    config.add_section(newSection)
+                    for item in items:
+                        config.set(newSection, item[0], item[1])
+                config.remove_section(section)
+        with open(data.config.settings+"/user.settings", 'w') as userfile:
+            config.write(userfile, space_around_delimiters=False)
+    except:
+        print("fixing duplicate brackets failed")

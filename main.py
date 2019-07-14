@@ -57,6 +57,8 @@ if __name__ == "__main__":
             modModel = Model(ignorelock=True)
         else:
             sys.exit(1)
+    
+    fixUserSettingsDuplicateBrackets()
 
     mainWindow = CustomMainWindow()
     mainWidget = CustomMainWidget(mainWindow, modModel)

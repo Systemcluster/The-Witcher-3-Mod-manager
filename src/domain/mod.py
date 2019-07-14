@@ -322,6 +322,6 @@ class Mod:
                     if (context != ''):
                         string += '\n'
                     context = elem.context
-                    string += context + '\n'
+                    string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
         return string
