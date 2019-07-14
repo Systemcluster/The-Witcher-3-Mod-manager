@@ -5,7 +5,7 @@ import re
 from os import path, rename, walk
 from time import strftime, gmtime
 from dataclasses import dataclass, field
-from typing import Union, List
+from typing import Union, List, Optional
 from configparser import ConfigParser
 
 from PyQt5.Qt import QMessageBox
@@ -20,7 +20,7 @@ class Mod:
     '''Mod object containing all mod data'''
 
     _name: str = ''
-    _priority: str = ''
+    _priority: Optional[str] = ''
     enabled: bool = True
     date: str = ''
     source: str = ''

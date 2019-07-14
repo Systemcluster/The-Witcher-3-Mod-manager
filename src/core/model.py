@@ -1,7 +1,7 @@
 '''Mod management model'''
 # pylint: disable=invalid-name,missing-docstring,wildcard-import,unused-wildcard-import
 
-from typing import Dict, List
+from typing import Dict, List, KeysView
 from os import path
 import xml.etree.ElementTree as XML
 
@@ -35,20 +35,19 @@ class Model:
                 self.modList[mod.name] = mod
 
     def write(self) -> None:
-        root = XML.Element('installed')
+        root = XML.ElementTree(XML.Element('installed'))
         for mod in self.all():
             root = self.writeModToXml(mod, root)
-        indent(root)
-        tree = XML.ElementTree(root)
-        tree.write(self.xmlfile)
+        indent(root.getroot())
+        root.write(self.xmlfile)
 
     def get(self, modname: str) -> Mod:
         return self.modList[modname]
 
-    def list(self) -> List[str]:
+    def list(self) -> KeysView[str]:
         return self.modList.keys()
 
-    def all(self) -> List[Mod]:
+    def all(self) -> KeysView[Mod]:
         return self.modList.values()
 
     def add(self, modname: str, mod: Mod):
@@ -81,37 +80,37 @@ class Model:
         return data.config.configuration + '/installed.lock'
 
     @staticmethod
-    def populateModFromXml(mod: Mod, root: XML.ElementTree) -> Mod:
-        mod.date = root.get('date')
-        enabled = root.get('enabled')
+    def populateModFromXml(mod: Mod, root: XML.Element) -> Mod:
+        mod.date = str(root.get('date'))
+        enabled = str(root.get('enabled'))
         if enabled == 'True':
             mod.enabled = True
         else:
             mod.enabled = False
-        mod.name = root.get('name')
-        prt = root.get('priority')
+        mod.name = str(root.get('name'))
+        prt = str(root.get('priority'))
         if prt != 'Not Set':
             mod.priority = prt
         for elem in root.findall('data'):
-            mod.files.append(elem.text)
+            mod.files.append(str(elem.text))
         for elem in root.findall('dlc'):
-            mod.dlcs.append(elem.text)
+            mod.dlcs.append(str(elem.text))
         for elem in root.findall('menu'):
-            mod.menus.append(elem.text)
+            mod.menus.append(str(elem.text))
         for elem in root.findall('xmlkey'):
-            mod.xmlkeys.append(elem.text)
+            mod.xmlkeys.append(str(elem.text))
         for elem in root.findall('hidden'):
-            mod.hidden.append(elem.text)
+            mod.hidden.append(str(elem.text))
         for elem in root.findall('key'):
-            key = Key(elem.get('context'), elem.text)
+            key = Key(elem.get('context'), str(elem.text))
             mod.inputsettings.append(key)
         for elem in root.findall('settings'):
             # legacy usersetting storage format
-            settings = fetchUserSettings(elem.text)
+            settings = fetchUserSettings(str(elem.text))
             for setting in iter(settings):
                 mod.usersettings.append(setting)
         for elem in root.findall('setting'):
-            usersetting = Usersetting(elem.get('context'), elem.text)
+            usersetting = Usersetting(str(elem.get('context')), str(elem.text))
             mod.usersettings.append(usersetting)
 
         mod.checkPriority()
@@ -119,7 +118,7 @@ class Model:
 
     @staticmethod
     def writeModToXml(mod: Mod, root: XML.ElementTree) -> XML.ElementTree:
-        elem = XML.SubElement(root, 'mod')
+        elem = XML.SubElement(root.getroot(), 'mod')
         elem.set('name', mod.name)
         elem.set('enabled', str(mod.enabled))
         elem.set('date', mod.date)

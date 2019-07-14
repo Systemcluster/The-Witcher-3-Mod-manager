@@ -20,7 +20,7 @@ from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
 
 
-def formatUserError(error: str) -> str:
+def formatUserError(error: Exception) -> str:
     print(traceback.format_exc(), error, file=sys.stderr)
     if data.debug:
         return traceback.format_exc() + str(error)
@@ -57,7 +57,7 @@ def reconfigureGamePath() -> bool:
         return False
     return True
 
-def reconfigureScriptMergerPath() -> bool:
+def reconfigureScriptMergerPath():
     mergerPath = str(QFileDialog.getOpenFileName(
         None,
         TRANSLATE("MainWindow", "Select script merger .exe"),
@@ -96,7 +96,7 @@ def openFile(path: str):
         else:
             raise FileNotFoundError(path)
     except Exception as e:
-        formatUserError(str(e))
+        formatUserError(e)
         QMessageBox.warning(
             None,
             TRANSLATE("MainWindow", "Error"),

@@ -4,7 +4,7 @@
 import xml.etree.ElementTree as XML
 
 
-def indent(elem: XML.ElementTree, level: int = 0):
+def indent(elem: XML.Element, level: int = 0):
     # pylint: disable=len-as-condition
     i = "\n" + level * "    "
     if len(elem):

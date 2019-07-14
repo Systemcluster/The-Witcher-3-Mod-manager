@@ -107,7 +107,10 @@ def isTxtOrInputXmlFile(file: str) -> bool:
 def fetchRelevantDataFromInputXml(filetext: str, mod: Mod) -> str:
     getHiddenKeysIfExistFromInputXml(filetext, mod)
     searchResult = re.search(INPUT_XML_PATTERN, filetext, re.DOTALL)
-    return removeXmlComments(searchResult.group(0))
+    if searchResult:
+        return removeXmlComments(searchResult.group(0))
+    else:
+        return ""
 
 def getHiddenKeysIfExistFromInputXml(filetext: str, mod: Mod) -> None:
     temp = re.search('id="Hidden".+id="PCInput"', filetext, re.DOTALL)

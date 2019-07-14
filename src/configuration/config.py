@@ -113,7 +113,7 @@ class Configuration:
     def setOption(self, section: str, option: str):
         if not self.config.has_section(section):
             self.priority.add_section(section)
-        self.config.set(section, option)
+        self.config.set(section, option, "")
         self.write()
 
     def removeOption(self, section: str, option: str):
