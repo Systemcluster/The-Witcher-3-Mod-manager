@@ -120,7 +120,7 @@ def getHiddenKeysIfExistFromInputXml(filetext: str, mod: Mod) -> None:
         xmlkeys = XMLPATTERN.findall(hiddentext)
         for key in xmlkeys:
             key = removeMultiWhiteSpace(key)
-            mod.hidden += key
+            mod.hidden.append(key)
 
 # tested
 def removeXmlComments(filetext: str) -> str:
@@ -131,7 +131,7 @@ def removeXmlComments(filetext: str) -> str:
 def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
     xmlKeys = fetchXmlKeys(filetext)
     if "hidden" in file and xmlKeys:
-        mod.hiddenkeys += xmlKeys
+        mod.hidden += xmlKeys
     else:
         mod.xmlkeys += xmlKeys
 
@@ -168,7 +168,7 @@ def fetchXmlKeys(filetext: str) -> List[str]:
     xmlkeys = XMLPATTERN.findall(filetext)
     for key in xmlkeys:
         key = removeMultiWhiteSpace(key)
-        found += key
+        found.append(key)
     return found
 
 # tested
