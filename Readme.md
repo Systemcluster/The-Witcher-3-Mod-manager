@@ -17,3 +17,5 @@ Download and unpack the [latest release](https://github.com/Systemcluster/The-Wi
 
 A configuration file `config.ini` will be created under `Documents\The Witcher 3 Mod Manager`.  
 To run in portable mode, create a new `config.ini` in the same directory as the executable, or move the existing `config.ini` (along with the other config files) there.
+
+Note: If you encounter issues with Script Merger, update to the recent release of [Script Merger Unofficial Patch](https://www.nexusmods.com/witcher3/mods/3395).
