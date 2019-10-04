@@ -59,7 +59,7 @@ class CustomMainWidget(QWidget):
             self.verticalLayout_2.addWidget(self.searchWidget)
 
             self.treeWidget = QTreeWidget(self.centralwidget)
-            self.treeWidget.setMinimumSize(QSize(750, 500))
+            self.treeWidget.setMinimumSize(QSize(750, 350))
             self.treeWidget.setUniformRowHeights(True)
             self.treeWidget.setAnimated(True)
             self.treeWidget.setHeaderHidden(False)
