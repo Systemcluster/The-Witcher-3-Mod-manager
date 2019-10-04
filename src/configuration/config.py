@@ -54,7 +54,7 @@ class Configuration:
             self.config.add_section('TOOLBAR')
 
 
-    def write(self, space_around_delimiters: bool = True):
+    def write(self, space_around_delimiters: bool = False):
         with open(self.__configPath + '/config.ini', 'w') as file:
             self.config.write(file, space_around_delimiters)
         with open(self.__userSettingsPath + '/mods.settings', 'w') as file:
