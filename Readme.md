@@ -2,6 +2,8 @@
 
 An application to simplify installing and managing mods for the game The Witcher 3.
 
+![Example of TW3MM in use](./tw3mm.png)
+
 ## Description
 
 The Witcher 3 Mod Manager is an application that simplifies installing and managing The Witcher 3 mods.
