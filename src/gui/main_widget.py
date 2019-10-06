@@ -8,7 +8,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QTreeWidget, \
     QPushButton, QHBoxLayout, QVBoxLayout, QAction, QInputDialog, QLineEdit, \
     QFileIconProvider, QAbstractItemView, QTextEdit, QSizePolicy, QMenu, QProgressBar, \
-    QMenuBar, QToolBar, QActionGroup, QMessageBox
+    QMenuBar, QToolBar, QActionGroup, QMessageBox, QSplitter
 
 from src.globals.constants import *
 from src.globals import data
@@ -59,7 +59,7 @@ class CustomMainWidget(QWidget):
             self.verticalLayout_2.addWidget(self.searchWidget)
 
             self.treeWidget = QTreeWidget(self.centralwidget)
-            self.treeWidget.setMinimumSize(QSize(750, 350))
+            self.treeWidget.setMinimumSize(QSize(600, 350))
             self.treeWidget.setUniformRowHeights(True)
             self.treeWidget.setAnimated(True)
             self.treeWidget.setHeaderHidden(False)
@@ -70,9 +70,9 @@ class CustomMainWidget(QWidget):
             self.treeWidget.header().setSortIndicatorShown(True)
             self.treeWidget.setSortingEnabled(True)
 
-            self.horizontalLayout_tree = QHBoxLayout()
-            self.horizontalLayout_tree.setObjectName("horizontalLayout_tree")
-            self.horizontalLayout_tree.addWidget(self.treeWidget)
+            self.horizontalSplitter_tree = QSplitter()
+            self.horizontalSplitter_tree.setObjectName("horizontalSplitter_tree")
+            self.horizontalSplitter_tree.addWidget(self.treeWidget)
             self.horizontalLayout_2 = QHBoxLayout()
             self.horizontalLayout_2.setObjectName("horizontalLayout_2")
 
@@ -82,14 +82,15 @@ class CustomMainWidget(QWidget):
             self.loadOrder.setHeaderHidden(False)
             self.loadOrder.setColumnCount(2)
             self.loadOrder.setObjectName("loadOrder")
-            self.loadOrder.setMinimumWidth(250)
-            self.loadOrder.setMaximumWidth(350)
+            self.loadOrder.setMinimumWidth(200)
             self.loadOrder.setSortingEnabled(False)
 
-            self.horizontalLayout_tree.addWidget(self.loadOrder)
-            self.horizontalLayout_tree.setStretch(0, 3)
-            self.horizontalLayout_tree.setStretch(1, 1)
-            self.verticalLayout_2.addLayout(self.horizontalLayout_tree)
+            self.horizontalSplitter_tree.addWidget(self.loadOrder)
+            self.horizontalSplitter_tree.setCollapsible(0, False)
+            self.horizontalSplitter_tree.setCollapsible(1, True)
+            self.horizontalSplitter_tree.setStretchFactor(0, 3)
+            self.horizontalSplitter_tree.setStretchFactor(1, 1)
+            self.verticalLayout_2.addWidget(self.horizontalSplitter_tree)
 
             self.textEdit = QTextEdit(self.centralwidget)
             self.textEdit.setMaximumSize(QSize(16777215, 16777215))
@@ -106,8 +107,7 @@ class CustomMainWidget(QWidget):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.pushButton_4.sizePolicy().hasHeightForWidth())
             self.pushButton_4.setSizePolicy(sizePolicy)
-            self.pushButton_4.setMinimumSize(QSize(250, 50))
-            self.pushButton_4.setMaximumSize(QSize(350, 16777215))
+            self.pushButton_4.setMinimumSize(QSize(100, 50))
             self.pushButton_4.setObjectName("pushButton_4")
             self.verticalLayout.addWidget(self.pushButton_4)
             self.pushButton_5 = QPushButton(self.centralwidget)
@@ -116,8 +116,7 @@ class CustomMainWidget(QWidget):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
             self.pushButton_5.setSizePolicy(sizePolicy)
-            self.pushButton_5.setMinimumSize(QSize(250, 50))
-            self.pushButton_5.setMaximumSize(QSize(350, 16777215))
+            self.pushButton_5.setMinimumSize(QSize(100, 50))
             self.pushButton_5.setObjectName("pushButton_5")
             self.verticalLayout.addWidget(self.pushButton_5)
             self.horizontalLayout_2.addLayout(self.verticalLayout)
