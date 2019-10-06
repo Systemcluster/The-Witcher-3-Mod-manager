@@ -7,8 +7,7 @@ import re
 import traceback
 import webbrowser
 import subprocess
-from shutil import copytree
-from distutils import dir_util
+from shutil import copytree, rmtree
 from platform import python_version
 from ctypes import create_unicode_buffer, wintypes, windll
 from configparser import ConfigParser
@@ -111,10 +110,13 @@ def openFolder(path: str):
 
 def copyFolder(src, dst):
     '''Copy folder from src to dst'''
-    if (not os.path.exists(dst)):
-        copytree(src, dst)
-    else:
-        dir_util.copy_tree(src, dst)
+    dst = os.path.normpath(dst)
+    src = os.path.normpath(src)
+    print(f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
+    rmtree(dst, ignore_errors=True)
+    while os.path.isdir(dst):
+        pass
+    copytree(src, dst)
 
 def restartProgram():
     '''Restarts the program'''

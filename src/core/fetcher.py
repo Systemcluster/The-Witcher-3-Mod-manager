@@ -49,6 +49,9 @@ def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
 def isDataFolder(directory: str) -> bool:
     return bool(re.match("^mod.*", directory, re.IGNORECASE))
 
+def isModFolder(directory: str, parent: str):
+    return isDataFolder(directory) and not bool(re.match("^dlc[s]?$", parent, re.IGNORECASE))
+
 # tested
 def containContentFolder(directory: str) -> bool:
     return "content" in (dr.lower() for dr in getAllFoldersFromDirectory(directory))
@@ -63,9 +66,10 @@ def getAllFilesFromDirectory(directory: str) -> List[str]:
 
 # tested
 def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
-    dirName = path.split(current_dir)[1]
+    root, dirName = path.split(current_dir)
+    _, parent = path.split(root)
     if containContentFolder(current_dir):
-        if isDataFolder(dirName):
+        if isModFolder(dirName, parent):
             mod.files.append(dirName)
         else:
             mod.dlcs.append(dirName)
@@ -184,6 +188,8 @@ def extractArchive(modPath: str) -> str:
     extractedDir = data.config.extracted
     if (path.exists(extractedDir)):
         files.rmtree(extractedDir)
+        while path.isdir(extractedDir):
+            pass
     mkdir(extractedDir)
     subprocess.call(r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"')
     return extractedDir

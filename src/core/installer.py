@@ -46,23 +46,25 @@ class Installer:
             res = None
 
             for index, directory in enumerate(directories):
-                _, name = path.split(directory)
-                basepath = data.config.mods if isDataFolder(name) else data.config.dlc
+                root, name = path.split(directory)
+                _, parent = path.split(root)
+                modfolder = isModFolder(name, parent)
+                basepath = data.config.mods if modfolder else data.config.dlc
                 datapath = basepath + "/" + name
                 if (name in installed_mods) or (name in installed_dlcs):
                     if self.ask:
-                        res = MessageOverwrite(name)
+                        res = MessageOverwrite(name, 'Mod' if modfolder else 'DLC')
                     if res == QMessageBox.Yes:
-                        files.rmtree(datapath)
+                        copyFolder(directory, datapath)
                     elif res == QMessageBox.YesToAll:
-                        files.rmtree(datapath)
                         self.ask = False
+                        copyFolder(directory, datapath)
+                    elif res == QMessageBox.No:
+                        pass
                     elif res == QMessageBox.NoToAll:
                         self.ask = False
-                    elif res == QMessageBox.Cancel:
-                        self.uninstallMod(mod)
-                        return
-                copyFolder(directory, datapath)
+                else:
+                    copyFolder(directory, datapath)
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -106,6 +108,7 @@ class Installer:
         finally:
             if path.exists(data.config.extracted):
                 rmtree(data.config.extracted)
+        return True
 
     def uninstallMod(self, mod: Mod) -> bool:
         '''Uninstalls given mod'''

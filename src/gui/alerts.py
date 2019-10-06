@@ -19,17 +19,17 @@ def MessageRebindedKeys(key, temp):
         QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
         QMessageBox.Yes)
 
-def MessageOverwrite(modname):
+def MessageOverwrite(modname, modtype):
     '''Shows dialog to let user decide what to do if mod is already installed'''
     return QMessageBox.question(
         None,
-        TRANSLATE("MainWindow", "Mod allready installed"),
-        "'" + modname + "' " + TRANSLATE(
+        TRANSLATE("MainWindow", "Mod allready installed."),
+        str(modtype) + " '" + str(modname) + "' " + TRANSLATE(
             "MainWindow",
-            "is already installed\nDo you want to remove old one first?"),
+            "is already installed\nDo you want to overwrite the existing files?"),
         QMessageBox.Yes | QMessageBox.YesToAll | \
-            QMessageBox.No | QMessageBox.NoToAll | QMessageBox.Cancel,
-        QMessageBox.No)
+            QMessageBox.No | QMessageBox.NoToAll,
+        QMessageBox.Yes)
 
 def MessageAlertScript():
     '''Shows dialog to let user know he/she should run script merger \

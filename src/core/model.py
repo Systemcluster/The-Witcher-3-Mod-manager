@@ -1,7 +1,7 @@
 '''Mod management model'''
 # pylint: disable=invalid-name,missing-docstring,wildcard-import,unused-wildcard-import
 
-from typing import Dict, List, KeysView
+from typing import Dict, List, KeysView, ValuesView
 from os import path
 import xml.etree.ElementTree as XML
 
@@ -47,14 +47,15 @@ class Model:
     def list(self) -> KeysView[str]:
         return self.modList.keys()
 
-    def all(self) -> KeysView[Mod]:
+    def all(self) -> ValuesView[Mod]:
         return self.modList.values()
 
     def add(self, modname: str, mod: Mod):
         self.modList[modname] = mod
 
     def remove(self, modname: str):
-        del self.modList[modname]
+        if modname in self.modList:
+            del self.modList[modname]
 
     def rename(self, modname: str, newname: str) -> bool:
         if not modname in self.modList:
