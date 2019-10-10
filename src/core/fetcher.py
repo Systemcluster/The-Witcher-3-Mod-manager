@@ -196,5 +196,10 @@ def extractArchive(modPath: str) -> str:
         while path.isdir(extractedDir):
             pass
     mkdir(extractedDir)
-    subprocess.call(r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"')
+    si = subprocess.STARTUPINFO()
+    CREATE_NO_WINDOW = 0x08000000
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    subprocess.call(
+        r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"',
+        creationflags=CREATE_NO_WINDOW, startupinfo=si)
     return extractedDir
