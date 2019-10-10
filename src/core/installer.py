@@ -5,7 +5,7 @@ from os import path, listdir, remove, mkdir
 from time import gmtime, strftime
 from shutil import rmtree
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Any
 
 from PyQt5.QtWidgets import QMessageBox
 from src.globals import data
@@ -22,8 +22,9 @@ class Installer:
 
     model: Model
     ask: bool = True
-    progress: Callable[[float], any] = lambda _: None
-    output: Callable[[str], any] = lambda _: None
+
+    progress: Callable[[float], Any] = lambda _: None
+    output: Callable[[str], Any] = lambda _: None
 
     def installMod(self, modPath: str) -> bool:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
@@ -32,6 +33,7 @@ class Installer:
         self.output(TRANSLATE("MainWindow", "Installing") + " " + Mod.formatName(modname))
         self.progress(0.1)
         mod = None
+        result = True
         try:
             mod, directories, xmls = fetchMod(modPath)
 
@@ -49,22 +51,27 @@ class Installer:
                 root, name = path.split(directory)
                 _, parent = path.split(root)
                 modfolder = isModFolder(name, parent)
-                basepath = data.config.mods if modfolder else data.config.dlc
-                datapath = basepath + "/" + name
-                if (name in installed_mods) or (name in installed_dlcs):
-                    if self.ask:
-                        res = MessageOverwrite(name, 'Mod' if modfolder else 'DLC')
-                    if res == QMessageBox.Yes:
+                dlcfolder = isDlcFolder(name, parent)
+                basepath = data.config.mods if modfolder else (data.config.dlc if dlcfolder else None)
+                if basepath is not None:
+                    datapath = basepath + "/" + name
+                    if (modfolder and name in installed_mods) or (dlcfolder and name in installed_dlcs):
+                        if self.ask:
+                            res = MessageOverwrite(name, 'Mod' if modfolder else 'DLC')
+                        if res == QMessageBox.Yes:
+                            copyFolder(directory, datapath)
+                        elif res == QMessageBox.YesToAll:
+                            self.ask = False
+                            copyFolder(directory, datapath)
+                        elif res == QMessageBox.No:
+                            pass
+                        elif res == QMessageBox.NoToAll:
+                            self.ask = False
+                    else:
                         copyFolder(directory, datapath)
-                    elif res == QMessageBox.YesToAll:
-                        self.ask = False
-                        copyFolder(directory, datapath)
-                    elif res == QMessageBox.No:
-                        pass
-                    elif res == QMessageBox.NoToAll:
-                        self.ask = False
-                else:
-                    copyFolder(directory, datapath)
+                elif containContentFolder(directory):
+                    self.output(f"Detected data folder but could not recognize it as part of a mod or dlc.")
+                    self.output(f"  Some manual installation may be required.")
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -99,16 +106,16 @@ class Installer:
                 self.model.add(mod.name, mod)
 
             self.progress(1.0)
-            return True
+            result = True
         except Exception as err:
             self.output(formatUserError(err))
             if mod:
                 self.uninstallMod(mod)
-            return False
+            result = False
         finally:
             if path.exists(data.config.extracted):
                 rmtree(data.config.extracted)
-        return True
+        return result
 
     def uninstallMod(self, mod: Mod) -> bool:
         '''Uninstalls given mod'''

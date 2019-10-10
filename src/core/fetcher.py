@@ -25,7 +25,7 @@ def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
         modPath = extractArchive(modPath)
     if isValidModFolder(modPath):
         return fetchModFromDirectory(modPath)
-    raise IOError("not a valid mod")
+    raise IOError("Not detected as a valid mod (manual installation may be required)")
 
 # tested
 def isValidModFolder(modPath: str) -> bool:
@@ -52,9 +52,14 @@ def isDataFolder(directory: str) -> bool:
 def isModFolder(directory: str, parent: str):
     return isDataFolder(directory) and not bool(re.match("^dlc[s]?$", parent, re.IGNORECASE))
 
+def isDlcFolder(directory: str, parent: str):
+    return isDataFolder(directory) and bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or \
+        bool(re.match("^dlc", directory, re.IGNORECASE))
+
 # tested
 def containContentFolder(directory: str) -> bool:
-    return "content" in (dr.lower() for dr in getAllFoldersFromDirectory(directory))
+    dr = getAllFoldersFromDirectory(directory)
+    return "content" in (dr.lower() for dr in dr)
 
 # tested
 def getAllFoldersFromDirectory(directory: str) -> List[str]:
@@ -71,7 +76,7 @@ def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
     if containContentFolder(current_dir):
         if isModFolder(dirName, parent):
             mod.files.append(dirName)
-        else:
+        elif isDlcFolder(dirName, parent):
             mod.dlcs.append(dirName)
         return True
     return False
