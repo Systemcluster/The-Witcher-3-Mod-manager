@@ -3,7 +3,7 @@
 
 from PyQt5.QtCore import QCoreApplication
 
-VERSION = "0.7.8"
+VERSION = "0.7.9"
 TITLE = "The Witcher 3 Mod Manager"
 AUTHORS = ["Stefan Kostic (stefan3372)", "Christian Sdunek (Systemcluster)"]
 AUTHORS_MAIL = ["stekos@live.com", "cs@systemcluster.me"]
