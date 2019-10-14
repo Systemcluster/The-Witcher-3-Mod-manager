@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from src.globals import data
 from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
+from src.gui.alerts import MessageCouldntOpenFile
 
 
 def formatUserError(error: Exception) -> str:
@@ -96,12 +97,7 @@ def openFile(path: str):
         else:
             raise FileNotFoundError(path)
     except Exception as e:
-        formatUserError(e)
-        QMessageBox.warning(
-            None,
-            TRANSLATE("MainWindow", "Error"),
-            TRANSLATE("MainWindow", "Couln't open the file:") + " " + path + "\n"
-                + TRANSLATE("MainWindow", "Does it exist?"))
+        MessageCouldntOpenFile(path, formatUserError(e))
 
 def openFolder(path: str):
     while path and not os.path.isdir(path):

@@ -73,3 +73,17 @@ def MessageInitializationFailed(error: str):
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{error}")
     return message.exec_()
+
+def MessageCouldntOpenFile(file: str, error: str):
+    '''Shows alert that a file couldn't be opened'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(TRANSLATE("MainWindow", "Couldn't Open File"))
+    message.setText(
+        TRANSLATE("MainWindow", "Couln't open the file:<br>") +
+        f"<code>{file}</code><br><br>" +
+        TRANSLATE("MainWindow", "Does it exist?"))
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    message.setDetailedText(f"{error}")
+    return message.exec_()
