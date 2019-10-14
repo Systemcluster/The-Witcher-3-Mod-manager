@@ -10,6 +10,7 @@ mypy = "*"
 [packages]
 fasteners = ">=0.14"
 PyQt5 = ">=5.12"
+watchdog = "*"
 
 [requires]
 python_version = "3.7"

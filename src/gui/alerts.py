@@ -1,6 +1,7 @@
 '''Alert Dialogs'''
 # pylint: disable=invalid-name,wildcard-import,unused-wildcard-import
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
 
 from src.globals.constants import *
@@ -58,3 +59,17 @@ def MessageAlertOtherInstance():
             "\n"
             "Do you want to continue anyway?"),
         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+def MessageInitializationFailed(error: str):
+    '''Shows alert that application initialization failed'''
+    message = QMessageBox(None)
+    message.setWindowTitle(TRANSLATE("MainWindow", "Startup Error"))
+    message.setText(TRANSLATE(
+        "MainWindow",
+        "<b>Initialization of the mod list failed.</b><br><br>"
+        "It is possible that you have an error in your configuration file <code>installed.xml</code>.<br>"
+        "Detailed error below."))
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    message.setDetailedText(f"{error}")
+    return message.exec_()

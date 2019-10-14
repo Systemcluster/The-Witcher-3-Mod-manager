@@ -57,13 +57,17 @@ if __name__ == "__main__":
             modModel = Model(ignorelock=True)
         else:
             sys.exit(1)
-    
+    except Exception as e:
+        MessageInitializationFailed(formatUserError(e))
+        sys.exit(1)
+
     fixUserSettingsDuplicateBrackets()
 
     mainWindow = CustomMainWindow()
     mainWidget = CustomMainWidget(mainWindow, modModel)
     mainWindow.dropCallback = mainWidget.installModFiles
     data.app.setWindowIcon(getIcon("w3a.ico"))
+
     mainWindow.show()
 
     ret = data.app.exec_()

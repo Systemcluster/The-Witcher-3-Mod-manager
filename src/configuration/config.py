@@ -37,8 +37,8 @@ class Configuration:
         if not path.exists(self.__userSettingsPath):
             os.mkdir(self.__userSettingsPath)
 
-        self.config.read(self.__configPath + '/config.ini')
-        self.priority.read(self.__userSettingsPath + '/mods.settings')
+        self.readConfig()
+        self.readPriority()
 
         gamePath = self.getCorrectGamePath(gamePath)
         if gamePath:
@@ -53,6 +53,11 @@ class Configuration:
         if not self.config.has_section('TOOLBAR'):
             self.config.add_section('TOOLBAR')
 
+    def readPriority(self):
+        self.priority.read(self.__userSettingsPath + '/mods.settings')
+
+    def readConfig(self):
+        self.config.read(self.__configPath + '/config.ini')
 
     def write(self, space_around_delimiters: bool = False):
         with open(self.__configPath + '/config.ini', 'w') as file:
@@ -68,9 +73,6 @@ class Configuration:
                     priority.set(section, f'{option[:1].upper()}{option[1:].lower()}', value)
             priority.write(file, space_around_delimiters)
 
-    def read(self):
-        with open(self.__configPath + '/config.ini', 'r') as file:
-            return file.read()
 
     def get(self, section: str, option: str):
         if self.config.has_option(section, option):

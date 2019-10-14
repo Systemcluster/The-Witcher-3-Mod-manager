@@ -191,3 +191,18 @@ def fixUserSettingsDuplicateBrackets():
             config.write(userfile, space_around_delimiters=False)
     except:
         print("fixing duplicate brackets failed")
+
+
+def throttle(ms: int):
+    """Decorator ensures function that can only be called once every `ms` milliseconds"""
+    from datetime import datetime, timedelta
+    def decorate(f):
+        last_modified = None
+        def wrapped(*args, **kwargs):
+            nonlocal last_modified
+            if not last_modified or datetime.now() - last_modified > timedelta(milliseconds=ms):
+                result = f(*args, **kwargs)
+                last_modified = datetime.now()
+                return result
+        return wrapped
+    return decorate
