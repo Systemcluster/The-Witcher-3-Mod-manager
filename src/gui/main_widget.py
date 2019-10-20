@@ -681,6 +681,7 @@ class CustomMainWidget(QWidget):
             elif item.checkState(column) == Qt.Unchecked:
                 self.model.get(item.text(1)).disable()
             self.refreshLoadOrder()
+            self.alertRunScriptMerger()
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -960,6 +961,8 @@ class CustomMainWidget(QWidget):
         '''Changes checked state of the selected mods'''
         try:
             selected = self.treeWidget.selectedItems()
+            if not selected:
+                return
             self.setProgress(0)
             progress = 0
             progressMax = len(selected)
@@ -1185,6 +1188,7 @@ class CustomMainWidget(QWidget):
         action.triggered.connect(lambda: self.changeLanguage(ts))
         return action
 
+    @throttle(2000)
     def alertRunScriptMerger(self):
         '''Shows previous dialog based on settings'''
         if (data.config.allowpopups == "1"):
