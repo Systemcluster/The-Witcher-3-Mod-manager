@@ -30,8 +30,10 @@ def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
 # tested
 def isValidModFolder(modPath: str) -> bool:
     for current_dir, _, _ in walk(modPath):
-        if isDataFolder(path.split(current_dir)[1]) \
-        and containContentFolder(current_dir):
+        if containContentFolder(current_dir) and (
+                isModFolder(path.split(current_dir)[1], path.split(current_dir)[0]) or
+                isDlcFolder(path.split(current_dir)[1], path.split(current_dir)[0])
+        ):
             return True
     return False
 

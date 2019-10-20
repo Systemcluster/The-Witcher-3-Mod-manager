@@ -78,12 +78,13 @@ class Installer:
                 _, name = path.split(xml)
                 files.copy(xml, data.config.menu+"/"+name)
 
-            self.progress(0.8)
-            if (not mod.files):
-                raise Exception('No data foind in ' + "'"+mod.name+"'")
-
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
+            self.progress(0.8)
+
+            if (not mod.files and not mod.dlcs):
+                raise Exception('No data found in ' + "'"+mod.name+"'")
+
             mod.installXmlKeys()
             mod.installInputKeys()
             mod.installUserSettings()
