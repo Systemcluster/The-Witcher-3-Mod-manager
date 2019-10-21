@@ -26,9 +26,10 @@ class Installer:
     progress: Callable[[float], Any] = lambda _: None
     output: Callable[[str], Any] = lambda _: None
 
-    def installMod(self, modPath: str) -> bool:
+    def installMod(self, modPath: str) -> Tuple[bool, int]:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
 
+        installCount = 0
         modname = path.split(modPath)[1]
         self.output(TRANSLATE("MainWindow", "Installing") + " " + Mod.formatName(modname))
         self.progress(0.1)
@@ -63,18 +64,25 @@ class Installer:
                             res = MessageOverwrite(name, 'Mod' if modfolder else 'DLC')
                         if res == QMessageBox.Yes:
                             copyFolder(directory, datapath)
+                            installCount += 1
                         elif res == QMessageBox.YesToAll:
                             self.ask = False
                             copyFolder(directory, datapath)
+                            installCount += 1
                         elif res == QMessageBox.No:
                             pass
                         elif res == QMessageBox.NoToAll:
                             self.ask = False
                     else:
                         copyFolder(directory, datapath)
+                        installCount += 1
                 elif containContentFolder(directory):
-                    self.output(f"Detected data folder but could not recognize it as part of a mod or dlc.")
-                    self.output(f"  Some manual installation may be required.")
+                    try:
+                        ddir = directory[len(data.config.extracted)+1:]
+                    except:
+                        ddir = ''
+                    self.output(f"Detected data folder but could not recognize it as part of a mod or dlc{': '+ddir if ddir else ''}")
+                    self.output(f"  Some manual installation may be required, please check the mod to make sure.")
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -116,10 +124,11 @@ class Installer:
             if mod:
                 self.uninstallMod(mod)
             result = False
+            installCount = 0
         finally:
             if path.exists(data.config.extracted):
                 rmtree(data.config.extracted)
-        return result
+        return result, installCount
 
     def uninstallMod(self, mod: Mod) -> bool:
         '''Uninstalls given mod'''

@@ -851,6 +851,8 @@ class CustomMainWidget(QWidget):
     def installModFiles(self, file):
         '''Installs passed list of mods'''
         try:
+            successCount = 0
+            errorCount = 0
             if file:
                 progress = 0
                 progressMax = len(file)
@@ -862,7 +864,11 @@ class CustomMainWidget(QWidget):
                     # pylint: disable=cell-var-from-loop
                     installer.progress = lambda p: \
                         self.setProgress(progressStart + progressCur * p)
-                    installer.installMod(mod)
+                    result, count = installer.installMod(mod)
+                    if result:
+                        successCount += count
+                    else:
+                        errorCount += 1
                     progress += 1
                     self.setProgress(100 * progress / progressMax)
                 lastpath, _ = path.split(file[0])
@@ -875,6 +881,8 @@ class CustomMainWidget(QWidget):
         except Exception as err:
             self.setProgress(0)
             self.output(formatUserError(err))
+            errorCount += 1
+        self.output(f'> Installed {successCount} mods or dlcs ({errorCount} errors)')
 
     def uninstallMods(self):
         '''Uninstalls selected mods'''
