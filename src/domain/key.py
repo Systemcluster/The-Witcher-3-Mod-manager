@@ -8,6 +8,7 @@ class Key:
         self.context = context
 
         self.key, action = key.split('=(')
+
         if ("Pad" in self.key):
             self.type = 'controller'
         elif ('PS4' in self.key):
@@ -18,6 +19,8 @@ class Key:
         action = action[:-1]
         values = action.split(',')
         self.action = values[0][7:]
+        if self.action[-1] == ")":
+            self.action = self.action[:-1]
 
         self.duration = ''
         self.axis = ''
@@ -35,5 +38,6 @@ class Key:
                 string += ",State=Duration,IdleTime=" + self.duration
             else:
                 string += ",State=Axis,Value=" + self.axis
-        string += ")"
+        if string[-1] != ")":
+            string += ")"
         return string

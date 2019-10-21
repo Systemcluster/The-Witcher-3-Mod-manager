@@ -3,7 +3,7 @@
 
 from os import path, listdir, remove, mkdir
 from time import gmtime, strftime
-from shutil import rmtree
+from shutil import rmtree, copyfile
 from dataclasses import dataclass
 from typing import Callable, Any
 
@@ -36,6 +36,9 @@ class Installer:
         result = True
         try:
             mod, directories, xmls = fetchMod(modPath)
+
+            mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+            mod.name = modname
 
             if not path.isdir(data.config.mods):
                 mkdir(data.config.mods)
@@ -76,10 +79,10 @@ class Installer:
 
             for xml in xmls:
                 _, name = path.split(xml)
-                files.copy(xml, data.config.menu+"/"+name)
+                if not path.isdir(data.config.menu):
+                    os.makedirs(data.config.menu)
+                copyfile(xml, data.config.menu+"/"+name)
 
-            mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            mod.name = modname
             self.progress(0.8)
 
             if (not mod.files and not mod.dlcs):
