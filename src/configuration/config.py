@@ -54,6 +54,7 @@ class Configuration:
             self.config.add_section('TOOLBAR')
 
     def readPriority(self):
+        self.priority.clear()
         self.priority.read(self.__userSettingsPath + '/mods.settings')
 
     def readConfig(self):
