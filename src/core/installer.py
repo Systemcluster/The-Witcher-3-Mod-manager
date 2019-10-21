@@ -104,7 +104,7 @@ class Installer:
             self.progress(0.9)
             exists = False
             for installed in self.model.all():
-                if mod.files == installed.files:
+                if mod.files == installed.files and mod.name == installed.name:
                     installed.usersettings = mod.usersettings
                     installed.hidden = mod.hidden
                     installed.xmlkeys = mod.xmlkeys
