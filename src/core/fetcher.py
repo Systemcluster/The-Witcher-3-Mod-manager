@@ -99,21 +99,21 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
                 if file == "input.xml":
                     text = fetchRelevantDataFromInputXml(text, mod)
                 fetchAllXmlKeys(file, text, mod)
-                temp = fetchInputSettings(text)
-                if temp:
-                    mod.inputsettings += temp
-                temp = fetchUserSettings(text)
-                if temp:
-                    mod.usersettings += temp
+                inpt = fetchInputSettings(text)
+                if inpt:
+                    mod.inputsettings += inpt
+                usrs = fetchUserSettings(text)
+                if usrs:
+                    mod.usersettings += usrs
     return mod_xmls
 
 # tested
 def isMenuXmlFile(file: str) -> bool:
-    return bool(re.match(r".+\.xml$", file) and not re.match(r"^input\.xml$", file))
+    return bool(re.match(r".+\.xml$", file) and not re.match(r"^input\.xml$", file, re.IGNORECASE))
 
 # tested
 def isTxtOrInputXmlFile(file: str) -> bool:
-    return bool(re.match(r"(.+\.txt)|(input\.xml)$", file))
+    return bool(re.match(r"(.+(?<!readme)\.txt)|(input\.xml)$", file, re.IGNORECASE))
 
 def fetchRelevantDataFromInputXml(filetext: str, mod: Mod) -> str:
     getHiddenKeysIfExistFromInputXml(filetext, mod)

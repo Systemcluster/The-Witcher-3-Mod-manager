@@ -19,6 +19,7 @@ class Key:
         action = action[:-1]
         values = action.split(',')
         self.action = values[0][7:]
+        self.action = self.action.strip()
         if self.action[-1] == ")":
             self.action = self.action[:-1]
 
@@ -38,6 +39,7 @@ class Key:
                 string += ",State=Duration,IdleTime=" + self.duration
             else:
                 string += ",State=Axis,Value=" + self.axis
+        string = string.strip()
         if string[-1] != ")":
             string += ")"
         return string
