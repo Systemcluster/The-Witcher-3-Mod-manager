@@ -13,6 +13,7 @@ fasteners = ">=0.14"
 PyQt5 = ">=5.12"
 watchdog = "*"
 pywin32 = "==224"
+cchardet = "*"
 
 [requires]
 python_version = "3.7"

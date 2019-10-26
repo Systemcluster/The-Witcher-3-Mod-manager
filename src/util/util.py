@@ -11,6 +11,7 @@ from shutil import copytree, rmtree
 from platform import python_version
 from ctypes import create_unicode_buffer, wintypes, windll
 from configparser import ConfigParser
+import cchardet
 
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -164,12 +165,19 @@ def translateToChosenLanguage() -> bool:
         print("chosen language not found:", language, file=sys.stderr)
         return False
 
+def detectEncoding(path: str) -> str:
+    with open(path, 'rb') as file:
+        text = file.read()
+        detected = cchardet.detect(text)
+        print("detected", path, "as", detected)
+        return detected["encoding"]
+
 def fixUserSettingsDuplicateBrackets():
     '''Fix invalid section names in user.settings'''
     try:
         config = ConfigParser(strict=False)
         config.optionxform = str
-        config.read(data.config.settings + "/user.settings")
+        config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
         for section in config.sections():
             newSection = section
             while newSection[:1] == "[":
@@ -183,7 +191,7 @@ def fixUserSettingsDuplicateBrackets():
                     for item in items:
                         config.set(newSection, item[0], item[1])
                 config.remove_section(section)
-        with open(data.config.settings+"/user.settings", 'w') as userfile:
+        with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
             config.write(userfile, space_around_delimiters=False)
     except:
         print("fixing duplicate brackets failed")

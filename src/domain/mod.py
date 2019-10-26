@@ -144,52 +144,52 @@ class Mod:
     def installXmlKeys(self):
         if (self.xmlkeys):
             text = ''
-            with open(data.config.menu + "/input.xml", 'r') as userfile:
+            with open(data.config.menu + "/input.xml", 'r', encoding=detectEncoding(data.config.menu + "/input.xml")) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if (not xml in text):
                     text = text.replace(
                         '<!-- [BASE_CharacterMovement] -->',
                         xml+'\n<!-- [BASE_CharacterMovement] -->')
-            with open(data.config.menu + "/input.xml", 'w') as userfile:
+            with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
                 text = userfile.write(text)
         if (self.hidden):
             text = ''
-            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'r', encoding=detectEncoding(data.config.menu + "/hidden.xml")) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if (not xml in text):
                     text = text.replace(
                         '</VisibleVars>',
                         xml+'\n</VisibleVars>')
-            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
                 text = userfile.write(text)
 
     def uninstallXmlKeys(self):
         if (self.xmlkeys):
             text = ''
-            with open(data.config.menu + "/input.xml", 'r') as userfile:
+            with open(data.config.menu + "/input.xml", 'r', encoding=detectEncoding(data.config.menu + "/input.xml")) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if xml in text:
                     text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/input.xml", 'w') as userfile:
+            with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
                 text = userfile.write(text)
         if (self.hidden):
             text = ''
-            with open(data.config.menu + "/hidden.xml", 'r') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'r', encoding=detectEncoding(data.config.menu + "/hidden.xml")) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if xml in text:
                     text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/hidden.xml", 'w') as userfile:
+            with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
                 text = userfile.write(text)
 
     def installInputKeys(self) -> int:
         added = 0
         if (self.inputsettings):
             text = ''
-            with open(data.config.settings + "/input.settings", 'r') as userfile:
+            with open(data.config.settings + "/input.settings", 'r', encoding=detectEncoding(data.config.settings + "/input.settings")) as userfile:
                 text = userfile.read()
             ask = True
             keep = True
@@ -250,7 +250,7 @@ class Mod:
                                 r"\[" + keycontext + r"\]\n",
                                 r"[" + keycontext + r"]\n" + str(key) + r"\n",
                                 text)
-            with open(data.config.settings + "/input.settings", 'w') as userfile:
+            with open(data.config.settings + "/input.settings", 'w', encoding="utf-16") as userfile:
                 text = userfile.write(text)
         return added
 
@@ -259,13 +259,13 @@ class Mod:
         if self.usersettings:
             config = ConfigParser(strict=False)
             config.optionxform = str
-            config.read(data.config.settings + "/user.settings")
+            config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
             for setting in iter(self.usersettings):
                 if not config.has_section(setting.context):
                     config.add_section(setting.context)
                 config.set(setting.context, setting.option, setting.value)
                 added += 1
-            with open(data.config.settings+"/user.settings", 'w') as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
                 config.write(userfile, space_around_delimiters=False)
         return added
 
@@ -273,11 +273,11 @@ class Mod:
         if self.usersettings:
             config = ConfigParser(strict=False)
             config.optionxform = str
-            config.read(data.config.settings + "/user.settings")
+            config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
             for setting in iter(self.usersettings):
                 if config.has_section(setting.context):
                     config.remove_option(setting.context, setting.option)
-            with open(data.config.settings+"/user.settings", 'w') as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
                 config.write(userfile, space_around_delimiters=False)
 
 

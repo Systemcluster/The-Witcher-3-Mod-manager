@@ -9,7 +9,7 @@ from typing import Union
 
 from PyQt5.QtWidgets import QMainWindow, QWidget
 
-from src.util.util import normalizePath
+from src.util.util import normalizePath, detectEncoding
 
 class Configuration:
     '''Configuration'''
@@ -17,8 +17,8 @@ class Configuration:
     __configPath: str = ''
     __userSettingsPath: str = ''
 
-    config: configparser.ConfigParser = None
-    priority: configparser.ConfigParser = None
+    config: configparser.ConfigParser = None  # type: ignore
+    priority: configparser.ConfigParser = None  # type: ignore
 
     def __init__(self, documentsPath: str, gamePath: str = ''):
         self.documents = documentsPath
@@ -55,18 +55,20 @@ class Configuration:
 
     def readPriority(self):
         self.priority.clear()
-        self.priority.read(self.__userSettingsPath + '/mods.settings')
+        file = self.__userSettingsPath + '/mods.settings'
+        self.priority.read(file, encoding=detectEncoding(file))
 
     def readConfig(self):
-        self.config.read(self.__configPath + '/config.ini')
+        file = self.__configPath + '/config.ini'
+        self.config.read(file, encoding=detectEncoding(file))
 
     def write(self, space_around_delimiters: bool = False):
-        with open(self.__configPath + '/config.ini', 'w') as file:
+        with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
             self.config.write(file, space_around_delimiters)
-        with open(self.__userSettingsPath + '/mods.settings', 'w') as file:
+        with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
             # proper-case all keys
             priority = deepcopy(self.priority)
-            priority.optionxform = str
+            priority.optionxform = str  # type: ignore
             for section in priority.sections():
                 for option in priority.options(section):
                     value = priority.get(section, option)
