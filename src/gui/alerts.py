@@ -92,3 +92,16 @@ def MessageCouldntOpenFile(file: str, error: str):
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{error}")
     return message.exec_()
+
+
+def MessageUnsupportedOS(os: str):
+    '''Shows alert that the OS is not supported'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(TRANSLATE("MainWindow", "Unsupported OS"))
+    message.setText(
+        TRANSLATE("MainWindow", "Unsupported OS:<br>") +
+        f"<code>{os}</code><br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    return message.exec_()

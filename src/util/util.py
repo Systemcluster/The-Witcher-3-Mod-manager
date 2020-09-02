@@ -1,6 +1,7 @@
 '''Global Helpers'''
 # pylint: disable=invalid-name,superfluous-parens,missing-docstring,wildcard-import,unused-wildcard-import
 
+from sys import platform
 import os
 import sys
 import re
@@ -9,7 +10,6 @@ import webbrowser
 import subprocess
 from shutil import copytree, rmtree
 from platform import python_version
-from ctypes import create_unicode_buffer, wintypes, windll
 from configparser import ConfigParser
 from threading import Timer
 import cchardet
@@ -20,7 +20,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
 from src.globals import data
 from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
-from src.gui.alerts import MessageCouldntOpenFile
+from src.gui.alerts import MessageCouldntOpenFile, MessageUnsupportedOS
 
 
 def formatUserError(error: Exception) -> str:
@@ -32,9 +32,24 @@ def formatUserError(error: Exception) -> str:
 
 
 def getDocumentsFolder() -> str:
-    buf = create_unicode_buffer(wintypes.MAX_PATH)
-    windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
-    return normalizePath(buf.value)
+    if platform == "win32" or platform == "cygwin":
+        from ctypes import create_unicode_buffer, wintypes, windll
+        buf = create_unicode_buffer(wintypes.MAX_PATH)
+        windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
+        return normalizePath(buf.value)
+    if platform == "linux" or platform == "darwin":
+        return normalizePath(os.path.expanduser("~/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"))
+    MessageUnsupportedOS(platform)
+    sys.exit(1)
+
+
+def getConfigFolder() -> str:
+    if platform == "win32" or platform == "cygwin":
+        return getDocumentsFolder()
+    if platform == "linux" or platform == "darwin":
+        return normalizePath(os.path.expanduser("~/.config"))
+    MessageUnsupportedOS(platform)
+    sys.exit(1)
 
 
 def getVersionString() -> str:

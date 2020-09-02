@@ -9,7 +9,7 @@ from typing import Union
 
 from PySide2.QtWidgets import QMainWindow, QWidget
 
-from src.util.util import normalizePath, detectEncoding
+from src.util.util import detectEncoding, getDocumentsFolder, normalizePath, getConfigFolder
 
 
 class Configuration:
@@ -21,14 +21,22 @@ class Configuration:
     config: configparser.ConfigParser = None  # type: ignore
     priority: configparser.ConfigParser = None  # type: ignore
 
-    def __init__(self, documentsPath: str, gamePath: str = ''):
-        self.documents = documentsPath
+    def __init__(self, documentsPath: str = '', gamePath: str = '', configPath: str = ''):
+
+        if documentsPath:
+            self.documents = documentsPath
+        else:
+            self.documents = getDocumentsFolder()
+
         self.__userSettingsPath = self.documents + '/The Witcher 3'
 
-        if path.isfile(path.curdir + '/config.ini'):
-            self.__configPath = path.curdir
+        if configPath:
+            self.__configPath = configPath
         else:
-            self.__configPath = self.documents + '/The Witcher 3 Mod Manager'
+            if path.isfile(path.curdir + '/config.ini'):
+                self.__configPath = path.curdir
+            else:
+                self.__configPath = getConfigFolder() + '/The Witcher 3 Mod Manager'
 
         self.config = configparser.ConfigParser(
             allow_no_value=True, delimiters='=')

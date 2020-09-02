@@ -42,7 +42,7 @@ if __name__ == "__main__":
         print(str(e))
 
     data.app = QApplication(sys.argv)
-    data.config = Configuration(getDocumentsFolder())
+    data.config = Configuration()
     translateToChosenLanguage()
 
     if not Configuration.getCorrectGamePath(data.config.game):

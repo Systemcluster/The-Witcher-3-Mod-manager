@@ -46,8 +46,8 @@ setup(
             "zip_include_packages": ["src"]
         },
         "bdist_msi": BDIST_MSI_OPTIONS},
-    author=AUTHORS[0],
-    author_email=AUTHORS_MAIL[0],
+    author=AUTHORS[1],
+    author_email=AUTHORS_MAIL[1],
     description=TITLE,
     executables=[Executable(
         "main.py",
