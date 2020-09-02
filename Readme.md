@@ -21,6 +21,6 @@ Note: If you encounter issues with Script Merger, update to the recent release o
 
 ### Python
 
-Download the source and install the requirements with `pipenv install`. Python 3.7+ and Pipenv have to be installed. Afterwards run with `pipenv run python main.py`.
+Download the source and install the requirements with `pipenv install --python 3`. Python 3.7+ and Pipenv have to be installed. Afterwards run with `pipenv run python main.py`.
 
 On Linux, the configuration files will be created in `~/.config/The Witcher 3 Mod Manager`.

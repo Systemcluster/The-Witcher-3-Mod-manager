@@ -15,8 +15,5 @@ PySide2 = "==5.14.2.3"
 watchdog = ">=0.10.3"
 cchardet = "==2.1.5"
 
-[requires]
-python_version = "3.7"
-
 [pipenv]
 allow_prereleases = true
