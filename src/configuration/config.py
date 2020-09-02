@@ -9,7 +9,7 @@ from typing import Union
 
 from PySide2.QtWidgets import QMainWindow, QWidget
 
-from src.util.util import detectEncoding, getDocumentsFolder, normalizePath, getConfigFolder
+from src.util.util import detectEncoding, getConfigFolder, getConfigFolderName, getDocumentsFolder, normalizePath
 
 
 class Configuration:
@@ -36,7 +36,7 @@ class Configuration:
             if path.isfile(path.curdir + '/config.ini'):
                 self.__configPath = path.curdir
             else:
-                self.__configPath = getConfigFolder() + '/The Witcher 3 Mod Manager'
+                self.__configPath = getConfigFolder() + '/' + getConfigFolderName()
 
         self.config = configparser.ConfigParser(
             allow_no_value=True, delimiters='=')

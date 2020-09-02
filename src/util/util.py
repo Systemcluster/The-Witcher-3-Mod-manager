@@ -52,6 +52,12 @@ def getConfigFolder() -> str:
     sys.exit(1)
 
 
+def getConfigFolderName() -> str:
+    if platform == "linux" or platform == "darwin":
+        return "TheWitcher3ModManager"
+    return "The Witcher 3 Mod Manager"
+
+
 def getVersionString() -> str:
     return TITLE + " " + VERSION
 
