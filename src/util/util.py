@@ -115,7 +115,17 @@ def openFile(path: str):
             directory, _ = os.path.split(path)
             subprocess.Popen([path], cwd=directory)
         elif os.path.isfile(path):
-            os.startfile(path)
+            if platform == "linux" or platform == "darwin":
+                try:
+                    subprocess.call(["xdg-open", path])
+                except OSError as e:
+                    editor = os.getenv('EDITOR')
+                    if editor:
+                        subprocess.Popen([editor, path])
+                    else:
+                        webbrowser.open(path, new=1)
+            else:
+                os.startfile(path)
         elif os.path.isdir(path):
             openFolder(path)
         else:
@@ -127,7 +137,13 @@ def openFile(path: str):
 def openFolder(path: str):
     while path and not os.path.isdir(path):
         path, _ = os.path.split(path)
-    os.startfile(path, "explore")
+    if platform == "linux" or platform == "darwin":
+        try:
+            subprocess.Popen(["xdg-open", path])
+        except OSError as e:
+            webbrowser.open(path, new=1)
+    else:
+        os.startfile(path, "explore")
 
 
 def copyFolder(src, dst):
