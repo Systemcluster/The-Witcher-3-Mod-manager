@@ -56,6 +56,10 @@ def getVersionString() -> str:
     return TITLE + " " + VERSION
 
 
+def getProgramRootFolder() -> str:
+    return normalizePath(os.path.dirname(os.path.abspath(__file__))+"/../../")
+
+
 def normalizePath(path: str) -> str:
     return os.path.normpath(str(path)).replace('\\', '/')
 
@@ -183,7 +187,7 @@ def getSize(start_path='.'):
 def getIcon(filename):
     '''Gets icon from the res folder'''
     icon = QtGui.QIcon()
-    icon.addFile('res/' + filename)
+    icon.addFile(getProgramRootFolder() + '/res/' + filename)
     return icon
 
 

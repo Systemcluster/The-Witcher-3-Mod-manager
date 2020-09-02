@@ -243,7 +243,7 @@ class CustomMainWidget(QWidget):
         self.actionAlert_to_run_Script_Merger.setObjectName(
             "actionAlert_to_run_Script_Merger")
         self.languageActionGroup = QActionGroup(self.mainWindow)
-        for lang in os.listdir('translations/'):
+        for lang in os.listdir(getProgramRootFolder() + '/translations/'):
             temp = self.makeLangAction(lang)
             self.languageActionGroup.addAction(temp)
             self.menuSelect_Language.addAction(temp)
