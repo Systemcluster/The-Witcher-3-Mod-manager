@@ -70,13 +70,17 @@ class Configuration:
         self.priority.read(file, encoding=detectEncoding(file))
 
     def readConfig(self):
+        print(f"reading config.ini from {self.__configPath + '/config.ini'}")
         file = self.__configPath + '/config.ini'
         self.config.read(file, encoding=detectEncoding(file))
 
     def write(self, space_around_delimiters: bool = False):
         with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
+            print(f"writing config.ini to {self.__configPath + '/config.ini'}")
             self.config.write(file, space_around_delimiters)
         with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
+            print(
+                f"writing mode.settings to {self.__configPath + '/mods.settings'}")
             # proper-case all keys
             priority = deepcopy(self.priority)
             priority.optionxform = str  # type: ignore
@@ -97,6 +101,7 @@ class Configuration:
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
+        self.write()
 
     def getPriority(self, section: str):
         if self.priority.has_section(section):
