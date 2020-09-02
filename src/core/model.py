@@ -40,6 +40,7 @@ class Model:
         for mod in self.all():
             root = self.writeModToXml(mod, root)
         indent(root.getroot())
+        print(f"writing mod list to {self.xmlfile}")
         root.write(self.xmlfile)
 
     def get(self, modname: str) -> Mod:
@@ -53,10 +54,12 @@ class Model:
 
     def add(self, modname: str, mod: Mod):
         self.modList[modname] = mod
+        self.write()
 
     def remove(self, modname: str):
         if modname in self.modList:
             del self.modList[modname]
+        self.write()
 
     def rename(self, modname: str, newname: str) -> bool:
         if not modname in self.modList:
@@ -65,6 +68,7 @@ class Model:
         del self.modList[modname]
         mod.name = newname
         self.modList[newname] = mod
+        self.write()
         return True
 
     def explore(self, modname: str) -> None:
