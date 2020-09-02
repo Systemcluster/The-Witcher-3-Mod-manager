@@ -105,3 +105,17 @@ def MessageUnsupportedOS(os: str):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     return message.exec_()
+
+
+def MessageUnsupportedOSAction(message: str):
+    '''Shows alert that an action is not supported on the OS'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "Action not supported on this OS"))
+    message.setText(
+        TRANSLATE("MainWindow", "Action not supported on this OS.<br>") +
+        f"{message}<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    return message.exec_()

@@ -1,6 +1,7 @@
 '''XML Fetcher'''
 # pylint: disable=invalid-name,superfluous-parens,missing-docstring
 
+from sys import platform
 import re
 import subprocess
 import shutil as files
@@ -234,10 +235,14 @@ def extractArchive(modPath: str) -> str:
         while path.isdir(extractedDir):
             pass
     mkdir(extractedDir)
-    si = subprocess.STARTUPINFO()
-    CREATE_NO_WINDOW = 0x08000000
-    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    subprocess.call(
-        r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"',
-        creationflags=CREATE_NO_WINDOW, startupinfo=si)
+    if platform == "win32" or platform == "cygwin":
+        si = subprocess.STARTUPINFO()
+        CREATE_NO_WINDOW = 0x08000000
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        subprocess.call(
+            r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"',
+            creationflags=CREATE_NO_WINDOW, startupinfo=si)
+    else:
+        from pyunpack import Archive
+        Archive(modPath).extractall(extractedDir)
     return extractedDir

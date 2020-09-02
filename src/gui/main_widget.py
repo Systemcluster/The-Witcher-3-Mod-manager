@@ -1,6 +1,7 @@
 '''Main Widget'''
 # pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring,too-many-lines
 
+from sys import platform
 from os import path
 
 from PySide2.QtCore import Qt, QSize, QFileInfo, QRect, QMetaObject, Signal, QThread
@@ -22,7 +23,7 @@ from src.core.model import Model
 from src.core.installer import Installer
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.gui.details_dialog import DetailsDialog
-from src.gui.alerts import MessageAlertScript
+from src.gui.alerts import MessageAlertScript, MessageUnsupportedOSAction
 
 
 class ModsSettingsWatcher(QThread):
@@ -966,7 +967,11 @@ class CustomMainWidget(QWidget):
         try:
             gamepath = data.config.gameexe
             directory, _ = path.split(gamepath)
-            subprocess.Popen([gamepath], cwd=directory)
+            if platform == "win32" or platform == "cygwin":
+                subprocess.Popen([gamepath], cwd=directory)
+            else:
+                MessageUnsupportedOSAction(
+                    "Please run the game through Steam.")
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -974,15 +979,16 @@ class CustomMainWidget(QWidget):
         '''Runs script merger'''
         try:
             scriptmergerpath = data.config.scriptmerger
-            if (scriptmergerpath):
-                directory, _ = path.split(scriptmergerpath)
-                subprocess.Popen([scriptmergerpath], cwd=directory)
-            else:
+            if not scriptmergerpath:
                 self.changeScriptMergerPath()
                 scriptmergerpath = data.config.scriptmerger
-                if (scriptmergerpath):
-                    directory, _ = path.split(scriptmergerpath)
-                    subprocess.Popen([scriptmergerpath], cwd=directory)
+            directory, _ = path.split(scriptmergerpath)
+            if platform == "win32" or platform == "cygwin":
+                subprocess.Popen([scriptmergerpath], cwd=directory)
+            if platform == "linux" or platform == "darwin":
+                subprocess.Popen(["wine", scriptmergerpath], cwd=directory)
+            else:
+                MessageUnsupportedOSAction("")
         except Exception as err:
             self.output(formatUserError(err))
 
