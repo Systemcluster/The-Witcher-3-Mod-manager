@@ -14,6 +14,7 @@ from src.core.fetcher import *
 from src.util.util import *
 from src.util.syntax import *
 
+
 class Model:
     '''Mod management model'''
 
@@ -69,7 +70,8 @@ class Model:
     def explore(self, modname: str) -> None:
         mod = self.modList[modname]
         for file in mod.files:
-            moddir = data.config.mods + ('/~' if not mod.enabled else '/') + file
+            moddir = data.config.mods + \
+                ('/~' if not mod.enabled else '/') + file
             openFolder(moddir)
 
     @property

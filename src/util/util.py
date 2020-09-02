@@ -11,10 +11,11 @@ from shutil import copytree, rmtree
 from platform import python_version
 from ctypes import create_unicode_buffer, wintypes, windll
 from configparser import ConfigParser
+from threading import Timer
 import cchardet
 
-from PyQt5 import QtGui, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PySide2 import QtGui, QtCore, __version__
+from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 from src.globals import data
 from src.globals.constants import *
@@ -29,16 +30,20 @@ def formatUserError(error: Exception) -> str:
     else:
         return str(error)
 
+
 def getDocumentsFolder() -> str:
     buf = create_unicode_buffer(wintypes.MAX_PATH)
     windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
     return normalizePath(buf.value)
 
+
 def getVersionString() -> str:
     return TITLE + " " + VERSION
 
+
 def normalizePath(path: str) -> str:
     return os.path.normpath(str(path)).replace('\\', '/')
+
 
 def reconfigureGamePath() -> bool:
     gamePath = str(QFileDialog.getOpenFileName(
@@ -54,10 +59,10 @@ def reconfigureGamePath() -> bool:
             None,
             TRANSLATE("MainWindow", "Selected file not correct"),
             TRANSLATE("MainWindow", "'witcher3.exe' file not selected"),
-            QMessageBox.Ok,
-            QMessageBox.Ok)
+            QMessageBox.StandardButton.Ok)
         return False
     return True
+
 
 def reconfigureScriptMergerPath():
     mergerPath = str(QFileDialog.getOpenFileName(
@@ -67,6 +72,7 @@ def reconfigureScriptMergerPath():
         "*.exe")[0])
     if mergerPath:
         data.config.scriptmerger = mergerPath
+
 
 def showAboutWindow():
     QMessageBox.about(
@@ -79,12 +85,14 @@ def showAboutWindow():
             "Authors: "+(", ".join(AUTHORS))+"\n"
             "\n"
             "Written in: Python "+python_version()+"\n"
-            "GUI: PyQt "+QtCore.PYQT_VERSION_STR+"\n"
+            "GUI: PySide2 "+__version__+"\n"
             "\n"
             "Thank you for using "+TITLE+"!"))
 
+
 def openUrl(url: str):
     webbrowser.open(url)
+
 
 def openFile(path: str):
     try:
@@ -100,20 +108,24 @@ def openFile(path: str):
     except Exception as e:
         MessageCouldntOpenFile(path, formatUserError(e))
 
+
 def openFolder(path: str):
     while path and not os.path.isdir(path):
         path, _ = os.path.split(path)
     os.startfile(path, "explore")
 
+
 def copyFolder(src, dst):
     '''Copy folder from src to dst'''
     dst = os.path.normpath(dst)
     src = os.path.normpath(src)
-    print(f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
+    print(
+        f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
     rmtree(dst, ignore_errors=True)
     while os.path.isdir(dst):
         pass
     copytree(src, dst)
+
 
 def restartProgram():
     '''Restarts the program'''
@@ -121,9 +133,11 @@ def restartProgram():
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
+
 def getFile(directory="", extensions="", title="Select Files or Folders"):
     '''Opens custom dialog for selecting multiple folders or files'''
     return FileDialog(None, title, str(directory), str(extensions)).selectedFiles
+
 
 def getSize(start_path='.'):
     '''Calculates the size of the selected folder'''
@@ -134,23 +148,28 @@ def getSize(start_path='.'):
             total_size += os.path.getsize(fp)
     return total_size
 
+
 def getIcon(filename):
     '''Gets icon from the res folder'''
     icon = QtGui.QIcon()
     icon.addFile('res/' + filename)
     return icon
 
+
 def getKey(item):
     '''Helper function for the mod list'''
     return item[1]
+
 
 def isData(name):
     '''Checks if given name represents correct mod folder or not'''
     return re.match(r"^(~|)mod.+$", name)
 
+
 def isExecutable(name: str) -> bool:
     _, ext = os.path.splitext(name)
     return ext in ('.exe', '.bat')
+
 
 def translateToChosenLanguage() -> bool:
     language = data.config.language
@@ -165,19 +184,25 @@ def translateToChosenLanguage() -> bool:
         print("chosen language not found:", language, file=sys.stderr)
         return False
 
+
 def detectEncoding(path: str) -> str:
-    with open(path, 'rb') as file:
-        text = file.read()
-        detected = cchardet.detect(text)
-        print("detected", path, "as", detected)
-        return detected["encoding"]
+    if os.path.exists(path):
+        with open(path, 'rb') as file:
+            text = file.read()
+            detected = cchardet.detect(text)
+            print("detected", path, "as", detected)
+            return detected["encoding"]
+    else:
+        return "utf-8"
+
 
 def fixUserSettingsDuplicateBrackets():
     '''Fix invalid section names in user.settings'''
     try:
         config = ConfigParser(strict=False)
         config.optionxform = str
-        config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
+        config.read(data.config.settings + "/user.settings",
+                    encoding=detectEncoding(data.config.settings + "/user.settings"))
         for section in config.sections():
             newSection = section
             while newSection[:1] == "[":
@@ -200,8 +225,10 @@ def fixUserSettingsDuplicateBrackets():
 def throttle(ms: int):
     """Decorator ensures function that can only be called once every `ms` milliseconds"""
     from datetime import datetime, timedelta
+
     def decorate(f):
         last_modified = None
+
         def wrapped(*args, **kwargs):
             nonlocal last_modified
             if not last_modified or datetime.now() - last_modified > timedelta(milliseconds=ms):
@@ -210,3 +237,19 @@ def throttle(ms: int):
                 return result
         return wrapped
     return decorate
+
+
+def debounce(ms: int):
+    """Debounce a functions execution by {ms} milliseconds"""
+    def decorator(fun):
+        def debounced(*args, **kwargs):
+            def deferred():
+                fun(*args, **kwargs)
+            try:
+                debounced.timer.cancel()
+            except AttributeError:
+                pass
+            debounced.timer = Timer(ms / 1000.0, deferred)
+            debounced.timer.start()
+        return debounced
+    return decorator

@@ -1,8 +1,8 @@
 '''Alert Dialogs'''
 # pylint: disable=invalid-name,wildcard-import,unused-wildcard-import
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMessageBox
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QMessageBox
 
 from src.globals.constants import *
 
@@ -12,13 +12,14 @@ def MessageRebindedKeys(key, temp):
     return QMessageBox.question(
         None,
         TRANSLATE("MainWindow", "Rebinded key found"),
-        TRANSLATE("MainWindow", "Rebinded key found") + "\n" + \
-            TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" + \
-            TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" + \
-            TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
-        QMessageBox.Yes | QMessageBox.YesToAll | \
+        TRANSLATE("MainWindow", "Rebinded key found") + "\n" +
+        TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" +
+        TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" +
+        TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
+        QMessageBox.Yes | QMessageBox.YesToAll |
         QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
         QMessageBox.Yes)
+
 
 def MessageOverwrite(modname, modtype):
     '''Shows dialog to let user decide what to do if mod is already installed'''
@@ -28,9 +29,10 @@ def MessageOverwrite(modname, modtype):
         str(modtype) + " '" + str(modname) + "' " + TRANSLATE(
             "MainWindow",
             "is already installed\nDo you want to overwrite the existing files?"),
-        QMessageBox.Yes | QMessageBox.YesToAll | \
-            QMessageBox.No | QMessageBox.NoToAll,
+        QMessageBox.Yes | QMessageBox.YesToAll |
+        QMessageBox.No | QMessageBox.NoToAll,
         QMessageBox.Yes)
+
 
 def MessageAlertScript():
     '''Shows dialog to let user know he/she should run script merger \
@@ -47,6 +49,7 @@ def MessageAlertScript():
             "Note: You can disable these alerts in the settings..."),
         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
+
 def MessageAlertOtherInstance():
     '''Shows alert that another insntance is already open'''
     return QMessageBox.question(
@@ -59,6 +62,7 @@ def MessageAlertOtherInstance():
             "\n"
             "Do you want to continue anyway?"),
         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
 
 def MessageInitializationFailed(error: str):
     '''Shows alert that application initialization failed'''
@@ -73,6 +77,7 @@ def MessageInitializationFailed(error: str):
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{error}")
     return message.exec_()
+
 
 def MessageCouldntOpenFile(file: str, error: str):
     '''Shows alert that a file couldn't be opened'''

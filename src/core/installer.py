@@ -7,7 +7,7 @@ from shutil import rmtree, copyfile
 from dataclasses import dataclass
 from typing import Callable, Any
 
-from PyQt5.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox
 from src.globals import data
 from src.util.util import *
 from src.core.fetcher import *
@@ -31,7 +31,8 @@ class Installer:
 
         installCount = 0
         modname = path.split(modPath)[1]
-        self.output(TRANSLATE("MainWindow", "Installing") + " " + Mod.formatName(modname))
+        self.output(TRANSLATE("MainWindow", "Installing") +
+                    " " + Mod.formatName(modname))
         self.progress(0.1)
         mod = None
         result = True
@@ -56,12 +57,14 @@ class Installer:
                 _, parent = path.split(root)
                 modfolder = isModFolder(name, parent)
                 dlcfolder = isDlcFolder(name, parent)
-                basepath = data.config.mods if modfolder else (data.config.dlc if dlcfolder else None)
+                basepath = data.config.mods if modfolder else (
+                    data.config.dlc if dlcfolder else None)
                 if basepath is not None:
                     datapath = basepath + "/" + name
                     if (modfolder and name in installed_mods) or (dlcfolder and name in installed_dlcs):
                         if self.ask:
-                            res = MessageOverwrite(name, 'Mod' if modfolder else 'DLC')
+                            res = MessageOverwrite(
+                                name, 'Mod' if modfolder else 'DLC')
                         if res == QMessageBox.Yes:
                             copyFolder(directory, datapath)
                             installCount += 1
@@ -81,8 +84,10 @@ class Installer:
                         ddir = directory[len(data.config.extracted)+1:]
                     except:
                         ddir = ''
-                    self.output(f"Detected data folder but could not recognize it as part of a mod or dlc{': '+ddir if ddir else ''}")
-                    self.output(f"  Some manual installation may be required, please check the mod to make sure.")
+                    self.output(
+                        f"Detected data folder but could not recognize it as part of a mod or dlc{': '+ddir if ddir else ''}")
+                    self.output(
+                        f"  Some manual installation may be required, please check the mod to make sure.")
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -133,7 +138,8 @@ class Installer:
     def uninstallMod(self, mod: Mod) -> bool:
         '''Uninstalls given mod'''
         try:
-            self.output(TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
+            self.output(
+                TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
             mod.uninstallXmlKeys()
@@ -149,7 +155,8 @@ class Installer:
 
     def reinstallMod(self, mod: Mod) -> bool:
         try:
-            self.output(TRANSLATE("MainWindow", "Reinstalling") + " " + mod.name)
+            self.output(
+                TRANSLATE("MainWindow", "Reinstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
             mod.uninstallUserSettings()

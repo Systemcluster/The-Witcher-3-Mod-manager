@@ -3,9 +3,9 @@
 
 from os import path
 
-from PyQt5.QtCore import Qt, QSize, QFileInfo, QRect, QMetaObject, pyqtSignal, QThread
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget, QTreeWidget, \
+from PySide2.QtCore import Qt, QSize, QFileInfo, QRect, QMetaObject, Signal, QThread
+from PySide2.QtGui import QCursor
+from PySide2.QtWidgets import QWidget, QTreeWidget, \
     QPushButton, QHBoxLayout, QVBoxLayout, QAction, QInputDialog, QLineEdit, \
     QFileIconProvider, QAbstractItemView, QTextEdit, QSizePolicy, QMenu, QProgressBar, \
     QMenuBar, QToolBar, QActionGroup, QMessageBox, QSplitter
@@ -26,7 +26,8 @@ from src.gui.alerts import MessageAlertScript
 
 
 class ModsSettingsWatcher(QThread):
-    refresh = pyqtSignal(object)
+    refresh = Signal(object)
+
     def __init__(self, *args, **kwargs):
         self.modsEventHandler = PatternMatchingEventHandler(
             patterns=["*mods.settings"],
@@ -35,9 +36,11 @@ class ModsSettingsWatcher(QThread):
         self.modsEventHandler.on_modified = lambda e: self.refresh.emit(e)
         self.running = False
         self.observer = Observer()
-        self.observer.schedule(self.modsEventHandler, path=data.config.settings, recursive=False)
+        self.observer.schedule(self.modsEventHandler,
+                               path=data.config.settings, recursive=False)
         super().__init__(*args, **kwargs)
         self.observer.start()
+
     def __drop__(self):
         if self.observer:
             self.observer.stop()
@@ -56,7 +59,8 @@ class CustomMainWidget(QWidget):
         self.searchString = ""
 
         self.modsSettingsWatcher = ModsSettingsWatcher()
-        self.modsSettingsWatcher.refresh.connect(lambda e: self.refreshLoadOrder())
+        self.modsSettingsWatcher.refresh.connect(
+            lambda e: self.refreshLoadOrder())
 
         self.mainWindow.setObjectName("MainWindow")
 
@@ -131,7 +135,8 @@ class CustomMainWidget(QWidget):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_4.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.pushButton_4.sizePolicy().hasHeightForWidth())
         self.pushButton_4.setSizePolicy(sizePolicy)
         self.pushButton_4.setMinimumSize(QSize(100, 50))
         self.pushButton_4.setObjectName("pushButton_4")
@@ -140,7 +145,8 @@ class CustomMainWidget(QWidget):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.pushButton_5.sizePolicy().hasHeightForWidth())
         self.pushButton_5.setSizePolicy(sizePolicy)
         self.pushButton_5.setMinimumSize(QSize(100, 50))
         self.pushButton_5.setObjectName("pushButton_5")
@@ -195,7 +201,8 @@ class CustomMainWidget(QWidget):
         self.actionEnable_Disable_Mods = QAction(self.mainWindow)
         self.actionEnable_Disable_Mods.setIcon(getIcon('check.ico'))
         self.actionEnable_Disable_Mods.setIconVisibleInMenu(False)
-        self.actionEnable_Disable_Mods.setObjectName("actionEnable_Disable_Mods")
+        self.actionEnable_Disable_Mods.setObjectName(
+            "actionEnable_Disable_Mods")
         self.actionEnable_Disable_Mods.setIconText(
             TRANSLATE('MainWindow', "Toggle"))
         self.actionReinstall_Mods = QAction(self.mainWindow)
@@ -232,7 +239,8 @@ class CustomMainWidget(QWidget):
         self.actionGitHub.setObjectName("acitionGitHub")
         self.actionAlert_to_run_Script_Merger = QAction(self.mainWindow)
         self.actionAlert_to_run_Script_Merger.setCheckable(True)
-        self.actionAlert_to_run_Script_Merger.setObjectName("actionAlert_to_run_Script_Merger")
+        self.actionAlert_to_run_Script_Merger.setObjectName(
+            "actionAlert_to_run_Script_Merger")
         self.languageActionGroup = QActionGroup(self.mainWindow)
         for lang in os.listdir('translations/'):
             temp = self.makeLangAction(lang)
@@ -241,7 +249,8 @@ class CustomMainWidget(QWidget):
         self.actionChange_Game_Path = QAction(self.mainWindow)
         self.actionChange_Game_Path.setObjectName("actionChange_Game_Path")
         self.actionChange_Script_Merger_Path = QAction(self.mainWindow)
-        self.actionChange_Script_Merger_Path.setObjectName("actionChange_Script_Merger_Path")
+        self.actionChange_Script_Merger_Path.setObjectName(
+            "actionChange_Script_Merger_Path")
         self.actionClearOutput = QAction(self.mainWindow)
         self.actionClearOutput.setObjectName("actionClearOutput")
 
@@ -257,11 +266,13 @@ class CustomMainWidget(QWidget):
         self.menuFile.addAction(self.actionSelect_All_Mods)
 
         self.menuConfigure_Settings.addAction(self.actionChange_Game_Path)
-        self.menuConfigure_Settings.addAction(self.actionChange_Script_Merger_Path)
+        self.menuConfigure_Settings.addAction(
+            self.actionChange_Script_Merger_Path)
         self.menuConfigure_Settings.addSeparator()
         self.menuConfigure_Settings.addAction(self.actionRestoreColumns)
         self.menuConfigure_Settings.addSeparator()
-        self.menuConfigure_Settings.addAction(self.actionAlert_to_run_Script_Merger)
+        self.menuConfigure_Settings.addAction(
+            self.actionAlert_to_run_Script_Merger)
         self.menuConfigure_Settings.addSeparator()
         self.menuSettings.addAction(self.menuConfigure_Settings.menuAction())
         self.menuSettings.addAction(self.menuSelect_Language.menuAction())
@@ -289,7 +300,6 @@ class CustomMainWidget(QWidget):
 
         QMetaObject.connectSlotsByName(self.mainWindow)
 
-
     def translateUi(self):
         self.mainWindow.setWindowTitle(
             TRANSLATE("MainWindow", TITLE))
@@ -305,7 +315,8 @@ class CustomMainWidget(QWidget):
         self.treeWidget.headerItem().setText(8, TRANSLATE("MainWindow", "Key"))
         self.treeWidget.headerItem().setText(9, TRANSLATE("MainWindow", "Settings"))
         self.treeWidget.headerItem().setText(10, TRANSLATE("MainWindow", "Size"))
-        self.treeWidget.headerItem().setText(11, TRANSLATE("MainWindow", "Date Installed"))
+        self.treeWidget.headerItem().setText(
+            11, TRANSLATE("MainWindow", "Date Installed"))
 
         self.loadOrder.headerItem().setText(0, TRANSLATE("MainWindow", "Load Order"))
         self.loadOrder.headerItem().setText(1, TRANSLATE("MainWindow", "Priority"))
@@ -319,12 +330,15 @@ class CustomMainWidget(QWidget):
         self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
         self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
         self.menuSettings.setTitle(TRANSLATE("MainWindow", "Settings"))
-        self.menuSelect_Language.setTitle(TRANSLATE("MainWindow", "Select Language"))
-        self.menuConfigure_Settings.setTitle(TRANSLATE("MainWindow", "Configure Settings"))
+        self.menuSelect_Language.setTitle(
+            TRANSLATE("MainWindow", "Select Language"))
+        self.menuConfigure_Settings.setTitle(
+            TRANSLATE("MainWindow", "Configure Settings"))
         self.menuHelp.setTitle(TRANSLATE("MainWindow", "Help"))
         self.toolBar.setWindowTitle(TRANSLATE("MainWindow", "toolBar"))
 
-        self.actionInstall_Mods.setText(TRANSLATE("MainWindow", "Install Mods"))
+        self.actionInstall_Mods.setText(
+            TRANSLATE("MainWindow", "Install Mods"))
         self.actionInstall_Mods.setToolTip(
             TRANSLATE("MainWindow", "Install one or more Mods from folders or archives"))
         self.actionInstall_Mods.setShortcut("Ctrl+E")
@@ -426,17 +440,22 @@ class CustomMainWidget(QWidget):
         self.actionUninstall_Mods.triggered.connect(self.uninstallMods)
         self.actionReinstall_Mods.triggered.connect(self.reinstallMods)
         self.actionAbout.triggered.connect(showAboutWindow)
-        self.actionEnable_Disable_Mods.triggered.connect(self.enableDisableMods)
-        self.actionRefresh_Mod_List.triggered.connect(lambda e: self.refreshList())
-        self.actionRefresh_Load_Order.triggered.connect(lambda e: self.refreshLoadOrder())
+        self.actionEnable_Disable_Mods.triggered.connect(
+            self.enableDisableMods)
+        self.actionRefresh_Mod_List.triggered.connect(
+            lambda e: self.refreshList())
+        self.actionRefresh_Load_Order.triggered.connect(
+            lambda e: self.refreshLoadOrder())
         self.actionSelect_All_Mods.triggered.connect(self.selectAllMods)
         self.actionRun_The_Game.triggered.connect(self.runTheGame)
         self.actionRun_Script_Merger.triggered.connect(self.runScriptMerger)
         self.actionMain_Web_Page.triggered.connect(lambda: openUrl(URL_WEB))
         self.actionGitHub.triggered.connect(lambda: openUrl(URL_GIT))
-        self.actionAlert_to_run_Script_Merger.triggered.connect(self.alertPopupChanged)
+        self.actionAlert_to_run_Script_Merger.triggered.connect(
+            self.alertPopupChanged)
         self.actionChange_Game_Path.triggered.connect(self.changeGamePath)
-        self.actionChange_Script_Merger_Path.triggered.connect(self.changeScriptMergerPath)
+        self.actionChange_Script_Merger_Path.triggered.connect(
+            self.changeScriptMergerPath)
         self.actionClearOutput.triggered.connect(self.clear)
         self.actionRename.triggered.connect(self.rename)
         self.actionDetails.triggered.connect(self.details)
@@ -465,10 +484,10 @@ class CustomMainWidget(QWidget):
 
         self.loadOrder.itemDoubleClicked.connect(self.loadOrderDoubleClicked)
 
-        self.actionAlert_to_run_Script_Merger.setChecked(data.config.allowpopups == '1')
+        self.actionAlert_to_run_Script_Merger.setChecked(
+            data.config.allowpopups == '1')
 
         self.searchWidget.textChanged.connect(self.setSearchString)
-
 
     def openByConfigKey(self, option):
         '''Open or run any kind of folder/file or executable by configuration key'''
@@ -523,7 +542,8 @@ class CustomMainWidget(QWidget):
             lambda: openFile(data.config.settings + '/input.settings'))
         actionTemp.setText('Input Settings')
         actionTemp.setIcon(getIcon("input.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open input.settings file'))
+        actionTemp.setToolTip(
+            TRANSLATE("MainWindow", 'Open input.settings file'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
@@ -531,7 +551,8 @@ class CustomMainWidget(QWidget):
             lambda: openFile(data.config.settings + '/user.settings'))
         actionTemp.setText('User Settings')
         actionTemp.setIcon(getIcon("user.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open user.settings file'))
+        actionTemp.setToolTip(
+            TRANSLATE("MainWindow", 'Open user.settings file'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
@@ -539,7 +560,8 @@ class CustomMainWidget(QWidget):
             lambda: openFile(data.config.settings + '/mods.settings'))
         actionTemp.setText('Mods Settings')
         actionTemp.setIcon(getIcon("modset.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open mods.settings file'))
+        actionTemp.setToolTip(
+            TRANSLATE("MainWindow", 'Open mods.settings file'))
         self.toolBar.addAction(actionTemp)
 
         self.toolBar.addSeparator()
@@ -799,8 +821,8 @@ class CustomMainWidget(QWidget):
                     else:
                         self.output(TRANSLATE(
                             "MainWindow",
-                            "You cannot set priority to disabled mod") + \
-                                " '" + modname + "'")
+                            "You cannot set priority to disabled mod") +
+                            " '" + modname + "'")
                 data.config.write()
                 self.refreshList()
         except Exception as err:
@@ -882,7 +904,8 @@ class CustomMainWidget(QWidget):
             self.setProgress(0)
             self.output(formatUserError(err))
             errorCount += 1
-        self.output(f'> Installed {successCount} mods or dlcs ({errorCount} errors)')
+        self.output(
+            f'> Installed {successCount} mods or dlcs ({errorCount} errors)')
 
     def uninstallMods(self):
         '''Uninstalls selected mods'''
@@ -891,9 +914,10 @@ class CustomMainWidget(QWidget):
             if selected:
                 clicked = QMessageBox.question(
                     self, TRANSLATE("MainWindow", "Confirm"),
-                    TRANSLATE("MainWindow", "Are you sure you want to uninstall ") \
-                        + str(len(selected)) + \
-                        TRANSLATE("MainWindow", " selected mods") + "?",
+                    TRANSLATE("MainWindow",
+                              "Are you sure you want to uninstall ")
+                    + str(len(selected)) +
+                    TRANSLATE("MainWindow", " selected mods") + "?",
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
                     progress = 0
@@ -917,11 +941,12 @@ class CustomMainWidget(QWidget):
             if selected:
                 clicked = QMessageBox.question(
                     self, TRANSLATE("MainWindow", "Confirm"),
-                    TRANSLATE("MainWindow", "Are you sure you want to reinstall ") \
-                        + str(len(selected)) + \
-                        TRANSLATE("MainWindow", " selected mods") + "?\n\n" + \
-                        TRANSLATE("MainWindow", "This will override the mods settings with " + \
-                            "their defaults."),
+                    TRANSLATE("MainWindow",
+                              "Are you sure you want to reinstall ")
+                    + str(len(selected)) +
+                    TRANSLATE("MainWindow", " selected mods") + "?\n\n" +
+                    TRANSLATE("MainWindow", "This will override the mods settings with " +
+                              "their defaults."),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
                     self.setProgress(20)
@@ -1069,12 +1094,14 @@ class CustomMainWidget(QWidget):
                     item.setTextAlignment(1, Qt.AlignCenter)
                     self.loadOrder.addTopLevelItem(item)
             for item in selected:
-                rows = self.loadOrder.findItems(item.replace("~", ""), Qt.MatchEndsWith, 0)
+                rows = self.loadOrder.findItems(
+                    item.replace("~", ""), Qt.MatchEndsWith, 0)
                 if (rows):
                     for row in rows:
                         row.setSelected(True)
         except Exception as err:
-            self.output(f"Couldn't read or refresh load order: {formatUserError(err)}")
+            self.output(
+                f"Couldn't read or refresh load order: {formatUserError(err)}")
             return err
         return None
 

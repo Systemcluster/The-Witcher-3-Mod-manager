@@ -15,7 +15,8 @@ from src.domain.mod import Mod
 from src.util.util import normalizePath
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
-INPUTPATTERN = re.compile(r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
+INPUTPATTERN = re.compile(
+    r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
@@ -25,17 +26,22 @@ def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
         modPath = extractArchive(modPath)
     if isValidModFolder(modPath):
         return fetchModFromDirectory(modPath)
-    raise IOError("Not detected as a valid mod (manual installation may be required)")
+    raise IOError(
+        "Not detected as a valid mod (manual installation may be required)")
 
 # tested
+
+
 def isValidModFolder(modPath: str) -> bool:
     for current_dir, _, _ in walk(modPath):
         if containContentFolder(current_dir) and (
                 isModFolder(path.split(current_dir)[1], path.split(current_dir)[0]) or
-                isDlcFolder(path.split(current_dir)[1], path.split(current_dir)[0])
+                isDlcFolder(path.split(current_dir)[
+                            1], path.split(current_dir)[0])
         ):
             return True
     return False
+
 
 def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     mod = Mod(path.split(modPath)[1])
@@ -48,30 +54,42 @@ def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     return mod, mod_dirs, mod_xmls
 
 # tested
+
+
 def isDataFolder(directory: str) -> bool:
     return bool(re.match("^mod.*", directory, re.IGNORECASE))
 
+
 def isModFolder(directory: str, parent: str):
     return isDataFolder(directory) and not bool(re.match("^dlc[s]?$", parent, re.IGNORECASE))
+
 
 def isDlcFolder(directory: str, parent: str):
     return isDataFolder(directory) and bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or \
         bool(re.match("^dlc", directory, re.IGNORECASE))
 
 # tested
+
+
 def containContentFolder(directory: str) -> bool:
     dr = getAllFoldersFromDirectory(directory)
     return "content" in (dr.lower() for dr in dr)
 
 # tested
+
+
 def getAllFoldersFromDirectory(directory: str) -> List[str]:
     return [f for f in listdir(directory) if path.isdir(join(directory, f))]
 
 # tested
+
+
 def getAllFilesFromDirectory(directory: str) -> List[str]:
     return [f for f in listdir(directory) if isfile(join(directory, f))]
 
 # tested
+
+
 def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
     root, dirName = path.split(current_dir)
     _, parent = path.split(root)
@@ -82,6 +100,7 @@ def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
             mod.dlcs.append(dirName)
         return True
     return False
+
 
 def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
     mod_xmls: List[str] = []
@@ -108,12 +127,17 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
     return mod_xmls
 
 # tested
+
+
 def isMenuXmlFile(file: str) -> bool:
     return bool(re.match(r".+\.xml$", file) and not re.match(r"^input\.xml$", file, re.IGNORECASE))
 
 # tested
+
+
 def isTxtOrInputXmlFile(file: str) -> bool:
     return bool(re.match(r"(.+(?<!readme)\.txt)|(input\.xml)$", file, re.IGNORECASE))
+
 
 def fetchRelevantDataFromInputXml(filetext: str, mod: Mod) -> str:
     getHiddenKeysIfExistFromInputXml(filetext, mod)
@@ -122,6 +146,7 @@ def fetchRelevantDataFromInputXml(filetext: str, mod: Mod) -> str:
         return removeXmlComments(searchResult.group(0))
     else:
         return ""
+
 
 def getHiddenKeysIfExistFromInputXml(filetext: str, mod: Mod) -> None:
     temp = re.search('id="Hidden".+id="PCInput"', filetext, re.DOTALL)
@@ -134,10 +159,13 @@ def getHiddenKeysIfExistFromInputXml(filetext: str, mod: Mod) -> None:
             mod.hidden.append(key)
 
 # tested
+
+
 def removeXmlComments(filetext: str) -> str:
     filetext = re.sub('<!--.*?-->', '', filetext)
     filetext = re.sub('<!--.*?-->', '', filetext, 0, re.DOTALL)
     return filetext
+
 
 def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
     xmlKeys = fetchXmlKeys(filetext)
@@ -145,6 +173,7 @@ def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
         mod.hidden += xmlKeys
     else:
         mod.xmlkeys += xmlKeys
+
 
 def fetchInputSettings(filetext: str) -> List[Key]:
     found = []
@@ -160,6 +189,7 @@ def fetchInputSettings(filetext: str) -> List[Key]:
                 found.append(Key(context, line))
     return found
 
+
 def fetchUserSettings(filetext: str) -> List[Usersetting]:
     found = []
     usersettings = USERPATTERN.search(filetext)
@@ -174,6 +204,7 @@ def fetchUserSettings(filetext: str) -> List[Usersetting]:
                 found.append(Usersetting(context, line))
     return found
 
+
 def fetchXmlKeys(filetext: str) -> List[str]:
     found = []
     xmlkeys = XMLPATTERN.findall(filetext)
@@ -183,13 +214,18 @@ def fetchXmlKeys(filetext: str) -> List[str]:
     return found
 
 # tested
+
+
 def removeMultiWhiteSpace(key: str) -> str:
     key = re.sub(r"\s+", " ", key)
     return key
 
 # tested
+
+
 def isArchive(modPath: str) -> bool:
     return bool(re.match(r".+\.(zip|rar|7z)$", path.basename(modPath)))
+
 
 def extractArchive(modPath: str) -> str:
     extractedDir = data.config.extracted

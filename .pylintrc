@@ -1,2 +1,2 @@
 [MASTER]
-extension-pkg-whitelist=PyQt5
+extension-pkg-whitelist=PySide2

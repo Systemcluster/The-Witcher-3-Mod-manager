@@ -1,8 +1,9 @@
 '''Main Window'''
 # pylint: disable=invalid-name,wildcard-import,unused-wildcard-import
 
-from PyQt5.QtWidgets import QMainWindow
+from PySide2.QtWidgets import QMainWindow
 from src.core.fetcher import *
+
 
 class CustomMainWindow(QMainWindow):
     '''Main Window for drag-and-drop integration'''
@@ -27,5 +28,6 @@ class CustomMainWindow(QMainWindow):
     def dropEvent(self, event):
         '''Qt dropEvent override'''
         if self.dropCallback:
-            filelist = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
+            filelist = list(
+                map(lambda url: url.toLocalFile(), event.mimeData().urls()))
             self.dropCallback(filelist)

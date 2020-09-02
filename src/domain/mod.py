@@ -8,12 +8,13 @@ from dataclasses import dataclass, field
 from typing import Union, List, Optional
 from configparser import ConfigParser
 
-from PyQt5.Qt import QMessageBox
+from PySide2.QtWidgets import QMessageBox
 
 from src.util.util import *
 from src.domain.key import Key
 from src.globals import data
 from src.gui.alerts import MessageRebindedKeys
+
 
 @dataclass
 class Mod:
@@ -39,6 +40,7 @@ class Mod:
     @property
     def name(self) -> str:
         return self._name
+
     @name.setter
     def name(self, value: str) -> None:
         self._name = self.formatName(value)
@@ -46,6 +48,7 @@ class Mod:
     @property
     def priority(self) -> str:
         return self._priority if self._priority else '-'
+
     @priority.setter
     def priority(self, value: Union[str, int, None]):
         if value is None or not str(value).isdecimal():
@@ -58,11 +61,13 @@ class Mod:
             self._priority = str(int(value))
 
     def increasePriority(self):
-        new_priority = int(self.priority) + 1 if self.priority and self.priority.isdecimal() else 0
+        new_priority = int(self.priority) + \
+            1 if self.priority and self.priority.isdecimal() else 0
         self.priority = new_priority
 
     def decreasePriority(self):
-        new_priority = int(self.priority) - 1 if self.priority and self.priority.isdecimal() else -1
+        new_priority = int(self.priority) - \
+            1 if self.priority and self.priority.isdecimal() else -1
         if new_priority < 0:
             self.priority = None
         else:
@@ -90,7 +95,6 @@ class Mod:
 
         return name
 
-
     def enable(self):
         if (not self.enabled):
             self.installXmlKeys()
@@ -104,7 +108,8 @@ class Mod:
                     for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
                         for file in fls:
                             if (path.exists(subdir + "/" + file)):
-                                rename(subdir + "/" + file, subdir + "/" + file[:-9])
+                                rename(subdir + "/" + file,
+                                       subdir + "/" + file[:-9])
             for filedata in iter(self.files):
                 if path.exists(data.config.mods + "/~" + filedata):
                     rename(
@@ -139,7 +144,6 @@ class Mod:
             for filedata in iter(self.files):
                 if (data.config.priority.has_section(filedata)):
                     self.priority = data.config.getPriority(filedata)
-
 
     def installXmlKeys(self):
         if (self.xmlkeys):
@@ -202,9 +206,11 @@ class Mod:
                 else:
                     contexttext = str(context.group(0))
                 if (key.duration or key.axis):
-                    foundkeys = re.findall(r".*Action="+key.action+r",.*", contexttext)
+                    foundkeys = re.findall(
+                        r".*Action="+key.action+r",.*", contexttext)
                 else:
-                    foundkeys = re.findall(r".*Action="+key.action+r"\)", contexttext)
+                    foundkeys = re.findall(
+                        r".*Action="+key.action+r"\)", contexttext)
                 if (not foundkeys):
                     added += 1
                     text = re.sub(
@@ -241,8 +247,10 @@ class Mod:
                                     else:
                                         keep = True
                                 if (not keep):
-                                    newcontexttext = contexttext.replace(foundkey, str(key))
-                                    text = text.replace(contexttext, newcontexttext)
+                                    newcontexttext = contexttext.replace(
+                                        foundkey, str(key))
+                                    text = text.replace(
+                                        contexttext, newcontexttext)
                                     contexttext = newcontexttext
                         if (shdadd):
                             added += 1
@@ -259,7 +267,8 @@ class Mod:
         if self.usersettings:
             config = ConfigParser(strict=False)
             config.optionxform = str
-            config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
+            config.read(data.config.settings + "/user.settings",
+                        encoding=detectEncoding(data.config.settings + "/user.settings"))
             for setting in iter(self.usersettings):
                 if not config.has_section(setting.context):
                     config.add_section(setting.context)
@@ -273,13 +282,13 @@ class Mod:
         if self.usersettings:
             config = ConfigParser(strict=False)
             config.optionxform = str
-            config.read(data.config.settings + "/user.settings", encoding=detectEncoding(data.config.settings + "/user.settings"))
+            config.read(data.config.settings + "/user.settings",
+                        encoding=detectEncoding(data.config.settings + "/user.settings"))
             for setting in iter(self.usersettings):
                 if config.has_section(setting.context):
                     config.remove_option(setting.context, setting.option)
             with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
                 config.write(userfile, space_around_delimiters=False)
-
 
     def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \

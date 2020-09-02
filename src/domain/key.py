@@ -1,6 +1,7 @@
 '''Mod Key module'''
 # pylint: disable=invalid-name,superfluous-parens
 
+
 class Key:
     '''Key objects representing keys from input.settings'''
 

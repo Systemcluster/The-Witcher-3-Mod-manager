@@ -1,7 +1,6 @@
 '''Witcher 3 Mod Manager cx_Freeze setup script'''
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-# NOTE: currently requires: pip install --upgrade git+https://github.com/anthony-tuininga/cx_Freeze.git@master
 from cx_Freeze import setup, Executable
 from src.globals.constants import *
 

@@ -1,6 +1,7 @@
 '''Usersetting module'''
 # pylint: disable=invalid-name,superfluous-parens
 
+
 class Usersetting:
     '''Usersetting objects representing user setting from user.settings'''
 

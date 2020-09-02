@@ -6,14 +6,14 @@ verify_ssl = true
 [dev-packages]
 pylint = "*"
 mypy = "*"
-cx-freeze = ">=6"
+cx-freeze = ">=6.2"
+autopep8 = "*"
 
 [packages]
-fasteners = ">=0.14"
-PyQt5 = ">=5.12"
-watchdog = "*"
-pywin32 = "==224"
-cchardet = "*"
+fasteners = ">=0.15"
+PySide2 = "==5.14.2.3"
+watchdog = ">=0.10.3"
+cchardet = "==2.1.5"
 
 [requires]
 python_version = "3.7"

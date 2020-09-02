@@ -1,8 +1,8 @@
 '''Global instances'''
 # pylint: disable=invalid-name
 
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QTranslator
+from PySide2.QtWidgets import QApplication
+from PySide2.QtCore import QTranslator
 from src.configuration.config import Configuration
 
 config: Configuration = None

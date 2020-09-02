@@ -2,9 +2,9 @@
 '''Details Dialog'''
 # pylint: disable=invalid-name
 
-from PyQt5 import QtCore
-from PyQt5.QtGui import QTextDocument
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QTextEdit
+from PySide2 import QtCore
+from PySide2.QtGui import QTextDocument
+from PySide2.QtWidgets import QWidget, QHBoxLayout, QTextEdit
 
 from src.globals.constants import TRANSLATE
 from src.domain.mod import Mod
@@ -12,6 +12,7 @@ from src.domain.mod import Mod
 
 class DetailsDialog(QWidget):
     '''Dialog showing mod details'''
+
     def __init__(self, parent: QWidget, mod: Mod):
         super().__init__(parent)
 
@@ -37,9 +38,9 @@ class DetailsDialog(QWidget):
     def adjustWidth(self):
         '''Fits size to content'''
         self.resize(
-            self.document.idealWidth() + \
-                self.text.contentsMargins().left() + self.text.contentsMargins().right() + \
-                self.contentsMargins().left() + self.contentsMargins().right() + 50,
+            self.document.idealWidth() +
+            self.text.contentsMargins().left() + self.text.contentsMargins().right() +
+            self.contentsMargins().left() + self.contentsMargins().right() + 50,
             self.height())
 
     def showEvent(self, event):

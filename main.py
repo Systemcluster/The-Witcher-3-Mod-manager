@@ -7,7 +7,7 @@ import re
 from os import environ
 from argparse import ArgumentParser
 
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PySide2.QtWidgets import QApplication, QMessageBox
 
 from src.gui.main_window import CustomMainWindow
 from src.gui.main_widget import CustomMainWidget

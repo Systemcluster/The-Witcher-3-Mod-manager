@@ -7,9 +7,10 @@ import os.path as path
 from copy import deepcopy
 from typing import Union
 
-from PyQt5.QtWidgets import QMainWindow, QWidget
+from PySide2.QtWidgets import QMainWindow, QWidget
 
 from src.util.util import normalizePath, detectEncoding
+
 
 class Configuration:
     '''Configuration'''
@@ -29,8 +30,10 @@ class Configuration:
         else:
             self.__configPath = self.documents + '/The Witcher 3 Mod Manager'
 
-        self.config = configparser.ConfigParser(allow_no_value=True, delimiters='=')
-        self.priority = configparser.ConfigParser(allow_no_value=True, delimiters='=')
+        self.config = configparser.ConfigParser(
+            allow_no_value=True, delimiters='=')
+        self.priority = configparser.ConfigParser(
+            allow_no_value=True, delimiters='=')
 
         if not path.exists(self.__configPath):
             os.mkdir(self.__configPath)
@@ -73,9 +76,9 @@ class Configuration:
                 for option in priority.options(section):
                     value = priority.get(section, option)
                     priority.remove_option(section, option)
-                    priority.set(section, f'{option[:1].upper()}{option[1:].lower()}', value)
+                    priority.set(
+                        section, f'{option[:1].upper()}{option[1:].lower()}', value)
             priority.write(file, space_around_delimiters)
-
 
     def get(self, section: str, option: str):
         if self.config.has_option(section, option):
@@ -86,7 +89,6 @@ class Configuration:
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
-
 
     def getPriority(self, section: str):
         if self.priority.has_section(section):
@@ -129,6 +131,7 @@ class Configuration:
     @property
     def scriptmerger(self):
         return self.get('PATHS', 'scriptmerger')
+
     @scriptmerger.setter
     def scriptmerger(self, value: str):
         self.set('PATHS', 'scriptmerger', value)
@@ -136,6 +139,7 @@ class Configuration:
     @property
     def game(self):
         return self.get('PATHS', 'game')
+
     @game.setter
     def game(self, value: str):
         gamePath = self.getCorrectGamePath(value)
@@ -148,6 +152,7 @@ class Configuration:
     @property
     def allowpopups(self):
         return self.get('SETTINGS', 'AllowPopups')
+
     @allowpopups.setter
     def allowpopups(self, value):
         self.set('SETTINGS', 'AllowPopups', value)
@@ -155,6 +160,7 @@ class Configuration:
     @property
     def language(self):
         return self.get('SETTINGS', 'language')
+
     @language.setter
     def language(self, value):
         self.set('SETTINGS', 'language', value)
@@ -162,6 +168,7 @@ class Configuration:
     @property
     def lastpath(self):
         return self.get('PATHS', 'lastpath')
+
     @lastpath.setter
     def lastpath(self, value):
         self.set('PATHS', 'lastpath', value)
@@ -194,12 +201,12 @@ class Configuration:
     def gameexe(self):
         return self.game and self.game + '/bin/x64/witcher3.exe'
 
-
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
         self.set('WINDOW', 'width', str(window.width()))
         self.set('WINDOW', 'height', str(window.height()))
         for i in range(0, ui.treeWidget.header().count()+1):
-            self.set('WINDOW', 'section'+str(i), str(ui.treeWidget.header().sectionSize(i)))
+            self.set('WINDOW', 'section'+str(i),
+                     str(ui.treeWidget.header().sectionSize(i)))
 
     def setDefaultWindow(self):
         self.set('WINDOW', 'width', '1024')
