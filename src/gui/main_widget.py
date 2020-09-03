@@ -724,6 +724,7 @@ class CustomMainWidget(QWidget):
                 self.model.get(item.text(1)).enable()
             elif item.checkState(column) == Qt.Unchecked:
                 self.model.get(item.text(1)).disable()
+            self.model.write()
             self.refreshLoadOrder()
             self.alertRunScriptMerger()
         except Exception as err:
