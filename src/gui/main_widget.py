@@ -301,7 +301,7 @@ class CustomMainWidget(QWidget):
         self.loadOrder.header().sectionResized.connect(lambda: self.onResize())
         self.treeWidget.header().sectionResized.connect(lambda: self.onResize())
 
-    @debounce(250)
+    @throttle(200)
     def onResize(self):
         data.config.saveWindowSettings(self, self.mainWindow)
 
@@ -1092,7 +1092,6 @@ class CustomMainWidget(QWidget):
             return err
         return None
 
-    @debounce(200)
     def refreshLoadOrder(self):
         '''Refreshes right panel list - load order'''
         try:
