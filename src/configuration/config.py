@@ -21,6 +21,9 @@ class Configuration:
     config: configparser.ConfigParser = None  # type: ignore
     priority: configparser.ConfigParser = None  # type: ignore
 
+    configLastWritten: configparser.ConfigParser = None  # type: ignore
+    priorityLastWritten: configparser.ConfigParser = None  # type: ignore
+
     def __init__(self, documentsPath: str = '', gamePath: str = '', configPath: str = ''):
 
         if documentsPath:
@@ -75,22 +78,27 @@ class Configuration:
         self.config.read(file, encoding=detectEncoding(file))
 
     def write(self, space_around_delimiters: bool = False):
-        with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
-            print(f"writing config.ini to {self.__configPath + '/config.ini'}")
-            self.config.write(file, space_around_delimiters)
-        with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
-            print(
-                f"writing mode.settings to {self.__configPath + '/mods.settings'}")
-            # proper-case all keys
-            priority = deepcopy(self.priority)
-            priority.optionxform = str  # type: ignore
-            for section in priority.sections():
-                for option in priority.options(section):
-                    value = priority.get(section, option)
-                    priority.remove_option(section, option)
-                    priority.set(
-                        section, f'{option[:1].upper()}{option[1:].lower()}', value)
-            priority.write(file, space_around_delimiters)
+        if self.config != self.configLastWritten:
+            with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
+                print(
+                    f"writing config.ini to {self.__configPath + '/config.ini'}")
+                self.config.write(file, space_around_delimiters)
+            self.configLastWritten = deepcopy(self.config)
+        if self.priority != self.priorityLastWritten:
+            with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
+                print(
+                    f"writing mods.settings to {self.__configPath + '/mods.settings'}")
+                # proper-case all keys
+                priority = deepcopy(self.priority)
+                priority.optionxform = str  # type: ignore
+                for section in priority.sections():
+                    for option in priority.options(section):
+                        value = priority.get(section, option)
+                        priority.remove_option(section, option)
+                        priority.set(
+                            section, f'{option[:1].upper()}{option[1:].lower()}', value)
+                priority.write(file, space_around_delimiters)
+            self.priorityLastWritten = deepcopy(self.priority)
 
     def get(self, section: str, option: str):
         if self.config.has_option(section, option):
@@ -121,8 +129,8 @@ class Configuration:
             self.priority.remove_section(section)
         self.write()
 
-    def getWindowSection(self, section: str):
-        value = self.get('WINDOW', 'section'+str(section))
+    def getWindowSection(self, section: str, prefix: str = ''):
+        value = self.get('WINDOW', prefix+'section'+str(section))
         return int(value) if value else None
 
     def getOptions(self, section: str):
@@ -220,6 +228,12 @@ class Configuration:
         for i in range(0, ui.treeWidget.header().count()+1):
             self.set('WINDOW', 'section'+str(i),
                      str(ui.treeWidget.header().sectionSize(i)))
+        for i in range(0, ui.loadOrder.header().count() + 1):
+            self.set('WINDOW', 'losection'+str(i),
+                     str(ui.loadOrder.header().sectionSize(i)))
+        hsplit = ui.horizontalSplitter_tree.sizes()
+        self.set('WINDOW', 'hsplit0', str(hsplit[0]))
+        self.set('WINDOW', 'hsplit1', str(hsplit[1]))
 
     def setDefaultWindow(self):
         self.set('WINDOW', 'width', '1024')

@@ -4,16 +4,12 @@
 from sys import platform
 from os import path
 
-from PySide2.QtCore import Qt, QSize, QFileInfo, QRect, QMetaObject, Signal, QThread
-from PySide2.QtGui import QCursor
-from PySide2.QtWidgets import QWidget, QTreeWidget, \
-    QPushButton, QHBoxLayout, QVBoxLayout, QAction, QInputDialog, QLineEdit, \
-    QFileIconProvider, QAbstractItemView, QTextEdit, QSizePolicy, QMenu, QProgressBar, \
-    QMenuBar, QToolBar, QActionGroup, QMessageBox, QSplitter
+from PySide2.QtCore import QFileInfo, QMetaObject, QRect, QSize, QThread, Qt, Signal
+from PySide2.QtGui import QCursor, QResizeEvent
+from PySide2.QtWidgets import QAbstractItemView, QAction, QActionGroup, QFileIconProvider, QHBoxLayout, QHeaderView, QInputDialog, QLineEdit, QMenu, QMenuBar, QMessageBox, QProgressBar, QPushButton, QSizePolicy, QSplitter, QTextEdit, QToolBar, QTreeWidget, QVBoxLayout, QWidget
 
-from datetime import datetime, timedelta
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, PatternMatchingEventHandler
+from watchdog.events import PatternMatchingEventHandler
 
 from src.globals.constants import *
 from src.globals import data
@@ -301,6 +297,17 @@ class CustomMainWidget(QWidget):
 
         QMetaObject.connectSlotsByName(self.mainWindow)
 
+        self.mainWindow.resizeEvent = lambda e: self.onResize()  # type: ignore
+        self.loadOrder.header().sectionResized.connect(lambda: self.onResize())
+        self.treeWidget.header().sectionResized.connect(lambda: self.onResize())
+
+    @debounce(250)
+    def onResize(self):
+        data.config.saveWindowSettings(self, self.mainWindow)
+
+    def resizeEvent(self, event: QResizeEvent):
+        self.onResize()
+
     def translateUi(self):
         self.mainWindow.setWindowTitle(
             TRANSLATE("MainWindow", TITLE))
@@ -427,15 +434,17 @@ class CustomMainWidget(QWidget):
             if not data.config.getWindowSection(i):
                 data.config.setDefaultWindow()
                 break
-        self.resizeColumns()
 
         self.treeWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.treeWidget.header().setDefaultAlignment(Qt.AlignCenter)
         self.treeWidget.sortByColumn(1, Qt.AscendingOrder)
 
-        self.loadOrder.header().resizeSection(0, 180)
-        self.loadOrder.header().resizeSection(1, 40)
         self.loadOrder.header().setDefaultAlignment(Qt.AlignCenter)
+        self.loadOrder.header().setStretchLastSection(False)
+        self.loadOrder.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.loadOrder.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+
+        self.resizeColumns()
 
         self.actionInstall_Mods.triggered.connect(self.installMods)
         self.actionUninstall_Mods.triggered.connect(self.uninstallMods)
@@ -645,6 +654,18 @@ class CustomMainWidget(QWidget):
     def resizeColumns(self):
         for i in range(0, self.treeWidget.header().count()):
             self.treeWidget.header().resizeSection(i, data.config.getWindowSection(i) or 60)
+        for i in range(0, self.loadOrder.header().count() + 1):
+            size = data.config.getWindowSection(i, 'lo')
+            if size:
+                self.loadOrder.header().resizeSection(i, size)
+        try:
+            hsplit0 = data.config.get('WINDOW', 'hsplit0')
+            hsplit1 = data.config.get('WINDOW', 'hsplit1')
+            if hsplit0 and hsplit1:
+                self.horizontalSplitter_tree.setSizes(
+                    [int(hsplit0), int(hsplit1)])
+        except Exception as e:
+            print(f"couldn't restore split: {e}")
 
     def output(self, appendation):
         '''Prints appendation to the output text field'''
@@ -1070,7 +1091,7 @@ class CustomMainWidget(QWidget):
             return err
         return None
 
-    @throttle(200)
+    @debounce(200)
     def refreshLoadOrder(self):
         '''Refreshes right panel list - load order'''
         try:
