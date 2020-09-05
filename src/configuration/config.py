@@ -10,6 +10,7 @@ from typing import Union
 from PySide2.QtWidgets import QMainWindow, QWidget
 
 from src.util.util import detectEncoding, getConfigFolder, getConfigFolderName, getDocumentsFolder, normalizePath
+from src.gui.alerts import MessageAlertReadingConfigINI
 
 
 class Configuration:
@@ -75,7 +76,11 @@ class Configuration:
     def readConfig(self):
         print(f"reading config.ini from {self.__configPath + '/config.ini'}")
         file = self.__configPath + '/config.ini'
-        self.config.read(file, encoding=detectEncoding(file))
+        if os.path.isfile(file):
+            try:
+                self.config.read(file, encoding=detectEncoding(file))
+            except Exception as e:
+                MessageAlertReadingConfigINI(file, e)
 
     def write(self, space_around_delimiters: bool = False):
         if self.config != self.configLastWritten:

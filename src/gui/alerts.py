@@ -154,6 +154,22 @@ def MessageAlertReadingConfigurationFailed(path: str, error: Exception):
     return message.exec_()
 
 
+def MessageAlertReadingConfigINI(path: str, error: Exception):
+    '''Shows alert that reading the config.ini file failed'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "Failed to read configuration file"))
+    message.setText(
+        TRANSLATE("MainWindow", "Failed to read the configuration file:<br>") +
+        f"<code>{path}</code><br><br>" +
+        "The program will start with a new configuration.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    message.setDetailedText(f"{str(error)}")
+    return message.exec_()
+
+
 def MessageNotConfigured():
     '''Shows alert that an action is not supported on the OS'''
     message = QMessageBox(None)
