@@ -12,7 +12,8 @@ import os
 # trick used by distutils itself it installs itself into the virtualenv
 distutils_path = os.path.join(os.path.dirname(opcode.__file__), 'distutils')
 
-FILES = ["res/", "translations/", "tools/", (distutils_path, 'lib/distutils')]
+FILES = ["res/", "translations/", "tools/",
+         (distutils_path, 'lib/distutils'), ("res/qt.conf", "qt.conf")]
 SHORTCUT_TABLE = [
     (
         "DesktopShortcut",        # Shortcut
