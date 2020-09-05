@@ -11,10 +11,10 @@ def MessageRebindedKeys(key, temp):
     '''Shows dialog to let user decide what to do if rebinded key is found'''
     return QMessageBox.question(
         None,
-        TRANSLATE("MainWindow", "Rebinded key found"),
-        TRANSLATE("MainWindow", "Rebinded key found") + "\n" +
-        TRANSLATE("MainWindow", "Original key") + ": \n" + str(key) + "\n" +
-        TRANSLATE("MainWindow", "Current key") + ": " + str(temp) + "\n\n" +
+        TRANSLATE("MainWindow", "Key Rebinding Found"),
+        TRANSLATE("MainWindow", "Key rebinding found.") + "\n\n" +
+        TRANSLATE("MainWindow", "New key") + ": \n  " + str(key) + "\n" +
+        TRANSLATE("MainWindow", "Current key") + ": \n  " + str(temp) + "\n\n" +
         TRANSLATE("MainWindow", "Do you wish to keep your current key?"),
         QMessageBox.Yes | QMessageBox.YesToAll |
         QMessageBox.No | QMessageBox.NoToAll | QMessageBox.SaveAll,
