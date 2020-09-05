@@ -1,6 +1,6 @@
-# The Witcher 3 Mod Manager
+# The Witcher 3 Mod Manager with Linux support
 
-An application to simplify installing and managing mods for the game The Witcher 3.
+An application to simplify installing and managing mods for the game The Witcher 3. This version also supports Linux.
 
 ## Description
 
