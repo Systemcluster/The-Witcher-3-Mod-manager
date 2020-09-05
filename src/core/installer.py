@@ -173,23 +173,24 @@ class Installer:
             self.output(formatUserError(err))
             return False
 
-    @staticmethod
-    def removeModData(mod):
+    def removeModData(self, mod):
         '''Removes mod data'''
         for file in mod.files:
             if path.exists(data.config.mods + "/" + file):
                 rmtree(data.config.mods + "/" + file)
 
-    @staticmethod
-    def removeModDlcs(mod):
+    def removeModDlcs(self, mod):
         '''Removes dlc data'''
         for dlc in mod.dlcs:
             if path.exists(data.config.dlc + "/" + dlc):
                 rmtree(data.config.dlc + "/" + dlc)
 
-    @staticmethod
-    def removeModMenus(mod):
+    def removeModMenus(self, mod):
         '''Removes menu data'''
         for menu in mod.menus:
             if path.exists(data.config.menu + "/" + menu):
-                remove(data.config.menu + "/" + menu)
+                if menu in ("audio.xml", "gameplay.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
+                    self.output("Note: Additions to " +
+                                menu + " will not be removed.")
+                else:
+                    remove(data.config.menu + "/" + menu)
