@@ -108,8 +108,9 @@ class Mod:
                     for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
                         for file in fls:
                             if (path.exists(subdir + "/" + file)):
-                                rename(subdir + "/" + file,
-                                       subdir + "/" + file[:-9])
+                                if file.endswith(".disabled") and not file.startswith("."):
+                                    rename(subdir + "/" + file,
+                                           subdir + "/" + file[:-9])
             for filedata in iter(self.files):
                 if path.exists(data.config.mods + "/~" + filedata):
                     rename(
@@ -121,7 +122,7 @@ class Mod:
         if (self.enabled):
             self.uninstallXmlKeys()
             for menu in iter(self.menus):
-                if path.exists(data.config.menu + "/" + menu):
+                if path.exists(data.config.menu + "/" + menu) and not menu.endswith(".disabled"):
                     rename(
                         data.config.menu + "/" + menu,
                         data.config.menu + "/" + menu + ".disabled")
@@ -129,14 +130,16 @@ class Mod:
                 if path.exists(data.config.dlc + "/" + dlc):
                     for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
                         for file in fls:
-                            rename(
-                                path.join(subdir, file),
-                                path.join(subdir, file) + ".disabled")
+                            if not file.endswith(".disabled") and not file.startswith("."):
+                                rename(
+                                    path.join(subdir, file),
+                                    path.join(subdir, file) + ".disabled")
             for filedata in iter(self.files):
                 if path.exists(data.config.mods + "/" + filedata):
-                    rename(
-                        data.config.mods + "/" + filedata,
-                        data.config.mods + "/~" + filedata)
+                    if not filedata.startswith("~"):
+                        rename(
+                            data.config.mods + "/" + filedata,
+                            data.config.mods + "/~" + filedata)
             self.enabled = False
 
     def checkPriority(self):
