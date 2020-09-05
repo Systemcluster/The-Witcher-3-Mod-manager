@@ -919,7 +919,8 @@ class CustomMainWidget(QWidget):
                 lastpath, _ = path.split(file[0])
                 data.config.lastpath = lastpath
                 self.refreshList()
-                self.alertRunScriptMerger()
+                if successCount:
+                    self.alertRunScriptMerger()
                 self.setProgress(0)
             else:
                 self.output(TRANSLATE("MainWindow", "Installation canceled"))
