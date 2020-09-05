@@ -136,7 +136,10 @@ def openFile(path: str):
                     else:
                         webbrowser.open(path, new=1)
             else:
-                os.startfile(path)
+                try:
+                    os.startfile(path)
+                except Exception as e:
+                    webbrowser.open(path, new=1)
         elif os.path.isdir(path):
             openFolder(path)
         else:
