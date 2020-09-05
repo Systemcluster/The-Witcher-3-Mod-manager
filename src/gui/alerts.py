@@ -152,3 +152,17 @@ def MessageAlertReadingConfigurationFailed(path: str, error: Exception):
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{str(error)}")
     return message.exec_()
+
+
+def MessageNotConfigured():
+    '''Shows alert that an action is not supported on the OS'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Information)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "The Witcher 3 Mod Manager - Configuration"))
+    message.setText(
+        TRANSLATE("MainWindow", "Welcome! Please select your <code>witcher3.exe</code> in the next dialog.<br><br>") +
+        "This file can be found in the games installation directory under <code>bin/x64/witcher3.exe</code>.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    return message.exec_()

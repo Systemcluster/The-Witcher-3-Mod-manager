@@ -20,7 +20,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
 from src.globals import data
 from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
-from src.gui.alerts import MessageCouldntOpenFile, MessageUnsupportedOS
+from src.gui.alerts import MessageCouldntOpenFile, MessageNotConfigured, MessageUnsupportedOS
 
 
 def formatUserError(error: Exception) -> str:
@@ -71,6 +71,7 @@ def normalizePath(path: str) -> str:
 
 
 def reconfigureGamePath() -> bool:
+    MessageNotConfigured()
     gamePath = str(QFileDialog.getOpenFileName(
         None,
         TRANSLATE("MainWindow", "Select witcher3.exe"),
