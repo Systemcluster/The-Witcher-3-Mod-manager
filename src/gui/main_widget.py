@@ -1008,7 +1008,7 @@ class CustomMainWidget(QWidget):
             directory, _ = path.split(scriptmergerpath)
             if platform == "win32" or platform == "cygwin":
                 subprocess.Popen([scriptmergerpath], cwd=directory)
-            if platform == "linux" or platform == "darwin":
+            elif platform == "linux" or platform == "darwin":
                 subprocess.Popen(["wine", scriptmergerpath], cwd=directory)
             else:
                 MessageUnsupportedOSAction("")
