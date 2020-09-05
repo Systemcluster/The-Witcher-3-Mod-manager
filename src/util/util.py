@@ -63,7 +63,11 @@ def getVersionString() -> str:
 
 
 def getProgramRootFolder() -> str:
-    return normalizePath(os.path.dirname(os.path.abspath(__file__))+"/../../")
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        return normalizePath(os.path.dirname(sys.executable))
+    else:
+        return normalizePath(os.path.dirname(os.path.abspath(__file__))+"/../../")
 
 
 def normalizePath(path: str) -> str:
