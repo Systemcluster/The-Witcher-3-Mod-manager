@@ -13,6 +13,7 @@ from src.globals import data
 from src.core.fetcher import *
 from src.util.util import *
 from src.util.syntax import *
+from src.gui.alerts import MessageAlertReadingConfigurationFailed, MessageAlertWritingFailed
 
 
 class Model:
@@ -29,11 +30,17 @@ class Model:
     def reload(self) -> None:
         self.modList = {}
         if path.exists(self.xmlfile):
-            tree = XML.parse(self.xmlfile)
-            root = tree.getroot()
-            for xmlmod in root.findall('mod'):
-                mod = self.populateModFromXml(Mod(), xmlmod)
-                self.modList[mod.name] = mod
+            try:
+                encoding = detectEncoding(self.xmlfile)
+                with open(self.xmlfile, 'r', encoding=encoding) as file:
+                    tree = XML.parse(file)
+                root = tree.getroot()
+                for xmlmod in root.findall('mod'):
+                    mod = self.populateModFromXml(Mod(), xmlmod)
+                    self.modList[mod.name] = mod
+            except XML.ParseError as e:
+                MessageAlertReadingConfigurationFailed(self.xmlfile, e)
+                raise e
 
     def write(self) -> None:
         root = XML.ElementTree(XML.Element('installed'))
@@ -41,7 +48,18 @@ class Model:
             root = self.writeModToXml(mod, root)
         indent(root.getroot())
         print(f"writing mod list to {self.xmlfile}")
-        root.write(self.xmlfile)
+        try:
+            # write to a copy first to work around writing errors
+            encoding = detectEncoding(self.xmlfile)
+            with open(self.xmlfile + ".new", 'wb') as file:
+                root.write(file, encoding=encoding)
+            if os.path.isfile(self.xmlfile + ".old"):
+                os.remove(self.xmlfile + ".old")
+            if os.path.isfile(self.xmlfile):
+                os.rename(self.xmlfile, self.xmlfile + ".old")
+            os.rename(self.xmlfile + ".new", self.xmlfile)
+        except Exception as e:
+            MessageAlertWritingFailed(self.xmlfile, e)
 
     def get(self, modname: str) -> Mod:
         return self.modList[modname]

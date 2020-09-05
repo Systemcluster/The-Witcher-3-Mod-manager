@@ -119,3 +119,36 @@ def MessageUnsupportedOSAction(message: str):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     return message.exec_()
+
+
+def MessageAlertWritingFailed(path: str, error: Exception):
+    '''Shows alert that writing to a file failed'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(TRANSLATE("MainWindow", "Failed to write file"))
+    message.setText(
+        TRANSLATE("MainWindow", "Failed to write to a file:<br>") +
+        f"<code>{path}</code><br><br>" +
+        "Please check if the file is still valid.<br>" +
+        "Otherwise check if a .old copy exists in its location and copy over its contents.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    message.setDetailedText(f"{str(error)}")
+    return message.exec_()
+
+
+def MessageAlertReadingConfigurationFailed(path: str, error: Exception):
+    '''Shows alert that reading a configuration file failed'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Warning)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "Failed to read configuration file"))
+    message.setText(
+        TRANSLATE("MainWindow", "Failed to read a configuration file:<br>") +
+        f"<code>{path}</code><br><br>" +
+        "Please check if the file is still valid.<br>" +
+        "Otherwise check if a .old copy exists in its location and copy over its contents.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    message.setDetailedText(f"{str(error)}")
+    return message.exec_()
