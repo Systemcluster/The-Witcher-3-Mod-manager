@@ -182,3 +182,16 @@ def MessageNotConfigured():
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     return message.exec_()
+
+
+def MessageAlertModFromGamePath():
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Information)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "Invalid Mod Location"))
+    message.setText(
+        "Adding mods from within the game's directory is not supported.<br>" +
+        "If you want to add existing mods to the manager you have to uninstall them first.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    return message.exec_()

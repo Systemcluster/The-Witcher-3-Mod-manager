@@ -12,7 +12,7 @@ from src.globals import data
 from src.util.util import *
 from src.core.fetcher import *
 from src.core.model import Model
-from src.gui.alerts import MessageOverwrite
+from src.gui.alerts import MessageAlertModFromGamePath, MessageOverwrite
 from src.globals.constants import TRANSLATE
 
 
@@ -28,6 +28,10 @@ class Installer:
 
     def installMod(self, modPath: str) -> Tuple[bool, int]:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
+
+        if os.path.realpath(modPath).startswith(os.path.realpath(data.config.game)):
+            MessageAlertModFromGamePath()
+            return False, 0
 
         installCount = 0
         modname = path.split(modPath)[1]
