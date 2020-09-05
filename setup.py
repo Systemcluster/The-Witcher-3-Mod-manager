@@ -42,7 +42,7 @@ setup(
     options={
         "build_exe": {
             "include_files": FILES,
-            "excludes": ["distutils"],
+            "excludes": ["distutils", "patool", "pyunpack"],
             "optimize": 2,
             "zip_include_packages": ["src"]
         },
