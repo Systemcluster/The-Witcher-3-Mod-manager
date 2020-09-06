@@ -167,6 +167,7 @@ class Installer:
             mod.installUserSettings()
             mod.uninstallXmlKeys()
             mod.installXmlKeys()
+            mod.installInputKeys()
             # TODO: re-fetch and copy xml files
             return True
         except Exception as err:

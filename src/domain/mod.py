@@ -193,6 +193,7 @@ class Mod:
                 text = userfile.write(text)
 
     def installInputKeys(self) -> int:
+        print("installing input settings", str(self.inputsettings))
         added = 0
         if (self.inputsettings):
             text = ''
