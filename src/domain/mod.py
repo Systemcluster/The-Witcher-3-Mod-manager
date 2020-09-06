@@ -262,7 +262,7 @@ class Mod:
                                 r"\[" + keycontext + r"\]\n",
                                 r"[" + keycontext + r"]\n" + str(key) + r"\n",
                                 text)
-            with open(data.config.settings + "/input.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings + "/input.settings", 'w', encoding="utf-8") as userfile:
                 text = userfile.write(text)
         return added
 
@@ -278,7 +278,7 @@ class Mod:
                     config.add_section(setting.context)
                 config.set(setting.context, setting.option, setting.value)
                 added += 1
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
                 config.write(userfile, space_around_delimiters=False)
         return added
 
@@ -291,7 +291,7 @@ class Mod:
             for setting in iter(self.usersettings):
                 if config.has_section(setting.context):
                     config.remove_option(setting.context, setting.option)
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
                 config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):

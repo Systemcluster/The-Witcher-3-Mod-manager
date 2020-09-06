@@ -90,7 +90,7 @@ class Configuration:
                 self.config.write(file, space_around_delimiters)
             self.configLastWritten = deepcopy(self.config)
         if self.priority != self.priorityLastWritten:
-            with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
+            with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8') as file:
                 print(
                     f"writing mods.settings to {self.__configPath + '/mods.settings'}")
                 # proper-case all keys
