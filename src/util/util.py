@@ -32,15 +32,25 @@ def formatUserError(error: Exception) -> str:
 
 
 def getDocumentsFolder() -> str:
+    path = ""
     if platform == "win32" or platform == "cygwin":
         from ctypes import create_unicode_buffer, wintypes, windll
         buf = create_unicode_buffer(wintypes.MAX_PATH)
         windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
-        return normalizePath(buf.value)
-    if platform == "linux" or platform == "darwin":
-        return normalizePath(os.path.expanduser("~/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"))
-    MessageUnsupportedOS(platform)
-    sys.exit(1)
+        path = normalizePath(buf.value)
+    elif platform == "linux" or platform == "darwin":
+        # try steam proton documents location path
+        path = normalizePath(os.path.expanduser(
+            "~/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"))
+    else:
+        MessageUnsupportedOS(platform)
+        sys.exit(1)
+    if not path or not os.path.exists(path):
+        path = normalizePath(str(QFileDialog.getExistingDirectory(
+            None,
+            "Select \"My Documents\" directory containing the Witcher 3 config directory",
+            "My Documents")))
+    return path
 
 
 def getConfigFolder() -> str:
