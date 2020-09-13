@@ -199,6 +199,9 @@ def fetchUserSettings(filetext: str) -> List[Usersetting]:
         arr = filter(lambda s: s != '', str(res).split('\n'))
         context = ''
         for line in arr:
+            line = line.strip()
+            if not line:
+                continue
             if line[0] == "[":
                 context = line
             else:
