@@ -33,6 +33,7 @@ class Mod:
     usersettings: List[object] = field(default_factory=list)
     inputsettings: List[object] = field(default_factory=list)
     hidden: List[str] = field(default_factory=list)
+    readmes: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -337,4 +338,8 @@ class Mod:
                     context = elem.context
                     string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
+        if (self.readmes):
+            string += "\nREADMES:\n"
+            for readme in iter(self.readmes):
+                string += readme + "\n"
         return string

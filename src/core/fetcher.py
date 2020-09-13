@@ -13,7 +13,7 @@ from src.globals import data
 from src.domain.key import Key
 from src.domain.usersetting import Usersetting
 from src.domain.mod import Mod
-from src.util.util import normalizePath
+from src.util.util import normalizePath, detectEncoding
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
@@ -48,10 +48,13 @@ def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     mod = Mod(path.split(modPath)[1])
     mod_dirs: List[str] = []
     mod_xmls: List[str] = []
+    mod_readmes: List[str] = []
     for current_dir, _, _ in walk(modPath):
         if fetchDataIfRelevantFolder(current_dir, mod):
             mod_dirs.append(normalizePath(current_dir))
         mod_xmls += fetchDataFromRelevantFiles(current_dir, mod)
+        mod_readmes.extend(fetchReadmes(current_dir))
+    mod.readmes = mod_readmes
     return mod, mod_dirs, mod_xmls
 
 # tested
@@ -126,6 +129,15 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
                 if usrs:
                     mod.usersettings += usrs
     return mod_xmls
+
+
+def fetchReadmes(current_dir: str) -> List[str]:
+    readmes = []
+    for file in getAllFilesFromDirectory(current_dir):
+        if bool(re.match(r"^(.*readme.*)\.(txt|md)$", file, re.IGNORECASE)):
+            with open(join(current_dir, file), 'r', encoding=detectEncoding(file)) as f:
+                readmes.append(f.read())
+    return readmes
 
 # tested
 

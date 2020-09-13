@@ -137,6 +137,8 @@ class Model:
         for elem in root.findall('setting'):
             usersetting = Usersetting(str(elem.get('context')), str(elem.text))
             mod.usersettings.append(usersetting)
+        for elem in root.findall('readme'):
+            mod.readmes.append(str(elem.text))
 
         mod.checkPriority()
         return mod
@@ -173,4 +175,8 @@ class Model:
                 us = XML.SubElement(elem, 'setting')
                 us.text = str(usersetting)
                 us.set('context', usersetting.context)
+        if mod.readmes:
+            for readme in mod.readmes:
+                us = XML.SubElement(elem, 'readme')
+                us.text = str(readme)
         return root
