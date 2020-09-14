@@ -65,7 +65,7 @@ class Configuration:
         if not path.exists(self.__userSettingsPath):
             os.mkdir(self.__userSettingsPath)
 
-        self.set('PATHS', 'documents', self.documents)
+        self.set('PATHS', 'documents', self.documents, False)
 
         self.readPriority()
 
@@ -74,7 +74,7 @@ class Configuration:
             self.game = gamePath
 
         if not self.get('PATHS', 'scriptmerger'):
-            self.set('PATHS', 'scriptmerger', '')
+            self.set('PATHS', 'scriptmerger', '', False)
         if not self.allowpopups:
             self.allowpopups = '1'
         if not self.language:
@@ -124,11 +124,12 @@ class Configuration:
             return self.config.get(section, option)
         return None
 
-    def set(self, section: str, option: str, value):
+    def set(self, section: str, option: str, value, write: bool = True):
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
-        self.write()
+        if write:
+            self.write()
 
     def getPriority(self, section: str):
         if self.priority.has_section(section):
