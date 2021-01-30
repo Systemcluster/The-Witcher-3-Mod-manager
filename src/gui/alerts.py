@@ -171,7 +171,7 @@ def MessageAlertReadingConfigINI(path: str, error: Exception):
 
 
 def MessageNotConfigured():
-    '''Shows alert that an action is not supported on the OS'''
+    '''Shows alert that the game path configuration is missing'''
     message = QMessageBox(None)
     message.setIcon(QMessageBox.Information)
     message.setWindowTitle(
@@ -179,6 +179,21 @@ def MessageNotConfigured():
     message.setText(
         TRANSLATE("MainWindow", "Welcome! Please select your <code>witcher3.exe</code> in the next dialog.<br><br>") +
         "This file can be found in the games installation directory under <code>bin/x64/witcher3.exe</code>.<br><br>")
+    message.setStandardButtons(QMessageBox.Ok)
+    message.setTextFormat(Qt.RichText)
+    return message.exec_()
+
+
+def MessageNotConfiguredScriptMerger():
+    '''Shows alert that the script merger path configuration is missing'''
+    message = QMessageBox(None)
+    message.setIcon(QMessageBox.Information)
+    message.setWindowTitle(
+        TRANSLATE("MainWindow", "The Witcher 3 Mod Manager - Configuration"))
+    message.setText(
+        TRANSLATE("MainWindow", "Please select your <code>WitcherScriptMerger.exe</code> in the next dialog.<br><br>") +
+        "Script Merger is not included and has to be downloaded separately.<br>" +
+        "It can be found at <a href=\"https://www.nexusmods.com/witcher3/mods/484\">https://www.nexusmods.com/witcher3/mods/484</a><br><br>")
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     return message.exec_()

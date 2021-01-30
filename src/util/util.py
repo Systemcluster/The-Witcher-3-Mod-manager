@@ -21,7 +21,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
 from src.globals import data
 from src.globals.constants import *
 from src.gui.file_dialog import FileDialog
-from src.gui.alerts import MessageCouldntOpenFile, MessageNotConfigured, MessageUnsupportedOS
+from src.gui.alerts import MessageCouldntOpenFile, MessageNotConfigured, MessageNotConfiguredScriptMerger, MessageUnsupportedOS
 
 
 def formatUserError(error: Exception) -> str:
@@ -106,6 +106,7 @@ def reconfigureGamePath() -> bool:
 
 
 def reconfigureScriptMergerPath():
+    MessageNotConfiguredScriptMerger()
     mergerPath = str(QFileDialog.getOpenFileName(
         None,
         TRANSLATE("MainWindow", "Select script merger .exe"),
