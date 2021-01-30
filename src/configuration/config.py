@@ -46,6 +46,10 @@ class Configuration:
 
         self.readConfig()
 
+        if documentsPath and not os.path.exists(documentsPath):
+            print(
+                f'documents path override {documentsPath} is invalid, starting with existing configuration')
+
         if documentsPath and os.path.exists(documentsPath):
             self.documents = documentsPath
         elif self.get('PATHS', 'documents') and os.path.exists(self.get('PATHS', 'documents')):
@@ -69,9 +73,13 @@ class Configuration:
 
         self.readPriority()
 
-        gamePath = self.getCorrectGamePath(gamePath)
         if gamePath:
-            self.game = gamePath
+            correctGamePath = self.getCorrectGamePath(gamePath)
+            if correctGamePath:
+                self.game = correctGamePath
+            else:
+                print(
+                    f'game path override {gamePath} is invalid, starting with existing configuration')
 
         if not self.get('PATHS', 'scriptmerger'):
             self.set('PATHS', 'scriptmerger', '', False)

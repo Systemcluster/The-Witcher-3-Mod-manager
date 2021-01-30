@@ -25,6 +25,9 @@ if __name__ == "__main__":
         del environ["QT_DEVICE_PIXEL_RATIO"]
     environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
+    documentsPath: str = ''
+    gamePath: str = ''
+    configPath: str = ''
     try:
         parser = ArgumentParser(description=getVersionString())
         parser.add_argument(
@@ -33,16 +36,31 @@ if __name__ == "__main__":
         parser.add_argument(
             "-v", "--version", dest="version", action="store_true", default=False,
             help="show version information and exit")
+        dirs = parser.add_argument_group(
+            title='start overrides'
+        )
+        dirs.add_argument(
+            "-u", "--userdocuments", dest="userdocuments", type=str, default="",
+            help="override the documents path")
+        dirs.add_argument(
+            "-g", "--game", dest="game", type=str, default="",
+            help="override the game path")
+        dirs.add_argument(
+            "-c", "--config", dest="config", type=str, default="",
+            help="override the config path")
         args = parser.parse_args()
         data.debug = args.debug
         if args.version:
             print(getVersionString())
             sys.exit()
+        documentsPath = args.userdocuments
+        gamePath = args.game
+        configPath = args.config
     except Exception as e:
         print(str(e))
 
     data.app = QApplication(sys.argv)
-    data.config = Configuration()
+    data.config = Configuration(documentsPath, gamePath, configPath)
     translateToChosenLanguage()
 
     if not Configuration.getCorrectGamePath(data.config.game):
