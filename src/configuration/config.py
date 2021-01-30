@@ -31,8 +31,8 @@ class Configuration:
         if configPath:
             self.__configPath = configPath
         else:
-            if path.isfile(path.curdir + '/config.ini'):
-                self.__configPath = path.curdir
+            if path.isfile(path.realpath(path.curdir) + '/config.ini'):
+                self.__configPath = path.realpath(path.curdir)
             else:
                 self.__configPath = getConfigFolder() + '/' + getConfigFolderName()
 
