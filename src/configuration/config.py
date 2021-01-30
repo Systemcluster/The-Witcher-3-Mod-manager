@@ -37,9 +37,9 @@ class Configuration:
                 self.__configPath = getConfigFolder() + '/' + getConfigFolderName()
 
         self.config = configparser.ConfigParser(
-            allow_no_value=True, delimiters='=')
+            allow_no_value=True, delimiters='=', strict=False)
         self.priority = configparser.ConfigParser(
-            allow_no_value=True, delimiters='=')
+            allow_no_value=True, delimiters='=', strict=False)
 
         if not path.exists(self.__configPath):
             os.mkdir(self.__configPath)
