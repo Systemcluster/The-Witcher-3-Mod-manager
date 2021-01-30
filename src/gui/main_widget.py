@@ -988,13 +988,17 @@ class CustomMainWidget(QWidget):
     def runTheGame(self):
         '''Runs the game'''
         try:
-            gamepath = data.config.gameexe
-            directory, _ = path.split(gamepath)
-            if platform == "win32" or platform == "cygwin":
-                subprocess.Popen([gamepath], cwd=directory)
+            if data.config.gamelaunchcommand:
+                subprocess.Popen(
+                    data.config.gamelaunchcommand)
             else:
-                MessageUnsupportedOSAction(
-                    "Please run the game through Steam.")
+                gamepath = data.config.gameexe
+                directory, _ = path.split(gamepath)
+                if platform == "win32" or platform == "cygwin":
+                    subprocess.Popen([gamepath], cwd=directory)
+                else:
+                    MessageUnsupportedOSAction(
+                        "Please run the game through Steam.")
         except Exception as err:
             self.output(formatUserError(err))
 

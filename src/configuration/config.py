@@ -250,6 +250,10 @@ class Configuration:
     def gameexe(self):
         return self.game and self.game + '/bin/x64/witcher3.exe'
 
+    @property
+    def gamelaunchcommand(self):
+        return self.get("PATHS", "gamelaunchcommand")
+
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
         self.set('WINDOW', 'width', str(window.width()))
         self.set('WINDOW', 'height', str(window.height()))
