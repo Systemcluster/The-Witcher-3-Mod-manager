@@ -13,6 +13,7 @@ from platform import python_version
 from configparser import ConfigParser
 from threading import Timer
 import cchardet
+from typing import Callable, Any
 
 from PySide2 import QtGui, QtCore, __version__
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QWidget
@@ -180,10 +181,19 @@ def copyFolder(src, dst):
     src = os.path.normpath(src)
     print(
         f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
-    rmtree(dst, ignore_errors=True)
+    removeDirectory(dst)
     while os.path.isdir(dst):
         pass
     copytree(src, dst)
+
+
+def removeDirectory(directory: str) -> None:
+    def getWriteAccess(func: Callable, directory: str, exc_info: Any) -> None:
+        import stat
+        os.chmod(directory, stat.S_IWRITE)
+        func(directory)
+    if os.path.isdir(directory):
+        rmtree(directory, onerror=getWriteAccess)
 
 
 def restartProgram():

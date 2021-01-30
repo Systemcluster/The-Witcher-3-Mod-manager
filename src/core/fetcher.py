@@ -4,7 +4,6 @@
 from sys import platform
 import re
 import subprocess
-import shutil as files
 from os import path, walk, listdir, mkdir
 from os.path import isfile, join
 from typing import Tuple, List
@@ -13,7 +12,7 @@ from src.globals import data
 from src.domain.key import Key
 from src.domain.usersetting import Usersetting
 from src.domain.mod import Mod
-from src.util.util import detectEncoding, getProgramRootFolder, normalizePath
+from src.util.util import detectEncoding, getProgramRootFolder, normalizePath, removeDirectory
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
@@ -247,7 +246,7 @@ def extractArchive(modPath: str) -> str:
     extractedDir = normalizePath(data.config.extracted)
     modPath = normalizePath(modPath)
     if (path.exists(extractedDir)):
-        files.rmtree(extractedDir)
+        removeDirectory(extractedDir)
         while path.isdir(extractedDir):
             pass
     mkdir(extractedDir)

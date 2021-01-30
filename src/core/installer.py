@@ -3,7 +3,7 @@
 
 from os import path, listdir, remove, mkdir
 from time import gmtime, strftime
-from shutil import rmtree, copyfile
+from shutil import copyfile
 from dataclasses import dataclass
 from typing import Callable, Any
 
@@ -144,7 +144,7 @@ class Installer:
             installCount = 0
         finally:
             if path.exists(data.config.extracted):
-                rmtree(data.config.extracted)
+                removeDirectory(data.config.extracted)
         return result, installCount
 
     def uninstallMod(self, mod: Mod) -> bool:
@@ -186,13 +186,13 @@ class Installer:
         '''Removes mod data'''
         for file in mod.files:
             if path.exists(data.config.mods + "/" + file):
-                rmtree(data.config.mods + "/" + file)
+                removeDirectory(data.config.mods + "/" + file)
 
     def removeModDlcs(self, mod):
         '''Removes dlc data'''
         for dlc in mod.dlcs:
             if path.exists(data.config.dlc + "/" + dlc):
-                rmtree(data.config.dlc + "/" + dlc)
+                removeDirectory(data.config.dlc + "/" + dlc)
 
     def removeModMenus(self, mod):
         '''Removes menu data'''
