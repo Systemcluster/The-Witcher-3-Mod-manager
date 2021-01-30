@@ -13,7 +13,7 @@ from src.globals import data
 from src.domain.key import Key
 from src.domain.usersetting import Usersetting
 from src.domain.mod import Mod
-from src.util.util import normalizePath, detectEncoding
+from src.util.util import detectEncoding, getProgramRootFolder, normalizePath
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
@@ -244,7 +244,8 @@ def isArchive(modPath: str) -> bool:
 
 
 def extractArchive(modPath: str) -> str:
-    extractedDir = data.config.extracted
+    extractedDir = normalizePath(data.config.extracted)
+    modPath = normalizePath(modPath)
     if (path.exists(extractedDir)):
         files.rmtree(extractedDir)
         while path.isdir(extractedDir):
@@ -254,9 +255,16 @@ def extractArchive(modPath: str) -> str:
         si = subprocess.STARTUPINFO()
         CREATE_NO_WINDOW = 0x08000000
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        subprocess.call(
-            r'tools\\7zip\\7z x "' + modPath + '" -o' + '"' + extractedDir + '"',
-            creationflags=CREATE_NO_WINDOW, startupinfo=si)
+        exe = getProgramRootFolder() + "/tools/7zip/7z.exe"
+        result = subprocess.run(
+            [exe, "x", modPath, "-o" + extractedDir, "-y"],
+            creationflags=CREATE_NO_WINDOW, startupinfo=si,
+            stdin=subprocess.DEVNULL, capture_output=True)
+        if result.returncode != 0:
+            raise IOError(
+                result.stderr.decode(
+                    'utf-8') if result.stderr else 'Could not extract archive'
+            )
     else:
         from pyunpack import Archive
         Archive(modPath).extractall(extractedDir)
