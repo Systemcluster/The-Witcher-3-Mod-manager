@@ -29,8 +29,10 @@ class Installer:
     def installMod(self, modPath: str) -> Tuple[bool, int]:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
 
-        if os.path.realpath(modPath).startswith(os.path.realpath(data.config.game)):
-            MessageAlertModFromGamePath()
+        realModPath = os.path.realpath(modPath)
+        realGamePath = os.path.realpath(data.config.game)
+        if realModPath and realGamePath and realModPath.startswith(realGamePath):
+            MessageAlertModFromGamePath(realModPath, realGamePath)
             return False, 0
 
         installCount = 0
