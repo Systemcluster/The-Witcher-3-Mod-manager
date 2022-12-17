@@ -177,6 +177,8 @@ class Installer:
             mod.installUserSettings()
             mod.uninstallXmlKeys()
             mod.installXmlKeys()
+            mod.uninstallMenus()
+            mod.installMenus()
             mod.installInputKeys()
             # TODO: re-fetch and copy xml files
             return True
@@ -200,7 +202,7 @@ class Installer:
         '''Removes menu data'''
         for menu in mod.menus:
             if path.exists(data.config.menu + "/" + menu):
-                if menu in ("audio.xml", "gameplay.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
+                if menu in ("audio.xml", "display.xml", "dx11filelist.txt", "dx12filelist.txt", "gameplay.xml", "gamma.xml", "graphics.xml", "graphicsdx11.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
                     self.output("Note: Additions to " +
                                 menu + " will not be removed.")
                 else:

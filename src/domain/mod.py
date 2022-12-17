@@ -99,6 +99,7 @@ class Mod:
     def enable(self):
         if (not self.enabled):
             self.installXmlKeys()
+            self.installMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu + ".disabled"):
                     rename(
@@ -122,6 +123,7 @@ class Mod:
     def disable(self):
         if (self.enabled):
             self.uninstallXmlKeys()
+            self.uninstallMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu) and not menu.endswith(".disabled"):
                     rename(
