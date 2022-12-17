@@ -178,7 +178,7 @@ def MessageNotConfigured():
         TRANSLATE("MainWindow", "The Witcher 3 Mod Manager - Configuration"))
     message.setText(
         TRANSLATE("MainWindow", "Welcome! Please select your <code>witcher3.exe</code> in the next dialog.<br><br>") +
-        "This file can be found in the games installation directory under <code>bin/x64/witcher3.exe</code>.<br><br>")
+        "This file can be found in the games installation directory under <code>bin/x64/witcher3.exe</code> or <code>bin/x64_dx12/witcher3.exe</code>.<br><br>")
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     return message.exec_()

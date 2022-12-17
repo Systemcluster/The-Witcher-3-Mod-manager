@@ -107,6 +107,7 @@ class Installer:
             if (not mod.files and not mod.dlcs):
                 raise Exception('No data found in ' + "'"+mod.name+"'")
 
+            mod.installMenus()
             mod.installXmlKeys()
             mod.installInputKeys()
             mod.installUserSettings()
@@ -154,6 +155,7 @@ class Installer:
                 TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
+            mod.uninstallMenus()
             mod.uninstallXmlKeys()
             mod.uninstallUserSettings()
             self.removeModMenus(mod)

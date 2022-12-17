@@ -187,16 +187,37 @@ class Configuration:
 
     @property
     def game(self):
-        return self.get('PATHS', 'game')
+        gameDirectory = self.get('PATHS', 'gameexe')
+        for _ in range(3):
+            gameDirectory, _ = path.split(gameDirectory)
+        return gameDirectory
 
-    @game.setter
-    def game(self, value: str):
-        gamePath = self.getCorrectGamePath(value)
-        if not gamePath:
-            raise ValueError('Invalid game path \'' + value + '\'')
-        self.set('PATHS', 'game', gamePath)
-        if not path.exists(gamePath + '/Mods'):
-            os.mkdir(gamePath + '/Mods')
+    @property
+    def gameexe(self):
+        return self.get('PATHS', 'gameexe')
+
+    @property
+    def gameversion(self):
+        if path.exists(self.game + "/bin/x64_dx12"):
+            return "ng"
+        else:
+            return "og"
+
+    @property
+    def gameengine(self):
+        if "x64_dx12" in self.gameexe:
+            return "dx12"
+        else:
+            return "dx11"
+
+    @gameexe.setter
+    def gameexe(self, value: str):
+        gameexe = self.getCorrectGamePath(value)
+        if not gameexe:
+            raise ValueError('Invalid game exe path \'' + value + '\'')
+        self.set('PATHS', 'gameexe', gameexe)
+        if not path.exists(self.game + '/Mods'):
+            os.mkdir(self.game + '/Mods')
 
     @property
     def allowpopups(self):
@@ -247,10 +268,6 @@ class Configuration:
         return self.__configPath + '/extracted'
 
     @property
-    def gameexe(self):
-        return self.game and self.game + '/bin/x64/witcher3.exe'
-
-    @property
     def gamelaunchcommand(self):
         return self.get("PATHS", "gamelaunchcommand")
 
@@ -286,12 +303,14 @@ class Configuration:
     @staticmethod
     def getCorrectGamePath(gamePath: Union[str, None]) -> str:
         '''Checks and corrects game path'''
+        gameDirectory = ""
         if not gamePath:
             return ''
         _, ext = path.splitext(gamePath)
+        gameDirectory = gamePath
         if ext == '.exe':
             for _ in range(3):
-                gamePath, _ = path.split(gamePath)
-        return normalizePath(gamePath) if path.exists(gamePath) \
-            and path.exists(gamePath + '/content') \
-            and path.isfile(gamePath + '/bin/x64/witcher3.exe') else ''
+                gameDirectory, _ = path.split(gameDirectory)
+        return normalizePath(gamePath) if path.exists(gameDirectory) \
+            and path.exists(gameDirectory + '/content') \
+            and path.isfile(gameDirectory + '/bin/x64/witcher3.exe') else ''

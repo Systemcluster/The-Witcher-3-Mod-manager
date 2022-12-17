@@ -93,7 +93,7 @@ def reconfigureGamePath() -> bool:
         data.config.gameexe or "witcher3.exe",
         "*.exe")[0])
     try:
-        data.config.game = gamePath
+        data.config.gameexe = gamePath
     except ValueError as err:
         print(str(err), file=sys.stderr)
         QMessageBox.critical(
