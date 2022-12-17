@@ -1,3 +1,7 @@
+# local testing configuration
+config.ini
+installed.*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

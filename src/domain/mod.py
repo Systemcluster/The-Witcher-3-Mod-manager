@@ -99,6 +99,7 @@ class Mod:
     def enable(self):
         if (not self.enabled):
             self.installXmlKeys()
+            self.installMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu + ".disabled"):
                     rename(
@@ -122,6 +123,7 @@ class Mod:
     def disable(self):
         if (self.enabled):
             self.uninstallXmlKeys()
+            self.uninstallMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu) and not menu.endswith(".disabled"):
                     rename(
@@ -149,6 +151,27 @@ class Mod:
                 if (data.config.priority.has_section(filedata)):
                     self.priority = data.config.getPriority(filedata)
 
+    def installMenus(self):
+        if (data.config.gameversion == "ng" and self.menus):
+            with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(not menu_line in text):
+                    text = text + '\n' + menu_line
+            with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+            with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(not menu_line in text):
+                    text = text + '\n' + menu_line
+            with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+
     def installXmlKeys(self):
         if (self.xmlkeys):
             text = ''
@@ -171,6 +194,27 @@ class Mod:
                         '</VisibleVars>',
                         xml+'\n</VisibleVars>')
             with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
+                text = userfile.write(text)
+
+    def uninstallMenus(self):
+        if (data.config.gameversion == "ng" and self.menus):
+            with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(menu_line in text):
+                    text = text.replace('\n'+menu_line, '')
+            with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+            with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(menu_line in text):
+                    text = text.replace('\n'+menu_line, '')
+            with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
                 text = userfile.write(text)
 
     def uninstallXmlKeys(self):

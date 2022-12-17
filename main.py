@@ -63,7 +63,7 @@ if __name__ == "__main__":
     data.config = Configuration(documentsPath, gamePath, configPath)
     translateToChosenLanguage()
 
-    if not Configuration.getCorrectGamePath(data.config.game):
+    if not Configuration.getCorrectGamePath(data.config.gameexe):
         if not reconfigureGamePath():
             sys.exit(1)
 

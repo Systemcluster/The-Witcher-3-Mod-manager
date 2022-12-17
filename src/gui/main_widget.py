@@ -333,7 +333,7 @@ class CustomMainWidget(QWidget):
         self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
 
         self.pushButton_4.setText(TRANSLATE("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game"))
+        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game") + " (" + data.config.gameengine + ")")
 
         self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
         self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
@@ -882,6 +882,7 @@ class CustomMainWidget(QWidget):
         '''Changes game path'''
         if reconfigureGamePath():
             self.refreshList()
+            self.translateUi()
 
     def changeScriptMergerPath(self):
         '''Changes script merger path'''
