@@ -314,11 +314,13 @@ class Mod:
     def installUserSettings(self) -> int:
         added = 0
         if self.usersettings:
-            dx11AdditionCount = self.installUserSettingsToFile("user.settings")
-            dx12AdditionCount = self.installUserSettingsToFile("dx12user.settings")
-            if dx11AdditionCount != dx12AdditionCount:
-                raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
-                    + dx11AdditionCount + 'dx12 count: ' + dx12AdditionCount)
+            added = self.installUserSettingsToFile("user.settings")
+
+            if data.config.gameversion == "ng":
+                dx12AdditionCount = self.installUserSettingsToFile("dx12user.settings")
+                if added != dx12AdditionCount:
+                    raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
+                        + added + 'dx12 count: ' + dx12AdditionCount)
         return added
 
     def installUserSettingsToFile(self, fileName) -> int:
@@ -339,7 +341,9 @@ class Mod:
     def uninstallUserSettings(self):
         if self.usersettings:
             self.uninstallUserSettingsFromFile("user.settings")
-            self.uninstallUserSettingsFromFile("dx12user.settings")
+
+            if data.config.gameversion == "ng":
+                self.uninstallUserSettingsFromFile("dx12user.settings")
 
     def uninstallUserSettingsFromFile(self, fileName):
         absFilePath = data.config.settings + '/' + fileName
