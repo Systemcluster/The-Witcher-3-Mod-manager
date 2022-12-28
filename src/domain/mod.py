@@ -314,30 +314,43 @@ class Mod:
     def installUserSettings(self) -> int:
         added = 0
         if self.usersettings:
-            config = ConfigParser(strict=False)
-            config.optionxform = str
-            config.read(data.config.settings + "/user.settings",
-                        encoding=detectEncoding(data.config.settings + "/user.settings"))
-            for setting in iter(self.usersettings):
-                if not config.has_section(setting.context):
-                    config.add_section(setting.context)
-                config.set(setting.context, setting.option, setting.value)
-                added += 1
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
-                config.write(userfile, space_around_delimiters=False)
+            dx11AdditionCount = self.installUserSettingsToFile("user.settings")
+            dx12AdditionCount = self.installUserSettingsToFile("dx12user.settings")
+            if dx11AdditionCount != dx12AdditionCount:
+                raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
+                    + dx11AdditionCount + 'dx12 count: ' + dx12AdditionCount)
+        return added
+
+    def installUserSettingsToFile(self, fileName) -> int:
+        added = 0
+        absFilePath = data.config.settings + '/' + fileName
+        config = ConfigParser(strict=False)
+        config.optionxform = str
+        config.read(absFilePath, encoding=detectEncoding(absFilePath))
+        for setting in iter(self.usersettings):
+            if not config.has_section(setting.context):
+                config.add_section(setting.context)
+            config.set(setting.context, setting.option, setting.value)
+            added += 1
+        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+            config.write(userfile, space_around_delimiters=False)
         return added
 
     def uninstallUserSettings(self):
         if self.usersettings:
-            config = ConfigParser(strict=False)
-            config.optionxform = str
-            config.read(data.config.settings + "/user.settings",
-                        encoding=detectEncoding(data.config.settings + "/user.settings"))
-            for setting in iter(self.usersettings):
-                if config.has_section(setting.context):
-                    config.remove_option(setting.context, setting.option)
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
-                config.write(userfile, space_around_delimiters=False)
+            self.uninstallUserSettingsFromFile("user.settings")
+            self.uninstallUserSettingsFromFile("dx12user.settings")
+
+    def uninstallUserSettingsFromFile(self, fileName):
+        absFilePath = data.config.settings + '/' + fileName
+        config = ConfigParser(strict=False)
+        config.optionxform = str
+        config.read(absFilePath, encoding=detectEncoding(absFilePath))
+        for setting in iter(self.usersettings):
+            if config.has_section(setting.context):
+                config.remove_option(setting.context, setting.option)
+        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+            config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \

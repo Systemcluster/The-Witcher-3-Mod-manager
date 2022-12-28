@@ -213,7 +213,7 @@ class Configuration:
             return "og"
 
     @property
-    def gameengine(self):
+    def graphicsapi(self):
         if "x64_dx12" in self.gameexe:
             return "dx12"
         else:
@@ -258,6 +258,10 @@ class Configuration:
     @property
     def settings(self):
         return self.__userSettingsPath
+
+    @property
+    def usersettings(self):
+        return "dx12user.settings" if self.graphicsapi == "dx12" else "user.settings"
 
     @property
     def configuration(self):
