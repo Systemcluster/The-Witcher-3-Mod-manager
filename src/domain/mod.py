@@ -341,7 +341,9 @@ class Mod:
     def uninstallUserSettings(self):
         if self.usersettings:
             self.uninstallUserSettingsFromFile("user.settings")
-            self.uninstallUserSettingsFromFile("dx12user.settings")
+
+            if data.config.gameversion == "ng":
+                self.uninstallUserSettingsFromFile("dx12user.settings")
 
     def uninstallUserSettingsFromFile(self, fileName):
         absFilePath = data.config.settings + '/' + fileName
