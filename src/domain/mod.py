@@ -321,9 +321,9 @@ class Mod:
                     + dx11AdditionCount + 'dx12 count: ' + dx12AdditionCount)
         return added
 
-    def installUserSettingsToFile(self, fileName) -> int
+    def installUserSettingsToFile(self, fileName) -> int:
         added = 0
-        absFilePath = "/".join(data.config.settings, fileName)
+        absFilePath = data.config.settings + '/' + fileName
         config = ConfigParser(strict=False)
         config.optionxform = str
         config.read(absFilePath, encoding=detectEncoding(absFilePath))
@@ -342,7 +342,7 @@ class Mod:
             self.uninstallUserSettingsFromFile("dx12user.settings")
 
     def uninstallUserSettingsFromFile(self, fileName):
-        absFilePath = "/".join(data.config.settings, fileName)
+        absFilePath = data.config.settings + '/' + fileName
         config = ConfigParser(strict=False)
         config.optionxform = str
         config.read(absFilePath, encoding=detectEncoding(absFilePath))

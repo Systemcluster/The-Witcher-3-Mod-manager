@@ -333,7 +333,7 @@ class CustomMainWidget(QWidget):
         self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
 
         self.pushButton_4.setText(TRANSLATE("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game") + " (" + data.config.gameengine + ")")
+        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
 
         self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
         self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
@@ -558,7 +558,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: openFile(data.config.settings + '/user.settings'))
+            lambda: openFile(data.config.settings + "/" + data.config.usersettings))
         actionTemp.setText('User Settings')
         actionTemp.setIcon(getIcon("user.ico"))
         actionTemp.setToolTip(
@@ -883,6 +883,7 @@ class CustomMainWidget(QWidget):
         if reconfigureGamePath():
             self.refreshList()
             self.translateUi()
+            self.configureToolbar()
 
     def changeScriptMergerPath(self):
         '''Changes script merger path'''
