@@ -357,30 +357,30 @@ class Mod:
             config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):
-        string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
-            "\nPRIORITY: " + self.priority + "\n"
+        string = TRANSLATE("MOD", "NAME: ") + str(self.name) + "\n" + TRANSLATE("MOD", "ENABLED: ") + str(self.enabled) + \
+            "\n" + TRANSLATE("MOD", "PRIORITY: ") + self.priority + "\n"
         if (self.files):
-            string += "\nDATA:\n"
+            string += "\n"+TRANSLATE("MOD", "DATA:")+"\n"
             for file in iter(self.files):
                 string += file + "\n"
         if (self.dlcs):
-            string += "\nDLC:\n"
+            string += "\n"+TRANSLATE("MOD", "DLC:")+"\n"
             for dlc in iter(self.dlcs):
                 string += dlc + "\n"
         if (self.menus):
-            string += "\nMENUS:\n"
+            string += "\n"+TRANSLATE("MOD", "MENUS:")+"\n"
             for menu in iter(self.menus):
                 string += menu + "\n"
         if (self.xmlkeys):
-            string += "\nXML VARIABLES:\n"
+            string += "\n"+TRANSLATE("MOD", "XML VARIABLES:")+"\n"
             for xml in iter(self.xmlkeys):
                 string += xml + "\n"
         if (self.hidden):
-            string += "\nHIDDEN XML:\n"
+            string += "\n"+TRANSLATE("MOD", "HIDDEN XML:")+"\n"
             for xml in iter(self.hidden):
                 string += xml + "\n"
         if (self.inputsettings):
-            string += "\nINPUT KEYS:\n"
+            string += "\n"+TRANSLATE("MOD", "INPUT KEYS:")+"\n"
             context = ''
             for elem in iter(self.inputsettings):
                 if (elem.context != context):
@@ -390,7 +390,7 @@ class Mod:
                     string += context + '\n'
                 string += str(elem) + "\n"
         if (self.usersettings):
-            string += "\nUSER SETTINGS:\n"
+            string += "\n"+TRANSLATE("MOD", "USER SETTINGS:")+"\n"
             context = ''
             for elem in iter(self.usersettings):
                 if (elem.context != context):
@@ -400,7 +400,7 @@ class Mod:
                     string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
         if (self.readmes):
-            string += "\nREADMES:\n"
+            string += "\n"+TRANSLATE("MOD", "READMES:")+"\n"
             for readme in iter(self.readmes):
                 string += readme + "\n"
         return string

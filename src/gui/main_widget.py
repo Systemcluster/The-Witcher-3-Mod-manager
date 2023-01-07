@@ -836,7 +836,7 @@ class CustomMainWidget(QWidget):
                 priority, ok = QInputDialog.getInt(
                     self,
                     TRANSLATE("MainWindow", "Set Priority"),
-                    TRANSLATE("MainWindow", "Enter new priority") + ": ",
+                    TRANSLATE("MainWindow", "Enter new priority: "),
                     old_priority)
                 if not ok:
                     return
@@ -934,7 +934,12 @@ class CustomMainWidget(QWidget):
             self.output(formatUserError(err))
             errorCount += 1
         self.output(
-            f'> Installed {successCount} mods or dlcs ({errorCount} errors)')
+            '> '+
+            TRANSLATE("MainWindow", "Installed")+
+            f' {successCount} '+
+            TRANSLATE("MainWindow", "mods or dlcs")+
+            f' ({errorCount} '+
+            TRANSLATE("MainWindow", "errors")+')')
 
     def uninstallMods(self):
         '''Uninstalls selected mods'''

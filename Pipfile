@@ -8,6 +8,7 @@ pylint = "*"
 mypy = "*"
 cx-freeze = ">=6.2"
 autopep8 = "*"
+pyqt5 = "*"
 
 [packages]
 fasteners = ">=0.15"

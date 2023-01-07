@@ -49,7 +49,7 @@ def getDocumentsFolder() -> str:
     if not path or not os.path.exists(path):
         path = normalizePath(str(QFileDialog.getExistingDirectory(
             None,
-            "Select \"My Documents\" directory containing the Witcher 3 config directory",
+            TRANSLATE("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"),
             "My Documents")))
     return path
 
@@ -120,16 +120,14 @@ def showAboutWindow():
     QMessageBox.about(
         None,
         TRANSLATE("MainWindow", "About"),
-        TRANSLATE(
-            "MainWindow",
-            ""+TITLE+"\n"
-            "Version: "+VERSION+"\n"
-            "Authors: "+(", ".join(AUTHORS))+"\n"
-            "\n"
-            "Written in: Python "+python_version()+"\n"
-            "GUI: PySide2 "+__version__+"\n"
-            "\n"
-            "Thank you for using "+TITLE+"!"))
+        ""+TITLE+"\n"+
+        TRANSLATE("MainWindow", "Version: ")+VERSION+"\n"+
+        TRANSLATE("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n"+
+        "\n"+
+        TRANSLATE("MainWindow", "Written in: ")+"Python "+python_version()+"\n"+
+        TRANSLATE("MainWindow", "GUI: PySide2 ")+__version__+"\n"+
+        "\n"+
+        TRANSLATE("MainWindow", "Thank you for using ")+TITLE+TRANSLATE("MainWindow", "!"))
 
 
 def openUrl(url: str):

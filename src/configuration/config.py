@@ -60,8 +60,8 @@ class Configuration:
         if not self.documents or not os.path.exists(self.documents):
             QMessageBox.critical(
                 None,
-                "No documents configured",
-                "No documents path configured",
+                TRANSLATE("Config", "No documents configured"),
+                TRANSLATE("Config", "No documents path configured"),
                 QMessageBox.StandardButton.Ok)
             sys.exit(1)
 
