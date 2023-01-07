@@ -281,11 +281,6 @@ class CustomMainWidget(QWidget):
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
-        self.toolBar.addAction(self.actionInstall_Mods)
-        self.toolBar.addAction(self.actionUninstall_Mods)
-        self.toolBar.addAction(self.actionEnable_Disable_Mods)
-        self.toolBar.setIconSize(QSize(32, 32))
-        self.toolBar.addSeparator()
 
         self.actionAddToToolbar = None
 
@@ -333,7 +328,7 @@ class CustomMainWidget(QWidget):
         self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
 
         self.pushButton_4.setText(TRANSLATE("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game"))
+        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
 
         self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
         self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
@@ -505,6 +500,14 @@ class CustomMainWidget(QWidget):
 
     def configureToolbar(self):
         '''Creates and configures toolbar'''
+        self.toolBar.clear()
+
+        self.toolBar.addAction(self.actionInstall_Mods)
+        self.toolBar.addAction(self.actionUninstall_Mods)
+        self.toolBar.addAction(self.actionEnable_Disable_Mods)
+        self.toolBar.setIconSize(QSize(32, 32))
+        self.toolBar.addSeparator()
+
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(lambda: self.openByConfigKey('mods'))
         actionTemp.setText('M')
@@ -558,7 +561,7 @@ class CustomMainWidget(QWidget):
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
-            lambda: openFile(data.config.settings + '/user.settings'))
+            lambda: openFile(data.config.settings + "/" + data.config.usersettings))
         actionTemp.setText('User Settings')
         actionTemp.setIcon(getIcon("user.ico"))
         actionTemp.setToolTip(
@@ -882,6 +885,8 @@ class CustomMainWidget(QWidget):
         '''Changes game path'''
         if reconfigureGamePath():
             self.refreshList()
+            self.translateUi()
+            self.configureToolbar()
 
     def changeScriptMergerPath(self):
         '''Changes script merger path'''

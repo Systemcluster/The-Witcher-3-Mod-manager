@@ -99,6 +99,7 @@ class Mod:
     def enable(self):
         if (not self.enabled):
             self.installXmlKeys()
+            self.installMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu + ".disabled"):
                     rename(
@@ -122,6 +123,7 @@ class Mod:
     def disable(self):
         if (self.enabled):
             self.uninstallXmlKeys()
+            self.uninstallMenus()
             for menu in iter(self.menus):
                 if path.exists(data.config.menu + "/" + menu) and not menu.endswith(".disabled"):
                     rename(
@@ -149,6 +151,27 @@ class Mod:
                 if (data.config.priority.has_section(filedata)):
                     self.priority = data.config.getPriority(filedata)
 
+    def installMenus(self):
+        if (data.config.gameversion == "ng" and self.menus):
+            with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(not menu_line in text):
+                    text = text + '\n' + menu_line
+            with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+            with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(not menu_line in text):
+                    text = text + '\n' + menu_line
+            with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+
     def installXmlKeys(self):
         if (self.xmlkeys):
             text = ''
@@ -171,6 +194,27 @@ class Mod:
                         '</VisibleVars>',
                         xml+'\n</VisibleVars>')
             with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
+                text = userfile.write(text)
+
+    def uninstallMenus(self):
+        if (data.config.gameversion == "ng" and self.menus):
+            with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(menu_line in text):
+                    text = text.replace('\n'+menu_line, '')
+            with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
+                text = userfile.write(text)
+            with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
+                text = userfile.read()
+            for menu in iter(self.menus):
+                menu_line = menu + ";"
+                if(menu_line in text):
+                    text = text.replace('\n'+menu_line, '')
+            with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
+                text = text.replace('\n\n', '\n');
                 text = userfile.write(text)
 
     def uninstallXmlKeys(self):
@@ -270,30 +314,47 @@ class Mod:
     def installUserSettings(self) -> int:
         added = 0
         if self.usersettings:
-            config = ConfigParser(strict=False)
-            config.optionxform = str
-            config.read(data.config.settings + "/user.settings",
-                        encoding=detectEncoding(data.config.settings + "/user.settings"))
-            for setting in iter(self.usersettings):
-                if not config.has_section(setting.context):
-                    config.add_section(setting.context)
-                config.set(setting.context, setting.option, setting.value)
-                added += 1
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
-                config.write(userfile, space_around_delimiters=False)
+            added = self.installUserSettingsToFile("user.settings")
+
+            if data.config.gameversion == "ng":
+                dx12AdditionCount = self.installUserSettingsToFile("dx12user.settings")
+                if added != dx12AdditionCount:
+                    raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
+                        + added + 'dx12 count: ' + dx12AdditionCount)
+        return added
+
+    def installUserSettingsToFile(self, fileName) -> int:
+        added = 0
+        absFilePath = data.config.settings + '/' + fileName
+        config = ConfigParser(strict=False)
+        config.optionxform = str
+        config.read(absFilePath, encoding=detectEncoding(absFilePath))
+        for setting in iter(self.usersettings):
+            if not config.has_section(setting.context):
+                config.add_section(setting.context)
+            config.set(setting.context, setting.option, setting.value)
+            added += 1
+        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+            config.write(userfile, space_around_delimiters=False)
         return added
 
     def uninstallUserSettings(self):
         if self.usersettings:
-            config = ConfigParser(strict=False)
-            config.optionxform = str
-            config.read(data.config.settings + "/user.settings",
-                        encoding=detectEncoding(data.config.settings + "/user.settings"))
-            for setting in iter(self.usersettings):
-                if config.has_section(setting.context):
-                    config.remove_option(setting.context, setting.option)
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
-                config.write(userfile, space_around_delimiters=False)
+            self.uninstallUserSettingsFromFile("user.settings")
+
+            if data.config.gameversion == "ng":
+                self.uninstallUserSettingsFromFile("dx12user.settings")
+
+    def uninstallUserSettingsFromFile(self, fileName):
+        absFilePath = data.config.settings + '/' + fileName
+        config = ConfigParser(strict=False)
+        config.optionxform = str
+        config.read(absFilePath, encoding=detectEncoding(absFilePath))
+        for setting in iter(self.usersettings):
+            if config.has_section(setting.context):
+                config.remove_option(setting.context, setting.option)
+        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+            config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):
         string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \

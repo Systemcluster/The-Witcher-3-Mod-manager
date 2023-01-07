@@ -186,17 +186,38 @@ class Configuration:
         self.set('PATHS', 'scriptmerger', value)
 
     @property
-    def game(self):
-        return self.get('PATHS', 'game')
+    def gameexe(self):
+        return self.get('PATHS', 'gameexe')
 
-    @game.setter
-    def game(self, value: str):
-        gamePath = self.getCorrectGamePath(value)
-        if not gamePath:
-            raise ValueError('Invalid game path \'' + value + '\'')
-        self.set('PATHS', 'game', gamePath)
-        if not path.exists(gamePath + '/Mods'):
-            os.mkdir(gamePath + '/Mods')
+    @gameexe.setter
+    def gameexe(self, value: str):
+        gameexe = self.getCorrectGamePath(value)
+        if not gameexe:
+            raise ValueError('Invalid game exe path \'' + value + '\'')
+        self.set('PATHS', 'gameexe', gameexe)
+        if not path.exists(self.game + '/Mods'):
+            os.mkdir(self.game + '/Mods')
+
+    @property
+    def game(self):
+        gameDirectory = self.get('PATHS', 'gameexe')
+        for _ in range(3):
+            gameDirectory, _ = path.split(gameDirectory)
+        return gameDirectory
+
+    @property
+    def gameversion(self):
+        if path.exists(self.game + "/bin/x64_dx12"):
+            return "ng"
+        else:
+            return "og"
+
+    @property
+    def graphicsapi(self):
+        if "x64_dx12" in self.gameexe:
+            return "dx12"
+        else:
+            return "dx11"
 
     @property
     def allowpopups(self):
@@ -239,16 +260,16 @@ class Configuration:
         return self.__userSettingsPath
 
     @property
+    def usersettings(self):
+        return "dx12user.settings" if self.graphicsapi == "dx12" else "user.settings"
+
+    @property
     def configuration(self):
         return self.__configPath
 
     @property
     def extracted(self):
         return self.__configPath + '/extracted'
-
-    @property
-    def gameexe(self):
-        return self.game and self.game + '/bin/x64/witcher3.exe'
 
     @property
     def gamelaunchcommand(self):
@@ -284,14 +305,15 @@ class Configuration:
         self.set('WINDOW', 'section11', '120')
 
     @staticmethod
-    def getCorrectGamePath(gamePath: Union[str, None]) -> str:
+    def getCorrectGamePath(gameExePath: Union[str, None]) -> str:
         '''Checks and corrects game path'''
-        if not gamePath:
+        if not gameExePath:
             return ''
-        _, ext = path.splitext(gamePath)
+        _, ext = path.splitext(gameExePath)
+        gameDirectory = gameExePath
         if ext == '.exe':
             for _ in range(3):
-                gamePath, _ = path.split(gamePath)
-        return normalizePath(gamePath) if path.exists(gamePath) \
-            and path.exists(gamePath + '/content') \
-            and path.isfile(gamePath + '/bin/x64/witcher3.exe') else ''
+                gameDirectory, _ = path.split(gameDirectory)
+        return normalizePath(gameExePath) if path.exists(gameDirectory) \
+            and path.exists(gameDirectory + '/content') \
+            and path.isfile(gameDirectory + '/bin/x64/witcher3.exe') else ''
