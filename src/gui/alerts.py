@@ -25,10 +25,10 @@ def MessageOverwrite(modname, modtype):
     '''Shows dialog to let user decide what to do if mod is already installed'''
     return QMessageBox.question(
         None,
-        TRANSLATE("MainWindow", "Mod already installed."),
+        TRANSLATE("MainWindow", "Mod already installed"),
         str(modtype) + " '" + str(modname) + "' " + TRANSLATE(
             "MainWindow",
-            "is already installed\nDo you want to overwrite the existing files?"),
+            "is already installed.") + "\n" + TRANSLATE("MainWindow", "Do you want to overwrite the existing files?"),
         QMessageBox.Yes | QMessageBox.YesToAll |
         QMessageBox.No | QMessageBox.NoToAll,
         QMessageBox.Yes)

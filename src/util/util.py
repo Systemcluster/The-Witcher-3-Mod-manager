@@ -202,7 +202,7 @@ def restartProgram():
     os.execl(python, python, *sys.argv)
 
 
-def getFile(directory="", extensions="", title="Select Files or Folders"):
+def getFile(directory="", extensions="", title=TRANSLATE("MainWindow", "Select Files or Folders")):
     '''Opens custom dialog for selecting multiple folders or files'''
     return FileDialog(None, title, str(directory), str(extensions)).selectedFiles
 

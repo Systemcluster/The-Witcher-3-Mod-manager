@@ -70,7 +70,7 @@ class Installer:
                     if (modfolder and name in installed_mods) or (dlcfolder and name in installed_dlcs):
                         if self.ask:
                             res = MessageOverwrite(
-                                name, 'Mod' if modfolder else 'DLC')
+                                name, TRANSLATE("MainWindow", 'Mod') if modfolder else TRANSLATE("MainWindow", 'DLC'))
                         if res == QMessageBox.Yes:
                             copyFolder(directory, datapath)
                             installCount += 1
@@ -91,9 +91,9 @@ class Installer:
                     except:
                         ddir = ''
                     self.output(
-                        f"Detected data folder but could not recognize it as part of a mod or dlc{': '+ddir if ddir else ''}")
+                        TRANSLATE("MainWindow", "Detected data folder but could not recognize it as part of a mod or dlc: ") + f"{ddir}")
                     self.output(
-                        f"  Some manual installation may be required, please check the mod to make sure.")
+                        TRANSLATE("MainWindow", "  Some manual installation may be required, please check the mod to make sure."))
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -114,9 +114,9 @@ class Installer:
             mod.checkPriority()
 
             if mod.readmes:
-                self.output("Detected one or more README files.")
+                self.output(TRANSLATE("MainWindow", "Detected one or more README files."))
                 self.output(
-                    f"  Some manual configuration may be required, please read the readme to make sure.")
+                    TRANSLATE("MainWindow", "  Some manual configuration may be required, please read the readme to make sure."))
 
             self.progress(0.9)
             exists = False
@@ -203,7 +203,7 @@ class Installer:
         for menu in mod.menus:
             if path.exists(data.config.menu + "/" + menu):
                 if menu in ("audio.xml", "display.xml", "dx11filelist.txt", "dx12filelist.txt", "gameplay.xml", "gamma.xml", "graphics.xml", "graphicsdx11.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
-                    self.output("Note: Additions to " +
-                                menu + " will not be removed.")
+                    self.output(TRANSLATE("MainWindow", "Note: Additions to ") +
+                                menu + TRANSLATE("MainWindow", " will not be removed."))
                 else:
                     remove(data.config.menu + "/" + menu)

@@ -16,4 +16,4 @@ SOURCES         = main.py \
                   src/gui/tree_widget.py \
                   src/util/syntax.py \
                   src/util/util.py
-TRANSLATIONS    = ts/English.ts
+TRANSLATIONS    = English.ts

@@ -545,7 +545,7 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.menu + '/input.xml'))
-        actionTemp.setText('Input Xml')
+        actionTemp.setText(TRANSLATE("MainWindow", 'Input Xml'))
         actionTemp.setIcon(getIcon("xml.ico"))
         actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open input.xml file'))
         self.toolBar.addAction(actionTemp)
@@ -553,7 +553,7 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + '/input.settings'))
-        actionTemp.setText('Input Settings')
+        actionTemp.setText(TRANSLATE("MainWindow", 'Input Settings'))
         actionTemp.setIcon(getIcon("input.ico"))
         actionTemp.setToolTip(
             TRANSLATE("MainWindow", 'Open input.settings file'))
@@ -562,7 +562,7 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + "/" + data.config.usersettings))
-        actionTemp.setText('User Settings')
+        actionTemp.setText(TRANSLATE("MainWindow", 'User Settings'))
         actionTemp.setIcon(getIcon("user.ico"))
         actionTemp.setToolTip(
             TRANSLATE("MainWindow", 'Open user.settings file'))
@@ -571,7 +571,7 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + '/mods.settings'))
-        actionTemp.setText('Mods Settings')
+        actionTemp.setText(TRANSLATE("MainWindow", 'Mods Settings'))
         actionTemp.setIcon(getIcon("modset.ico"))
         actionTemp.setToolTip(
             TRANSLATE("MainWindow", 'Open mods.settings file'))
@@ -809,8 +809,8 @@ class CustomMainWidget(QWidget):
         button = QMessageBox.question(
             self,
             TRANSLATE("MainWindow", "Change language"),
-            TRANSLATE("MainWindow", "You need to restart the program to apply the changes.\n\
-                Do you want to restart it now?"),
+            TRANSLATE("MainWindow", "You need to restart the program to apply the changes.")+"\n"+
+            TRANSLATE("MainWindow", "Do you want to restart it now?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if (button == QMessageBox.Yes):
             restartProgram()
@@ -951,7 +951,7 @@ class CustomMainWidget(QWidget):
                     TRANSLATE("MainWindow",
                               "Are you sure you want to uninstall ")
                     + str(len(selected)) +
-                    TRANSLATE("MainWindow", " selected mods") + "?",
+                    TRANSLATE("MainWindow", " selected mods?"),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
                     progress = 0
@@ -978,7 +978,7 @@ class CustomMainWidget(QWidget):
                     TRANSLATE("MainWindow",
                               "Are you sure you want to reinstall ")
                     + str(len(selected)) +
-                    TRANSLATE("MainWindow", " selected mods") + "?\n\n" +
+                    TRANSLATE("MainWindow", " selected mods?") + "\n\n" +
                     TRANSLATE("MainWindow", "This will override the mods settings with " +
                               "their defaults."),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -1008,7 +1008,7 @@ class CustomMainWidget(QWidget):
                     subprocess.Popen([gamepath], cwd=directory)
                 else:
                     MessageUnsupportedOSAction(
-                        "Please run the game through Steam.")
+                        TRANSLATE("MainWindow", "Please run the game through Steam."))
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -1103,7 +1103,7 @@ class CustomMainWidget(QWidget):
             self.refreshLoadOrder()
             self.model.write()
         except Exception as err:
-            self.output(f"Couldn't refresh list: {formatUserError(err)}")
+            self.output(TRANSLATE("MainWindow", "Couldn't refresh list: ") + f"{formatUserError(err)}")
             return err
         return None
 
@@ -1143,7 +1143,7 @@ class CustomMainWidget(QWidget):
                         row.setSelected(True)
         except Exception as err:
             self.output(
-                f"Couldn't read or refresh load order: {formatUserError(err)}")
+                TRANSLATE("MainWindow", "Couldn't read or refresh load order: ") + f"{formatUserError(err)}")
             return err
         return None
 
