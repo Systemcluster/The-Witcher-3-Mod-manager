@@ -3,10 +3,10 @@
 
 from PySide2.QtCore import QCoreApplication
 
-TRANSLATE = QCoreApplication.translate
+translate = QCoreApplication.translate
 
 VERSION = "0.9.0"
-TITLE = TRANSLATE("GLOBALS", "The Witcher 3 Mod Manager")
+TITLE = translate("GLOBALS", "The Witcher 3 Mod Manager")
 AUTHORS = ["Stefan Kostic (stefan3372)", "Christian Sdunek (Systemcluster)", "Adam Sunderman (madman asunder)", "Henry Hsieh (henry-hsieh)"]
 AUTHORS_MAIL = ["stekos@live.com", "me@systemcluster.me", "amsunderman@gmail.com", "r901042004@yahoo.com.tw"]
 URL_WEB = "https://www.nexusmods.com/witcher3/mods/2678"

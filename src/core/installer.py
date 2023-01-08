@@ -13,7 +13,7 @@ from src.util.util import *
 from src.core.fetcher import *
 from src.core.model import Model
 from src.gui.alerts import MessageAlertModFromGamePath, MessageOverwrite
-from src.globals.constants import TRANSLATE
+from src.globals.constants import translate
 
 
 @dataclass
@@ -37,7 +37,7 @@ class Installer:
 
         installCount = 0
         modname = path.split(modPath)[1]
-        self.output(TRANSLATE("MainWindow", "Installing") +
+        self.output(translate("MainWindow", "Installing") +
                     " " + Mod.formatName(modname))
         self.progress(0.1)
         mod = None
@@ -70,7 +70,7 @@ class Installer:
                     if (modfolder and name in installed_mods) or (dlcfolder and name in installed_dlcs):
                         if self.ask:
                             res = MessageOverwrite(
-                                name, TRANSLATE("MainWindow", 'Mod') if modfolder else TRANSLATE("MainWindow", 'DLC'))
+                                name, translate("MainWindow", 'Mod') if modfolder else translate("MainWindow", 'DLC'))
                         if res == QMessageBox.Yes:
                             copyFolder(directory, datapath)
                             installCount += 1
@@ -91,9 +91,9 @@ class Installer:
                     except:
                         ddir = ''
                     self.output(
-                        TRANSLATE("MainWindow", "Detected data folder but could not recognize it as part of a mod or dlc: ") + f"{ddir}")
+                        translate("MainWindow", "Detected data folder but could not recognize it as part of a mod or dlc: ") + f"{ddir}")
                     self.output(
-                        TRANSLATE("MainWindow", "  Some manual installation may be required, please check the mod to make sure."))
+                        translate("MainWindow", "  Some manual installation may be required, please check the mod to make sure."))
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
             for xml in xmls:
@@ -114,9 +114,9 @@ class Installer:
             mod.checkPriority()
 
             if mod.readmes:
-                self.output(TRANSLATE("MainWindow", "Detected one or more README files."))
+                self.output(translate("MainWindow", "Detected one or more README files."))
                 self.output(
-                    TRANSLATE("MainWindow", "  Some manual configuration may be required, please read the readme to make sure."))
+                    translate("MainWindow", "  Some manual configuration may be required, please read the readme to make sure."))
 
             self.progress(0.9)
             exists = False
@@ -152,7 +152,7 @@ class Installer:
         '''Uninstalls given mod'''
         try:
             self.output(
-                TRANSLATE("MainWindow", "Uninstalling") + " " + mod.name)
+                translate("MainWindow", "Uninstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
             mod.uninstallMenus()
@@ -170,7 +170,7 @@ class Installer:
     def reinstallMod(self, mod: Mod) -> bool:
         try:
             self.output(
-                TRANSLATE("MainWindow", "Reinstalling") + " " + mod.name)
+                translate("MainWindow", "Reinstalling") + " " + mod.name)
             if not mod.enabled:
                 mod.enable()
             mod.uninstallUserSettings()
@@ -203,7 +203,7 @@ class Installer:
         for menu in mod.menus:
             if path.exists(data.config.menu + "/" + menu):
                 if menu in ("audio.xml", "display.xml", "dx11filelist.txt", "dx12filelist.txt", "gameplay.xml", "gamma.xml", "graphics.xml", "graphicsdx11.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
-                    self.output(TRANSLATE("MainWindow", "Note: Additions to ") +
-                                menu + TRANSLATE("MainWindow", " will not be removed."))
+                    self.output(translate("MainWindow", "Note: Additions to ") +
+                                menu + translate("MainWindow", " will not be removed."))
                 else:
                     remove(data.config.menu + "/" + menu)

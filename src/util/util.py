@@ -49,7 +49,7 @@ def getDocumentsFolder() -> str:
     if not path or not os.path.exists(path):
         path = normalizePath(str(QFileDialog.getExistingDirectory(
             None,
-            TRANSLATE("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"),
+            translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"),
             "My Documents")))
     return path
 
@@ -89,7 +89,7 @@ def reconfigureGamePath() -> bool:
     MessageNotConfigured()
     gamePath = str(QFileDialog.getOpenFileName(
         None,
-        TRANSLATE("MainWindow", "Select witcher3.exe"),
+        translate("MainWindow", "Select witcher3.exe"),
         data.config.gameexe or "witcher3.exe",
         "*.exe")[0])
     try:
@@ -98,8 +98,8 @@ def reconfigureGamePath() -> bool:
         print(str(err), file=sys.stderr)
         QMessageBox.critical(
             None,
-            TRANSLATE("MainWindow", "Selected file not correct"),
-            TRANSLATE("MainWindow", "'witcher3.exe' file not selected"),
+            translate("MainWindow", "Selected file not correct"),
+            translate("MainWindow", "'witcher3.exe' file not selected"),
             QMessageBox.StandardButton.Ok)
         return False
     return True
@@ -109,7 +109,7 @@ def reconfigureScriptMergerPath():
     MessageNotConfiguredScriptMerger()
     mergerPath = str(QFileDialog.getOpenFileName(
         None,
-        TRANSLATE("MainWindow", "Select script merger .exe"),
+        translate("MainWindow", "Select WitcherScriptMerger.exe"),
         data.config.scriptmerger or '',
         "*.exe")[0])
     if mergerPath:
@@ -119,15 +119,15 @@ def reconfigureScriptMergerPath():
 def showAboutWindow():
     QMessageBox.about(
         None,
-        TRANSLATE("MainWindow", "About"),
+        translate("MainWindow", "About"),
         ""+TITLE+"\n"+
-        TRANSLATE("MainWindow", "Version: ")+VERSION+"\n"+
-        TRANSLATE("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n"+
+        translate("MainWindow", "Version: ")+VERSION+"\n"+
+        translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n"+
         "\n"+
-        TRANSLATE("MainWindow", "Written in: ")+"Python "+python_version()+"\n"+
-        TRANSLATE("MainWindow", "GUI: PySide2 ")+__version__+"\n"+
+        translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n"+
+        translate("MainWindow", "GUI: PySide2 ")+__version__+"\n"+
         "\n"+
-        TRANSLATE("MainWindow", "Thank you for using ")+TITLE+TRANSLATE("MainWindow", "!"))
+        translate("MainWindow", "Thank you for using ")+TITLE+translate("MainWindow", "!"))
 
 
 def openUrl(url: str):
@@ -202,7 +202,7 @@ def restartProgram():
     os.execl(python, python, *sys.argv)
 
 
-def getFile(directory="", extensions="", title=TRANSLATE("MainWindow", "Select Files or Folders")):
+def getFile(directory="", extensions="", title=translate("MainWindow", "Select Files or Folders")):
     '''Opens custom dialog for selecting multiple folders or files'''
     return FileDialog(None, title, str(directory), str(extensions)).selectedFiles
 

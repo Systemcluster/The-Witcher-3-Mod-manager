@@ -10,6 +10,7 @@ from typing import Union
 
 from PySide2.QtWidgets import QMainWindow, QMessageBox, QWidget
 
+from src.globals.constants import translate
 from src.util.util import detectEncoding, getConfigFolder, getConfigFolderName, getDocumentsFolder, normalizePath
 from src.gui.alerts import MessageAlertReadingConfigINI
 
@@ -60,8 +61,8 @@ class Configuration:
         if not self.documents or not os.path.exists(self.documents):
             QMessageBox.critical(
                 None,
-                TRANSLATE("Config", "No documents configured"),
-                TRANSLATE("Config", "No documents path configured"),
+                translate("Config", "No documents configured"),
+                translate("Config", "No documents path configured"),
                 QMessageBox.StandardButton.Ok)
             sys.exit(1)
 

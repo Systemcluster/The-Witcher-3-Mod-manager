@@ -6,7 +6,7 @@ from PySide2 import QtCore
 from PySide2.QtGui import QTextDocument
 from PySide2.QtWidgets import QWidget, QHBoxLayout, QTextEdit
 
-from src.globals.constants import TRANSLATE
+from src.globals.constants import translate
 from src.domain.mod import Mod
 
 
@@ -32,7 +32,7 @@ class DetailsDialog(QWidget):
         self.text.setLineWrapMode(QTextEdit.NoWrap)
         self.layout.addWidget(self.text)
 
-        self.setWindowTitle(mod.name + " " + TRANSLATE("Details", "Details"))
+        self.setWindowTitle(mod.name + " " + translate("Details", "Details"))
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def adjustWidth(self):
