@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 pylint = "*"
 mypy = "*"
-cx-freeze = ">=6.2"
+cx-freeze = ">=6.11,<6.13"
 autopep8 = "*"
 
 [packages]
