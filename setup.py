@@ -4,16 +4,8 @@
 from cx_Freeze import setup, Executable
 from src.globals.constants import *
 
-import distutils
-import opcode
-import os
-
-# opcode is not a virtualenv module, so we can use it to find the stdlib; this is the same
-# trick used by distutils itself it installs itself into the virtualenv
-distutils_path = os.path.join(os.path.dirname(opcode.__file__), 'distutils')
-
 FILES = ["res/", "translations/", "tools/",
-         (distutils_path, 'lib/distutils'), ("res/qt.conf", "qt.conf"), "LICENSE"]
+         ("res/qt.conf", "qt.conf"), "LICENSE"]
 SHORTCUT_TABLE = [
     (
         "DesktopShortcut",        # Shortcut
@@ -44,7 +36,8 @@ setup(
             "include_files": FILES,
             "excludes": ["distutils", "patool", "pyunpack"],
             "optimize": 2,
-            "zip_include_packages": ["src"]
+            "zip_include_packages": ["src"],
+            "include_msvcr": True
         },
         "bdist_msi": BDIST_MSI_OPTIONS},
     author=AUTHORS[1],
