@@ -16,7 +16,7 @@ from src.util.util import *
 from src.configuration.config import Configuration
 from src.core.model import Model
 from src.globals import data
-from src.globals.constants import TRANSLATE
+from src.globals.constants import translate
 
 
 if __name__ == "__main__":

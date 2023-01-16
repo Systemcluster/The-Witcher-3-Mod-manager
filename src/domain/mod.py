@@ -13,6 +13,7 @@ from PySide2.QtWidgets import QMessageBox
 from src.util.util import *
 from src.domain.key import Key
 from src.globals import data
+from src.globals.constants import translate
 from src.gui.alerts import MessageRebindedKeys
 
 
@@ -357,30 +358,30 @@ class Mod:
             config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):
-        string = "NAME: " + str(self.name) + "\nENABLED: " + str(self.enabled) + \
-            "\nPRIORITY: " + self.priority + "\n"
+        string = translate("MOD", "NAME: ") + str(self.name) + "\n" + translate("MOD", "ENABLED: ") + str(self.enabled) + \
+            "\n" + translate("MOD", "PRIORITY: ") + self.priority + "\n"
         if (self.files):
-            string += "\nDATA:\n"
+            string += "\n"+translate("MOD", "DATA:")+"\n"
             for file in iter(self.files):
                 string += file + "\n"
         if (self.dlcs):
-            string += "\nDLC:\n"
+            string += "\n"+translate("MOD", "DLC:")+"\n"
             for dlc in iter(self.dlcs):
                 string += dlc + "\n"
         if (self.menus):
-            string += "\nMENUS:\n"
+            string += "\n"+translate("MOD", "MENUS:")+"\n"
             for menu in iter(self.menus):
                 string += menu + "\n"
         if (self.xmlkeys):
-            string += "\nXML VARIABLES:\n"
+            string += "\n"+translate("MOD", "XML VARIABLES:")+"\n"
             for xml in iter(self.xmlkeys):
                 string += xml + "\n"
         if (self.hidden):
-            string += "\nHIDDEN XML:\n"
+            string += "\n"+translate("MOD", "HIDDEN XML:")+"\n"
             for xml in iter(self.hidden):
                 string += xml + "\n"
         if (self.inputsettings):
-            string += "\nINPUT KEYS:\n"
+            string += "\n"+translate("MOD", "INPUT KEYS:")+"\n"
             context = ''
             for elem in iter(self.inputsettings):
                 if (elem.context != context):
@@ -390,7 +391,7 @@ class Mod:
                     string += context + '\n'
                 string += str(elem) + "\n"
         if (self.usersettings):
-            string += "\nUSER SETTINGS:\n"
+            string += "\n"+translate("MOD", "USER SETTINGS:")+"\n"
             context = ''
             for elem in iter(self.usersettings):
                 if (elem.context != context):
@@ -400,7 +401,7 @@ class Mod:
                     string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
         if (self.readmes):
-            string += "\nREADMES:\n"
+            string += "\n"+translate("MOD", "READMES:")+"\n"
             for readme in iter(self.readmes):
                 string += readme + "\n"
         return string

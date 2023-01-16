@@ -82,7 +82,7 @@ class CustomMainWidget(QWidget):
 
         self.searchWidget = QLineEdit(self.centralwidget)
         self.searchWidget.setObjectName("searchWidget")
-        self.searchWidget.setPlaceholderText(TRANSLATE("MainWindow", "Search"))
+        self.searchWidget.setPlaceholderText(translate("MainWindow", "Search"))
         self.verticalLayout_2.addWidget(self.searchWidget)
 
         self.treeWidget = QTreeWidget(self.centralwidget)
@@ -185,7 +185,7 @@ class CustomMainWidget(QWidget):
         self.actionInstall_Mods.setIconVisibleInMenu(False)
         self.actionInstall_Mods.setObjectName("actionInstall_Mods")
         self.actionInstall_Mods.setIconText(
-            TRANSLATE('MainWindow', "Add"))
+            translate('MainWindow', "Add"))
         self.actionRestoreColumns = QAction(self.mainWindow)
         self.actionRestoreColumns.setIconVisibleInMenu(False)
         self.actionRestoreColumns.setObjectName("actionRestoreColumns")
@@ -194,14 +194,14 @@ class CustomMainWidget(QWidget):
         self.actionUninstall_Mods.setIconVisibleInMenu(False)
         self.actionUninstall_Mods.setObjectName("actionUninstall_Mods")
         self.actionUninstall_Mods.setIconText(
-            TRANSLATE('MainWindow', "Remove"))
+            translate('MainWindow', "Remove"))
         self.actionEnable_Disable_Mods = QAction(self.mainWindow)
         self.actionEnable_Disable_Mods.setIcon(getIcon('check.ico'))
         self.actionEnable_Disable_Mods.setIconVisibleInMenu(False)
         self.actionEnable_Disable_Mods.setObjectName(
             "actionEnable_Disable_Mods")
         self.actionEnable_Disable_Mods.setIconText(
-            TRANSLATE('MainWindow', "Toggle"))
+            translate('MainWindow', "Toggle"))
         self.actionReinstall_Mods = QAction(self.mainWindow)
         self.actionReinstall_Mods.setObjectName("actionReinstall_Mods")
         self.actionRefresh_Mod_List = QAction(self.mainWindow)
@@ -305,115 +305,115 @@ class CustomMainWidget(QWidget):
 
     def translateUi(self):
         self.mainWindow.setWindowTitle(
-            TRANSLATE("MainWindow", TITLE))
+            translate("MainWindow", TITLE))
 
-        self.treeWidget.headerItem().setText(0, TRANSLATE("MainWindow", "Enabled"))
-        self.treeWidget.headerItem().setText(1, TRANSLATE("MainWindow", "Mod Name"))
-        self.treeWidget.headerItem().setText(2, TRANSLATE("MainWindow", "Priority"))
-        self.treeWidget.headerItem().setText(3, TRANSLATE("MainWindow", "Data"))
-        self.treeWidget.headerItem().setText(4, TRANSLATE("MainWindow", "DLC"))
-        self.treeWidget.headerItem().setText(5, TRANSLATE("MainWindow", "Menu"))
-        self.treeWidget.headerItem().setText(6, TRANSLATE("MainWindow", "Var"))
-        self.treeWidget.headerItem().setText(7, TRANSLATE("MainWindow", "Hidden"))
-        self.treeWidget.headerItem().setText(8, TRANSLATE("MainWindow", "Key"))
-        self.treeWidget.headerItem().setText(9, TRANSLATE("MainWindow", "Settings"))
-        self.treeWidget.headerItem().setText(10, TRANSLATE("MainWindow", "Size"))
+        self.treeWidget.headerItem().setText(0, translate("MainWindow", "Enabled"))
+        self.treeWidget.headerItem().setText(1, translate("MainWindow", "Mod Name"))
+        self.treeWidget.headerItem().setText(2, translate("MainWindow", "Priority"))
+        self.treeWidget.headerItem().setText(3, translate("MainWindow", "Data"))
+        self.treeWidget.headerItem().setText(4, translate("MainWindow", "DLC"))
+        self.treeWidget.headerItem().setText(5, translate("MainWindow", "Menu"))
+        self.treeWidget.headerItem().setText(6, translate("MainWindow", "Var"))
+        self.treeWidget.headerItem().setText(7, translate("MainWindow", "Hidden"))
+        self.treeWidget.headerItem().setText(8, translate("MainWindow", "Key"))
+        self.treeWidget.headerItem().setText(9, translate("MainWindow", "Settings"))
+        self.treeWidget.headerItem().setText(10, translate("MainWindow", "Size"))
         self.treeWidget.headerItem().setText(
-            11, TRANSLATE("MainWindow", "Date Installed"))
+            11, translate("MainWindow", "Date Installed"))
 
-        self.loadOrder.headerItem().setText(0, TRANSLATE("MainWindow", "Load Order"))
-        self.loadOrder.headerItem().setText(1, TRANSLATE("MainWindow", "Priority"))
+        self.loadOrder.headerItem().setText(0, translate("MainWindow", "Load Order"))
+        self.loadOrder.headerItem().setText(1, translate("MainWindow", "Priority"))
 
-        self.textEdit.setPlaceholderText(TRANSLATE("MainWindow", "Output"))
+        self.textEdit.setPlaceholderText(translate("MainWindow", "Output"))
         self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
 
-        self.pushButton_4.setText(TRANSLATE("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(TRANSLATE("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
+        self.pushButton_4.setText(translate("MainWindow", "Run Script Merger"))
+        self.pushButton_5.setText(translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
 
-        self.menuFile.setTitle(TRANSLATE("MainWindow", "Mods"))
-        self.menuEdit.setTitle(TRANSLATE("MainWindow", "Edit"))
-        self.menuSettings.setTitle(TRANSLATE("MainWindow", "Settings"))
+        self.menuFile.setTitle(translate("MainWindow", "Mods"))
+        self.menuEdit.setTitle(translate("MainWindow", "Edit"))
+        self.menuSettings.setTitle(translate("MainWindow", "Settings"))
         self.menuSelect_Language.setTitle(
-            TRANSLATE("MainWindow", "Select Language"))
+            translate("MainWindow", "Select Language"))
         self.menuConfigure_Settings.setTitle(
-            TRANSLATE("MainWindow", "Configure Settings"))
-        self.menuHelp.setTitle(TRANSLATE("MainWindow", "Help"))
-        self.toolBar.setWindowTitle(TRANSLATE("MainWindow", "toolBar"))
+            translate("MainWindow", "Configure Settings"))
+        self.menuHelp.setTitle(translate("MainWindow", "Help"))
+        self.toolBar.setWindowTitle(translate("MainWindow", "toolBar"))
 
         self.actionInstall_Mods.setText(
-            TRANSLATE("MainWindow", "Install Mods"))
+            translate("MainWindow", "Install Mods"))
         self.actionInstall_Mods.setToolTip(
-            TRANSLATE("MainWindow", "Install one or more Mods from folders or archives"))
+            translate("MainWindow", "Install one or more Mods from folders or archives"))
         self.actionInstall_Mods.setShortcut("Ctrl+E")
         self.actionRestoreColumns.setText(
-            TRANSLATE("MainWindow", "Restore default column widths"))
+            translate("MainWindow", "Restore default column widths"))
         self.actionRestoreColumns.setToolTip(
-            TRANSLATE("MainWindow", "Restore default column widths"))
+            translate("MainWindow", "Restore default column widths"))
         self.actionUninstall_Mods.setText(
-            TRANSLATE("MainWindow", "Uninstall"))
+            translate("MainWindow", "Uninstall"))
         self.actionUninstall_Mods.setToolTip(
-            TRANSLATE("MainWindow", "Uninstall one or more selected Mods"))
+            translate("MainWindow", "Uninstall one or more selected Mods"))
         self.actionUninstall_Mods.setShortcut("Del")
         self.actionEnable_Disable_Mods.setText(
-            TRANSLATE("MainWindow", "Enable/Disable"))
+            translate("MainWindow", "Enable/Disable"))
         self.actionEnable_Disable_Mods.setToolTip(
-            TRANSLATE("MainWindow", "Enable or disable selected Mods"))
+            translate("MainWindow", "Enable or disable selected Mods"))
         self.actionEnable_Disable_Mods.setShortcut("Ctrl+Q")
         self.actionRefresh_Mod_List.setText(
-            TRANSLATE("MainWindow", "Refresh Mod List"))
+            translate("MainWindow", "Refresh Mod List"))
         self.actionRefresh_Mod_List.setShortcut("F5")
         self.actionReinstall_Mods.setText(
-            TRANSLATE("MainWindow", "Reinstall"))
+            translate("MainWindow", "Reinstall"))
         self.actionRefresh_Load_Order.setText(
-            TRANSLATE("MainWindow", "Refresh Load Order"))
+            translate("MainWindow", "Refresh Load Order"))
         self.actionRefresh_Load_Order.setShortcut("F6")
         self.actionSelect_All_Mods.setText(
-            TRANSLATE("MainWindow", "Select All Mods"))
+            translate("MainWindow", "Select All Mods"))
         self.actionSelect_All_Mods.setShortcut("Ctrl+A")
         self.actionRun_The_Game.setText(
-            TRANSLATE("MainWindow", "Run the Game"))
+            translate("MainWindow", "Run the Game"))
         self.actionRun_The_Game.setShortcut("Ctrl+R")
         self.actionRun_Script_Merger.setText(
-            TRANSLATE("MainWindow", "Run Script Merger"))
+            translate("MainWindow", "Run Script Merger"))
         self.actionRun_Script_Merger.setShortcut("Ctrl+S")
         self.actionAbout.setText(
-            TRANSLATE("MainWindow", "About"))
+            translate("MainWindow", "About"))
         self.actionAbout.setShortcut("F1")
         self.actionMain_Web_Page.setText(
-            TRANSLATE("MainWindow", "Main Web Page"))
+            translate("MainWindow", "Main Web Page"))
         self.actionGitHub.setText(
-            TRANSLATE("MainWindow", "GitHub"))
+            translate("MainWindow", "GitHub"))
         self.actionMain_Web_Page.setShortcut("Ctrl+F1")
         self.actionGitHub.setShortcut("Ctrl+F2")
         self.actionAlert_to_run_Script_Merger.setText(
-            TRANSLATE("MainWindow", "Alert to run Script Merger"))
+            translate("MainWindow", "Alert to run Script Merger"))
         self.actionChange_Game_Path.setText(
-            TRANSLATE("MainWindow", "Change Game Path"))
+            translate("MainWindow", "Change Game Path"))
         self.actionChange_Script_Merger_Path.setText(
-            TRANSLATE("MainWindow", "Change Script Merger Path"))
+            translate("MainWindow", "Change Script Merger Path"))
         self.actionClearOutput.setText(
-            TRANSLATE("MainWindow", "Clear Output"))
+            translate("MainWindow", "Clear Output"))
         self.actionRename.setText(
-            TRANSLATE("MainWindow", "Rename"))
+            translate("MainWindow", "Rename"))
         self.actionRename.setShortcut("F2")
         self.actionDetails.setShortcut("F3")
         self.actionDetails.setText(
-            TRANSLATE("MainWindow", "Details"))
+            translate("MainWindow", "Details"))
         self.actionOpenFolder.setShortcut("Ctrl+L")
         self.actionOpenFolder.setText(
-            TRANSLATE("MainWindow", "Open Folder"))
+            translate("MainWindow", "Open Folder"))
         self.actionIncreasePriority.setShortcut("Ctrl+Up")
         self.actionIncreasePriority.setText(
-            TRANSLATE("MainWindow", "Increase Priority"))
+            translate("MainWindow", "Increase Priority"))
         self.actionDecreasePriority.setShortcut("Ctrl+Down")
         self.actionDecreasePriority.setText(
-            TRANSLATE("MainWindow", "Decrease Priority"))
+            translate("MainWindow", "Decrease Priority"))
         self.actionSetPriority.setShortcut("Ctrl+P")
         self.actionSetPriority.setText(
-            TRANSLATE("MainWindow", "Set Priority"))
+            translate("MainWindow", "Set Priority"))
         self.actionUnsetPriority.setShortcut("Ctrl+U")
         self.actionUnsetPriority.setText(
-            TRANSLATE("MainWindow", "Remove Priority"))
+            translate("MainWindow", "Remove Priority"))
 
         self.menuEdit.addAction(self.actionDetails)
         self.menuEdit.addAction(self.actionRename)
@@ -511,33 +511,33 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(lambda: self.openByConfigKey('mods'))
         actionTemp.setText('M')
-        actionTemp.setIconText(TRANSLATE('MainWindow', 'Mods'))
+        actionTemp.setIconText(translate('MainWindow', 'Mods'))
         actionTemp.setIcon(getIcon("mods.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open Mods folder'))
+        actionTemp.setToolTip(translate("MainWindow", 'Open Mods folder'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(lambda: self.openByConfigKey('dlc'))
         actionTemp.setText('D')
-        actionTemp.setIconText(TRANSLATE('MainWindow', 'DLC'))
+        actionTemp.setIconText(translate('MainWindow', 'DLC'))
         actionTemp.setIcon(getIcon("dlc.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open DLC folder'))
+        actionTemp.setToolTip(translate("MainWindow", 'Open DLC folder'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(lambda: self.openByConfigKey('menu'))
         actionTemp.setText('I')
-        actionTemp.setIconText(TRANSLATE('MainWindow', 'Menus'))
+        actionTemp.setIconText(translate('MainWindow', 'Menus'))
         actionTemp.setIcon(getIcon("menu.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open Menus folder'))
+        actionTemp.setToolTip(translate("MainWindow", 'Open Menus folder'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(lambda: self.openByConfigKey('settings'))
         actionTemp.setText('S')
-        actionTemp.setIconText(TRANSLATE('MainWindow', 'Settings'))
+        actionTemp.setIconText(translate('MainWindow', 'Settings'))
         actionTemp.setIcon(getIcon("settings.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open Settings folder'))
+        actionTemp.setToolTip(translate("MainWindow", 'Open Settings folder'))
         self.toolBar.addAction(actionTemp)
 
         self.toolBar.addSeparator()
@@ -545,36 +545,36 @@ class CustomMainWidget(QWidget):
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.menu + '/input.xml'))
-        actionTemp.setText('Input Xml')
+        actionTemp.setText(translate("MainWindow", 'Input Xml'))
         actionTemp.setIcon(getIcon("xml.ico"))
-        actionTemp.setToolTip(TRANSLATE("MainWindow", 'Open input.xml file'))
+        actionTemp.setToolTip(translate("MainWindow", 'Open input.xml file'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + '/input.settings'))
-        actionTemp.setText('Input Settings')
+        actionTemp.setText(translate("MainWindow", 'Input Settings'))
         actionTemp.setIcon(getIcon("input.ico"))
         actionTemp.setToolTip(
-            TRANSLATE("MainWindow", 'Open input.settings file'))
+            translate("MainWindow", 'Open input.settings file'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + "/" + data.config.usersettings))
-        actionTemp.setText('User Settings')
+        actionTemp.setText(translate("MainWindow", 'User Settings'))
         actionTemp.setIcon(getIcon("user.ico"))
         actionTemp.setToolTip(
-            TRANSLATE("MainWindow", 'Open user.settings file'))
+            translate("MainWindow", 'Open user.settings file'))
         self.toolBar.addAction(actionTemp)
 
         actionTemp = QAction(self.mainWindow)
         actionTemp.triggered.connect(
             lambda: openFile(data.config.settings + '/mods.settings'))
-        actionTemp.setText('Mods Settings')
+        actionTemp.setText(translate("MainWindow", 'Mods Settings'))
         actionTemp.setIcon(getIcon("modset.ico"))
         actionTemp.setToolTip(
-            TRANSLATE("MainWindow", 'Open mods.settings file'))
+            translate("MainWindow", 'Open mods.settings file'))
         self.toolBar.addAction(actionTemp)
 
         self.toolBar.addSeparator()
@@ -583,7 +583,7 @@ class CustomMainWidget(QWidget):
             self.addToToolbar(custom)
         self.actionAddToToolbar = QAction(self.mainWindow)
         self.actionAddToToolbar.triggered.connect(self.addToToolbar)
-        self.actionAddToToolbar.setText(TRANSLATE("MainWindow", 'Add New..'))
+        self.actionAddToToolbar.setText(translate("MainWindow", 'Add New..'))
 
     def openMenu(self, position):
         '''Right click menu on mod list (Left panel)'''
@@ -612,7 +612,7 @@ class CustomMainWidget(QWidget):
         menu = QMenu(self.mainWindow)
         menu.addAction(self.actionAddToToolbar)
         rem = QMenu(menu)
-        rem.setTitle(TRANSLATE("MainWindow", "Remove.."))
+        rem.setTitle(translate("MainWindow", "Remove.."))
         actions = self.toolBar.actions()[14:]
         for action in actions:
             temp = self.makeTempAction(action)
@@ -687,8 +687,8 @@ class CustomMainWidget(QWidget):
                 for oldname in selected:
                     newname, ok = QInputDialog.getText(
                         None,
-                        TRANSLATE("MainWindow", 'Rename') + " " + oldname,
-                        TRANSLATE("MainWindow", 'Enter new mod name') + ": ",
+                        translate("MainWindow", 'Rename') + " " + oldname,
+                        translate("MainWindow", 'Enter new mod name') + ": ",
                         QLineEdit.Normal, oldname)
                     if ok:
                         self.model.rename(oldname, newname)
@@ -744,8 +744,8 @@ class CustomMainWidget(QWidget):
             if (selected[0] == '~'):
                 QMessageBox.critical(
                     self,
-                    TRANSLATE("MainWindow", "Error"),
-                    TRANSLATE("MainWindow", "You cannot set priority to disabled mod") + " ")
+                    translate("MainWindow", "Error"),
+                    translate("MainWindow", "You cannot set priority to disabled mod") + " ")
                 return
             selectedvalue = item.text(1)
             if (selectedvalue):
@@ -754,8 +754,8 @@ class CustomMainWidget(QWidget):
                 value = 0
             priority, ok = QInputDialog.getInt(
                 self,
-                TRANSLATE("MainWindow", "Set Priority"),
-                TRANSLATE("MainWindow", "Enter new priority") + ": ", value)
+                translate("MainWindow", "Set Priority"),
+                translate("MainWindow", "Enter new priority") + ": ", value)
             if (ok):
                 data.config.setPriority(str(selected), str(priority))
                 data.config.write()
@@ -808,9 +808,9 @@ class CustomMainWidget(QWidget):
         data.config.language = str(language)
         button = QMessageBox.question(
             self,
-            TRANSLATE("MainWindow", "Change language"),
-            TRANSLATE("MainWindow", "You need to restart the program to apply the changes.\n\
-                Do you want to restart it now?"),
+            translate("MainWindow", "Change language"),
+            translate("MainWindow", "You need to restart the program to apply the changes.")+"\n"+
+            translate("MainWindow", "Do you want to restart it now?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if (button == QMessageBox.Yes):
             restartProgram()
@@ -835,8 +835,8 @@ class CustomMainWidget(QWidget):
                     old_priority = int(old_priority)
                 priority, ok = QInputDialog.getInt(
                     self,
-                    TRANSLATE("MainWindow", "Set Priority"),
-                    TRANSLATE("MainWindow", "Enter new priority") + ": ",
+                    translate("MainWindow", "Set Priority"),
+                    translate("MainWindow", "Enter new priority: "),
                     old_priority)
                 if not ok:
                     return
@@ -845,7 +845,7 @@ class CustomMainWidget(QWidget):
                     if mod.enabled:
                         mod.priority = priority
                     else:
-                        self.output(TRANSLATE(
+                        self.output(translate(
                             "MainWindow",
                             "You cannot set priority to disabled mod") +
                             " '" + modname + "'")
@@ -928,13 +928,18 @@ class CustomMainWidget(QWidget):
                     self.alertRunScriptMerger()
                 self.setProgress(0)
             else:
-                self.output(TRANSLATE("MainWindow", "Installation canceled"))
+                self.output(translate("MainWindow", "Installation canceled"))
         except Exception as err:
             self.setProgress(0)
             self.output(formatUserError(err))
             errorCount += 1
         self.output(
-            f'> Installed {successCount} mods or dlcs ({errorCount} errors)')
+            '> '+
+            translate("MainWindow", "Installed")+
+            f' {successCount} '+
+            translate("MainWindow", "mods or dlcs")+
+            f' ({errorCount} '+
+            translate("MainWindow", "errors")+')')
 
     def uninstallMods(self):
         '''Uninstalls selected mods'''
@@ -942,11 +947,11 @@ class CustomMainWidget(QWidget):
             selected = self.getSelectedMods()
             if selected:
                 clicked = QMessageBox.question(
-                    self, TRANSLATE("MainWindow", "Confirm"),
-                    TRANSLATE("MainWindow",
+                    self, translate("MainWindow", "Confirm"),
+                    translate("MainWindow",
                               "Are you sure you want to uninstall ")
                     + str(len(selected)) +
-                    TRANSLATE("MainWindow", " selected mods") + "?",
+                    translate("MainWindow", " selected mods?"),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
                     progress = 0
@@ -969,12 +974,12 @@ class CustomMainWidget(QWidget):
             selected = self.getSelectedMods()
             if selected:
                 clicked = QMessageBox.question(
-                    self, TRANSLATE("MainWindow", "Confirm"),
-                    TRANSLATE("MainWindow",
+                    self, translate("MainWindow", "Confirm"),
+                    translate("MainWindow",
                               "Are you sure you want to reinstall ")
                     + str(len(selected)) +
-                    TRANSLATE("MainWindow", " selected mods") + "?\n\n" +
-                    TRANSLATE("MainWindow", "This will override the mods settings with " +
+                    translate("MainWindow", " selected mods?") + "\n\n" +
+                    translate("MainWindow", "This will override the mods settings with " +
                               "their defaults."),
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if clicked == QMessageBox.Yes:
@@ -1003,7 +1008,7 @@ class CustomMainWidget(QWidget):
                     subprocess.Popen([gamepath], cwd=directory)
                 else:
                     MessageUnsupportedOSAction(
-                        "Please run the game through Steam.")
+                        translate("MainWindow", "Please run the game through Steam."))
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -1073,9 +1078,9 @@ class CustomMainWidget(QWidget):
                 for modfile in mod.files:
                     modsize += getSize(data.config.mods + "/" + modfile)
                     modsize += getSize(data.config.mods + "/~" + modfile)
-                userstr = TRANSLATE("MainWindow", 'No')
+                userstr = translate("MainWindow", 'No')
                 if (mod.usersettings):
-                    userstr = TRANSLATE("MainWindow", 'Yes')
+                    userstr = translate("MainWindow", 'Yes')
                 self.addToList(
                     mod.enabled,
                     mod.name,
@@ -1098,7 +1103,7 @@ class CustomMainWidget(QWidget):
             self.refreshLoadOrder()
             self.model.write()
         except Exception as err:
-            self.output(f"Couldn't refresh list: {formatUserError(err)}")
+            self.output(translate("MainWindow", "Couldn't refresh list: ") + f"{formatUserError(err)}")
             return err
         return None
 
@@ -1138,7 +1143,7 @@ class CustomMainWidget(QWidget):
                         row.setSelected(True)
         except Exception as err:
             self.output(
-                f"Couldn't read or refresh load order: {formatUserError(err)}")
+                translate("MainWindow", "Couldn't read or refresh load order: ") + f"{formatUserError(err)}")
             return err
         return None
 
