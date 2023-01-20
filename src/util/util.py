@@ -12,7 +12,7 @@ from shutil import copytree, rmtree
 from platform import python_version
 from configparser import ConfigParser
 from threading import Timer
-import cchardet
+import charset_normalizer
 from typing import Callable, Any
 
 from PySide2 import QtGui, QtCore, __version__
@@ -49,7 +49,8 @@ def getDocumentsFolder() -> str:
     if not path or not os.path.exists(path):
         path = normalizePath(str(QFileDialog.getExistingDirectory(
             None,
-            translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"),
+            translate(
+                "MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"),
             "My Documents")))
     return path
 
@@ -120,13 +121,13 @@ def showAboutWindow():
     QMessageBox.about(
         None,
         translate("MainWindow", "About"),
-        ""+TITLE+"\n"+
-        translate("MainWindow", "Version: ")+VERSION+"\n"+
-        translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n"+
-        "\n"+
-        translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n"+
-        translate("MainWindow", "GUI: PySide2 ")+__version__+"\n"+
-        "\n"+
+        ""+TITLE+"\n" +
+        translate("MainWindow", "Version: ")+VERSION+"\n" +
+        translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n" +
+        "\n" +
+        translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n" +
+        translate("MainWindow", "GUI: PySide2 ")+__version__+"\n" +
+        "\n" +
         translate("MainWindow", "Thank you for using ")+TITLE+translate("MainWindow", "!"))
 
 
@@ -257,9 +258,9 @@ def detectEncoding(path: str) -> str:
     if os.path.exists(path):
         with open(path, 'rb') as file:
             text = file.read()
-            detected = cchardet.detect(text)
+            detected = charset_normalizer.detect(text)
             print("detected", path, "as", detected)
-            return detected["encoding"]
+            return str(detected["encoding"])
     else:
         return "utf-8"
 

@@ -10,10 +10,10 @@ cx-freeze = ">=6.11,<6.13"
 autopep8 = "*"
 
 [packages]
-fasteners = ">=0.15"
-PySide2 = "==5.15.1"
-watchdog = ">=0.10.3"
-cchardet = "==2.1.5"
+fasteners = ">=0.18"
+PySide2 = "==5.15.2.1"
+watchdog = ">=2.2.1"
+charset-normalizer = ">=3.0.1"
 patool = { version=">=1.12", sys_platform="!='win32'" }
 pyunpack = { version=">=0.2.1", sys_platform="!='win32'" }
 easyprocess = { version=">=0.3", sys_platform="!='win32'" }
