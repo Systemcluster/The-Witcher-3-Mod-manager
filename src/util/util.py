@@ -260,7 +260,9 @@ def detectEncoding(path: str) -> str:
             text = file.read()
             detected = charset_normalizer.detect(text)
             print("detected", path, "as", detected)
-            return str(detected["encoding"])
+            if float(detected["confidence"]) > 0.5:
+                return str(detected["encoding"])
+            return "utf-8"
     else:
         return "utf-8"
 
