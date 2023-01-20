@@ -4,6 +4,7 @@
 from typing import Dict, List, KeysView, ValuesView
 from os import path
 import xml.etree.ElementTree as XML
+from base64 import b64decode, b64encode
 
 from fasteners import InterProcessLock
 
@@ -138,7 +139,14 @@ class Model:
             usersetting = Usersetting(str(elem.get('context')), str(elem.text))
             mod.usersettings.append(usersetting)
         for elem in root.findall('readme'):
+            # legacy readme format
             mod.readmes.append(str(elem.text))
+        for elem in root.findall('readmeb64'):
+            try:
+                mod.readmes.append(
+                    b64decode(str(elem.text).encode('ascii')).decode('utf-8'))
+            except:
+                print('could not decode readme')
 
         mod.checkPriority()
         return mod
@@ -177,6 +185,7 @@ class Model:
                 us.set('context', usersetting.context)
         if mod.readmes:
             for readme in mod.readmes:
-                us = XML.SubElement(elem, 'readme')
-                us.text = str(readme)
+                us = XML.SubElement(elem, 'readmeb64')
+                us.text = b64encode(
+                    str(readme).encode('utf-8')).decode('ascii')
         return root
