@@ -1,0 +1,44 @@
+[project]
+
+name = "The-Witcher-3-Mod-Manager"
+description = "Mod manager for The Witcher 3"
+version = "0.9.2-pre"
+requires-python = ">=3.10,<3.11"
+license = { text = "BSD-2-Clause" }
+readme = "README.md"
+authors = [{ name = "Christian Sdunek", email = "me@systemcluster.me" }]
+urls = { repository = "https://github.com/Systemcluster/The-Witcher-3-Mod-Manager" }
+
+dependencies = [
+  "fasteners~=0.19",
+  "pyside2~=5.15.2.1",
+  "watchdog~=4.0.1",
+  "charset-normalizer~=3.3.2",
+
+  "pywin32>=306; sys_platform == 'win32'",
+  "colorama~=0.4.6; sys_platform == 'win32'",
+  "patool~=2.3.0; sys_platform != 'win32'",
+  "easyprocess~=1.1; sys_platform != 'win32'",
+  "patchelf~=0.17.2.1; sys_platform != 'win32'",
+]
+
+[project.optional-dependencies]
+
+dev = [
+  "pylint~=3.2.6",
+  "mypy~=1.11.1",
+  "cx-freeze~=7.2.0",
+  "autopep8~=2.3.1",
+  "lief~=0.13.2",
+]
+
+# [build-system]
+
+# requires = ["setuptools>=65.6.3", "cx-freeze~=7.2.0"]
+# build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+
+ignore_missing_imports = true
+follow_imports = "silent"
+show_column_numbers = true
