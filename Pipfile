@@ -8,7 +8,7 @@ pylint = ">=3.2"
 mypy = ">=1.10"
 cx-freeze = ">=6.11,<6.13"
 autopep8 = ">=2.3"
-lief = "==0.13.2"
+lief = "==0.15.0"
 
 [packages]
 fasteners = ">=0.19"
