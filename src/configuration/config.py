@@ -321,6 +321,10 @@ class Configuration:
     def gamelaunchcommand(self):
         return self.get("PATHS", "gamelaunchcommand")
 
+    @property
+    def mergerlaunchcommand(self):
+        return self.get("PATHS", "mergerlaunchcommand")
+
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
         self.set('WINDOW', 'width', str(window.width()))
         self.set('WINDOW', 'height', str(window.height()))
