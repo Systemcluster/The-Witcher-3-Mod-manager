@@ -274,7 +274,7 @@ def extractArchive(modPath: str) -> str:
         try:
             import shutil
             shutil.unpack_archive(modPath, extractedDir)
-        except ValueError:
+        except (ValueError, shutil.ReadError):
             import patoolib  # type: ignore
             patoolib.extract_archive(
                 modPath, outdir=extractedDir, interactive=False)
