@@ -21,7 +21,7 @@ from src.util.util import (
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
-    r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
+    r"(\[.*\]\s*((IK_.+=\(Action=.+\)|Version=\d+)\s*)*\s*)+", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
