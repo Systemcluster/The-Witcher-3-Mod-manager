@@ -203,7 +203,7 @@ def fetchInputSettings(filetext: str) -> List[Key]:
             line = line.strip()
             if line[0] == "[" and line[-1] == "]":
                 context = line
-            elif context != '':
+            elif context != '' and line != '':
                 found.append(Key(context, line))
     return found
 
