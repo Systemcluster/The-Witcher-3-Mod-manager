@@ -20,8 +20,7 @@ from src.util.util import (
 )
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
-INPUTPATTERN = re.compile(
-    r"(\[.*\]\s*((IK_.+=\(Action=.+\)|Version=\d+)\s*)*\s*)+", re.UNICODE)
+INPUTPATTERN = re.compile(r"\[.*\]\s+(?:IK_.+=\(Action=.+\)\s*)+", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
@@ -194,9 +193,9 @@ def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
 
 def fetchInputSettings(filetext: str) -> List[Key]:
     found = []
-    inputsettings = INPUTPATTERN.search(filetext)
+    inputsettings = ''.join(INPUTPATTERN.findall(filetext))
     if (inputsettings):
-        res = re.sub(r"(\r\n+)|(\n+)", "\n", inputsettings.group(0))
+        res = re.sub(r"(\r\n+)|(\n+)", "\n", inputsettings)
         arr = filter(lambda s: s != '', str(res).split('\n'))
         context = ''
         for line in arr:
