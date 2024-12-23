@@ -283,7 +283,7 @@ class Mod:
             for key in iter(self.inputsettings):
                 if any(x for x in existing if x == key):
                     continue
-                conflicting = [x for x in existing if x.context == key.context and x.action["Action"] == key.action["Action"] and (
+                conflicting = [x for x in existing if not x.empty and x.context == key.context and x.action["Action"] == key.action["Action"] and (
                     (x.type == key.type and x.key != key.key) or
                     (x.key == key.key and x.action != key.action)
                 )]
@@ -331,7 +331,8 @@ class Mod:
                 if not category.endswith(']'):
                     text += ']'
                 text += '\n'
-            text += repr(key) + "\n"
+            if not key.empty:
+                text += repr(key) + "\n"
         with open(filename, 'w', encoding="utf-8") as userfile:
             userfile.write(text)
             userfile.flush()

@@ -83,18 +83,17 @@ class Key:
     key: str
     action: Action
     type: str
+    empty: bool
 
-    def __init__(self, context: str, key: str):
+    def __init__(self, context: str, key: str = ''):
         self.context = context
-        if (key.startswith("Version")):
+        if (key.startswith("Version") or key == ''):
             self.key = key
             self.action = None
             self.type = None
-        elif (key == ''):
-            self.key = '\n'
-            self.action = None
-            self.type = None
+            self.empty = (key == '')
         else:
+            self.empty = False
             self.key, action = key.split('=(')
 
             self.action = Action(action)
@@ -107,42 +106,49 @@ class Key:
                 self.type = 'keyboard'
 
     def __repr__(self):
-        if (self.key.startswith("Version") or self.key == '\n'):
+        if (self.key.startswith("Version")):
             return self.key
         else:
             return self.key + "=(" + repr(self.action) + ")"
 
     def __eq__(self, other):
-        return self.context == other.context \
-            and self.key == other.key \
-            and self.type == other.type \
-            and self.action == other.action
+        if not self.empty:
+            return self.context == other.context \
+                and self.key == other.key \
+                and self.type == other.type \
+                and self.action == other.action
+        else:
+            return False
 
     def __gt__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                return self.action > other.action
+                if not self.empty:
+                    return self.action > other.action
             return self.key > other.key
         return self.context > other.context
 
     def __lt__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                return self.action > other.action
+                if not self.empty:
+                    return self.action > other.action
             return self.key < other.key
         return self.context < other.context
 
     def __ge__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                return self.action > other.action
+                if not self.empty:
+                    return self.action > other.action
             return self.key >= other.key
         return self.context >= other.context
 
     def __le__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                return self.action > other.action
+                if not self.empty:
+                    return self.action > other.action
             return self.key <= other.key
         return self.context <= other.context
 
