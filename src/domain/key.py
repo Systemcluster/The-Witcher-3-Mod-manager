@@ -90,6 +90,10 @@ class Key:
             self.key = key
             self.action = None
             self.type = None
+        elif (key == ''):
+            self.key = '\n'
+            self.action = None
+            self.type = None
         else:
             self.key, action = key.split('=(')
 
@@ -103,7 +107,7 @@ class Key:
                 self.type = 'keyboard'
 
     def __repr__(self):
-        if (self.key.startswith("Version")):
+        if (self.key.startswith("Version") or self.key == '\n'):
             return self.key
         else:
             return self.key + "=(" + repr(self.action) + ")"
