@@ -86,19 +86,27 @@ class Key:
 
     def __init__(self, context: str, key: str):
         self.context = context
-        self.key, action = key.split('=(')
-
-        self.action = Action(action)
-
-        if ("Pad" in self.key):
-            self.type = 'controller'
-        elif ('PS4' in self.key):
-            self.type = 'PS4'
+        if (key.startswith("Version")):
+            self.key = key
+            self.action = None
+            self.type = None
         else:
-            self.type = 'keyboard'
+            self.key, action = key.split('=(')
+
+            self.action = Action(action)
+
+            if ("Pad" in self.key):
+                self.type = 'controller'
+            elif ('PS4' in self.key):
+                self.type = 'PS4'
+            else:
+                self.type = 'keyboard'
 
     def __repr__(self):
-        return self.key + "=(" + repr(self.action) + ")"
+        if (self.key.startswith("Version")):
+            return self.key
+        else:
+            return self.key + "=(" + repr(self.action) + ")"
 
     def __eq__(self, other):
         return self.context == other.context \
