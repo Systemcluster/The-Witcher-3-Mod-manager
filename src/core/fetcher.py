@@ -199,7 +199,7 @@ def fetchInputSettings(filetext: str) -> List[Key]:
     if (inputsettings):
         arr = list(filter(lambda s: s != '', inputsettings.split('\n')))
         context = ''
-        empty = False
+        empty = True
         for line in arr:
             line = line.strip()
             if line[0] == "[" and line[-1] == "]":
@@ -210,10 +210,10 @@ def fetchInputSettings(filetext: str) -> List[Key]:
                     found.append(Key(context))
                     continue
                 context = line
-                empty = False
+                empty = True
             elif context != '':
                 found.append(Key(context, line))
-                empty = True
+                empty = False
     return found
 
 
