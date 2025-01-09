@@ -21,7 +21,7 @@ from src.util.util import (
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
-    r"(?:\[.+\]\s{1,2})(?:(?:IK_.+=\(Action=.+\)\s|Version=\d+\s)+)*", re.UNICODE)
+    r"\[.+\]\n(?:(?:IK_.+=\(Action=.+\)|Version=\d+)\n)*", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
@@ -194,19 +194,26 @@ def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
 
 def fetchInputSettings(filetext: str) -> List[Key]:
     found = []
-    filetext = re.sub("r(\r\n)", "\n", filetext)
+    filetext = re.sub("r(\r\n+)|(\n+)", "\n", filetext)
     inputsettings = ''.join(INPUTPATTERN.findall(filetext))
     if (inputsettings):
-        arr = inputsettings.split('\n')
+        arr = list(filter(lambda s: s != '', inputsettings.split('\n')))
         context = ''
+        count = 0
         for line in arr:
             line = line.strip()
-            if context != '' and line == '':
-                found.append(Key(context, line))
-            elif line[0] == "[" and line[-1] == "]":
+            if line[0] == "[" and line[-1] == "]":
+                if count == 0 and context != '':
+                    found.append(Key(context))
+                elif line == arr[-1]:
+                    context = line
+                    found.append(Key(context))
+                    continue
                 context = line
+                count = 0
             elif context != '':
                 found.append(Key(context, line))
+                count += 1
     return found
 
 
