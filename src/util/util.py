@@ -56,11 +56,11 @@ def getDocumentsFolder() -> str:
         MessageUnsupportedOS(platform)
         sys.exit(1)
     if not path or not os.path.exists(path):
-        path = normalizePath(str(QFileDialog.getExistingDirectory(
-            None,
-            translate("MainWindow",
-                      "Select \"My Documents\" directory containing the Witcher 3 config directory"),
-            "My Documents")))
+        dialog = QFileDialog(None, translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
+        dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        if dialog.exec():
+            path = normalizePath(str(dialog.selectedFiles()[0]))
     return path
 
 
@@ -102,22 +102,26 @@ def reconfigureGamePath() -> bool:
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfigured
     MessageNotConfigured()
-    gamePath = str(QFileDialog.getOpenFileName(
+    dialog = QFileDialog(
         None,
         translate("MainWindow", "Select witcher3.exe"),
         data.config.gameexe or "witcher3.exe",
-        "*.exe")[0])
-    try:
-        data.config.gameexe = gamePath
-    except ValueError as err:
-        print(str(err), file=sys.stderr)
-        QMessageBox.critical(
-            None,
-            translate("MainWindow", "Selected file not correct"),
-            translate("MainWindow", "'witcher3.exe' file not selected"),
-            QMessageBox.StandardButton.Ok)
-        return False
-    return True
+        "*.exe")
+    dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+    if dialog.exec():
+        gamePath = normalizePath(str(dialog.selectedFiles()[0]))
+        try:
+            data.config.gameexe = gamePath
+        except ValueError as err:
+            print(str(err), file=sys.stderr)
+            QMessageBox.critical(
+                None,
+                translate("MainWindow", "Selected file not correct"),
+                translate("MainWindow", "'witcher3.exe' file not selected"),
+                QMessageBox.StandardButton.Ok)
+            return False
+        return True
+    return False
 
 
 def reconfigureScriptMergerPath():
@@ -125,13 +129,16 @@ def reconfigureScriptMergerPath():
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfiguredScriptMerger
     MessageNotConfiguredScriptMerger()
-    mergerPath = str(QFileDialog.getOpenFileName(
+    dialog = QFileDialog(
         None,
         translate("MainWindow", "Select WitcherScriptMerger.exe"),
         data.config.scriptmerger or '',
-        "*.exe")[0])
-    if mergerPath:
-        data.config.scriptmerger = mergerPath
+        "*.exe")
+    dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+    if dialog.exec():
+        mergerPath = normalizePath(str(dialog.selectedFiles()[0]))
+        if mergerPath:
+            data.config.scriptmerger = mergerPath
 
 
 def showAboutWindow():
