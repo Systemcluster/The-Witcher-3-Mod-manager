@@ -230,7 +230,9 @@ def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
     if title is None:
         title = translate("MainWindow", "Select Files or Folders")
     dialog = QFileDialog(parent, title, directory, extensions)
-    dialog.setOptions(QFileDialog.Option.ReadOnly)
+    dialog.setOptions(QFileDialog.Option.ReadOnly | 
+                     QFileDialog.Option.DontUseNativeDialog |
+                     QFileDialog.Option.HideNameFilterDetails)
     dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
     dialog.setModal(True)
     dialog.open()
