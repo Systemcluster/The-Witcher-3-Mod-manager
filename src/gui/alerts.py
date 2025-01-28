@@ -48,14 +48,14 @@ def MessageAlertScript():
         translate("MainWindow", "Run Script Merger"),
         translate(
             "MainWindow",
-            "After changing the mod list in any way you should run script merger to merge "
-            "the mods and ensure their compatibility and remove previously merged scripts") +
+            "After changing the mod list in any way you should run Script Merger to merge "
+            "the mods and ensure their compatibility and remove previously merged scripts\n\n") +
         translate(
             "MainWindow",
             "Do you want to run it now?")+"\n\n" +
         translate(
             "MainWindow",
-            "Note: You can disable these alerts in the settings..."),
+            "Note: You can disable these alerts in the settings."),
         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
 
