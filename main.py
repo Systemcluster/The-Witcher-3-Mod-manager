@@ -7,7 +7,7 @@ from os import environ
 
 if __name__ == "__main__":
     try:
-        from PySide2.QtWidgets import QApplication, QMessageBox
+        from PySide6.QtWidgets import QApplication, QMessageBox
 
         from src.configuration.config import Configuration
         from src.core.model import Model
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
         mainWindow.show()
 
-        ret = data.app.exec_()
+        ret = data.app.exec()
         data.config.saveWindowSettings(mainWidget, mainWindow)
         data.config.write_priority().join()
         data.config.write_config().join()

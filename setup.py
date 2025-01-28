@@ -46,7 +46,7 @@ setup(
     description=TITLE,
     executables=[Executable(
         "main.py",
-        targetName="TheWitcher3ModManager.exe",
+        target_name="TheWitcher3ModManager.exe",
         icon='res/w3a.ico',
         base="Win32GUI"
     )]

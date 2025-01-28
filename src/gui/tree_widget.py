@@ -2,7 +2,7 @@
 # pylint: disable=invalid-name
 
 import sys
-from PySide2.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 
 
 class CustomTreeWidgetItem(QTreeWidgetItem):

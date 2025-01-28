@@ -8,7 +8,7 @@ from os import path, rename, walk
 from time import gmtime, strftime
 from typing import List, Optional, Union, Tuple
 
-from PySide2.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 from src.domain.key import Key
 from src.globals import data

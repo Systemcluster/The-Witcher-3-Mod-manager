@@ -14,8 +14,8 @@ from sys import platform
 from threading import Timer
 from typing import Any, Callable
 
-from PySide2 import QtGui, __version__
-from PySide2.QtWidgets import QFileDialog, QMessageBox
+from PySide6 import QtGui, __version__
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 
 def formatUserError(error: Exception) -> str:
@@ -144,7 +144,7 @@ def showAboutWindow():
         translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n" +
         "\n" +
         translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n" +
-        translate("MainWindow", "GUI: PySide2 ")+__version__+"\n" +
+        translate("MainWindow", "GUI: PySide6 ")+__version__+"\n" +
         "\n" +
         translate("MainWindow", "Thank you for using ")+TITLE+translate("MainWindow", "!"))
 
@@ -235,7 +235,7 @@ def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
     dialog.setModal(True)
     dialog.open()
     result = []
-    if dialog.exec_():
+    if dialog.exec():
         result = dialog.selectedFiles()
     return [normalizePath(file) for file in result if os.path.isfile(file)]
 

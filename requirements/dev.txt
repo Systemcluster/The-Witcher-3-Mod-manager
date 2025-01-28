@@ -1,0 +1,7 @@
+# Development requirements
+-r main.txt
+pylint
+mypy
+cx-freeze
+autopep8
+lief

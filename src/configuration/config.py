@@ -9,7 +9,7 @@ import sys
 from copy import deepcopy
 from typing import Union
 
-from PySide2.QtWidgets import QMainWindow, QMessageBox, QWidget
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QWidget
 from fasteners import ReaderWriterLock
 
 from src.globals.constants import translate

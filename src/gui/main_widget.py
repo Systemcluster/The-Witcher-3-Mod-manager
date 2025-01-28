@@ -4,12 +4,10 @@
 from os import path
 from sys import platform
 
-from PySide2.QtCore import QFileInfo, QMetaObject, QRect, QSize, Qt, QThread, Signal
-from PySide2.QtGui import QCursor, QResizeEvent
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QFileInfo, QMetaObject, QRect, QSize, Qt, QThread, Signal
+from PySide6.QtGui import QCursor, QResizeEvent, QAction, QActionGroup
+from PySide6.QtWidgets import (
     QAbstractItemView,
-    QAction,
-    QActionGroup,
     QFileIconProvider,
     QHBoxLayout,
     QHeaderView,
@@ -624,13 +622,13 @@ class CustomMainWidget(QWidget):
         menu.addAction(self.actionReinstall_Mods)
         menu.addAction(self.actionUninstall_Mods)
         menu.addAction(self.actionEnable_Disable_Mods)
-        menu.exec_(self.treeWidget.viewport().mapToGlobal(position))
+        menu.exec(self.treeWidget.viewport().mapToGlobal(position))
 
     def openEditMenu(self, position):
         '''Right click menu on output'''
         menu = QMenu()
         menu.addAction(self.actionClearOutput)
-        menu.exec_(self.textEdit.viewport().mapToGlobal(position))
+        menu.exec(self.textEdit.viewport().mapToGlobal(position))
 
     def toolbarMenu(self, position):
         '''Right click menu on toolbar'''
@@ -644,7 +642,7 @@ class CustomMainWidget(QWidget):
             rem.addAction(temp)
             del action
         menu.addAction(rem.menuAction())
-        menu.exec_(self.toolBar.mapToGlobal(position))
+        menu.exec(self.toolBar.mapToGlobal(position))
 
     def removeFromToolbar(self, action):
         '''Creates menu for removing actions from toolbar'''

@@ -1,0 +1,24 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+mypy = "*"
+cx-freeze = "*"
+autopep8 = "*"
+lief = "*"
+
+[packages]
+fasteners = "*"
+pyside6 = "*"
+watchdog = "*"
+charset-normalizer = "*"
+pywin32 = { version="*", markers="sys_platform == 'win32'" }
+colorama = { version="*", markers="sys_platform == 'win32'" }
+patool = { version="*", markers="sys_platform != 'linux'" }
+patchelf = { version="*", markers="sys_platform != 'linux'" }
+
+[requires]
+python_version = "3.10"

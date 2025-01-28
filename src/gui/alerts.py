@@ -1,8 +1,8 @@
 '''Alert Dialogs'''
 # pylint: disable=invalid-name,wildcard-import,unused-wildcard-import
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QMessageBox
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMessageBox
 
 from src.globals.constants import *
 
@@ -109,7 +109,7 @@ def MessageInitializationFailed(error: str):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{error}")
-    return message.exec_()
+    return message.exec()
 
 
 def MessageCouldntOpenFile(file: str, error: str):
@@ -124,7 +124,7 @@ def MessageCouldntOpenFile(file: str, error: str):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{error}")
-    return message.exec_()
+    return message.exec()
 
 
 def MessageUnsupportedOS(os: str):
@@ -137,7 +137,7 @@ def MessageUnsupportedOS(os: str):
         f"<code>{os}</code><br><br>")
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
-    return message.exec_()
+    return message.exec()
 
 
 def MessageUnsupportedOSAction(message: str):
@@ -151,7 +151,7 @@ def MessageUnsupportedOSAction(message: str):
         f"{message}<br><br>")
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
-    return message.exec_()
+    return message.exec()
 
 
 def MessageAlertWritingFailed(path: str, error: Exception):
@@ -167,7 +167,7 @@ def MessageAlertWritingFailed(path: str, error: Exception):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{str(error)}")
-    return message.exec_()
+    return message.exec()
 
 
 def MessageAlertReadingConfigurationFailed(path: str, error: Exception):
@@ -184,7 +184,7 @@ def MessageAlertReadingConfigurationFailed(path: str, error: Exception):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{str(error)}")
-    return message.exec_()
+    return message.exec()
 
 
 def MessageAlertReadingConfigINI(path: str, error: Exception):
@@ -200,7 +200,7 @@ def MessageAlertReadingConfigINI(path: str, error: Exception):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{str(error)}")
-    return message.exec_()
+    return message.exec()
 
 
 def MessageNotConfigured():
@@ -214,7 +214,7 @@ def MessageNotConfigured():
                   "This file can be found in the games installation directory under <code>bin/x64/witcher3.exe</code> or <code>bin/x64_dx12/witcher3.exe</code>.<br><br>"))
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
-    return message.exec_()
+    return message.exec()
 
 
 def MessageNotConfiguredScriptMerger():
@@ -229,7 +229,7 @@ def MessageNotConfiguredScriptMerger():
                   "It can be found at <a href=\"https://www.nexusmods.com/witcher3/mods/484\">https://www.nexusmods.com/witcher3/mods/484</a><br><br>"))
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
-    return message.exec_()
+    return message.exec()
 
 
 def MessageAlertModFromGamePath(modPath, gamePath):
@@ -245,7 +245,7 @@ def MessageAlertModFromGamePath(modPath, gamePath):
         translate("MainWindow", "Game location: ") + gamePath + "<br><br>")
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
-    return message.exec_()
+    return message.exec()
 
 
 def MessageAlertCriticalError(error: Exception):
@@ -259,4 +259,4 @@ def MessageAlertCriticalError(error: Exception):
     message.setStandardButtons(QMessageBox.Ok)
     message.setTextFormat(Qt.RichText)
     message.setDetailedText(f"{str(error)}")
-    return message.exec_()
+    return message.exec()

@@ -1,7 +1,7 @@
 '''Global constants'''
 # pylint: disable=invalid-name
 
-from PySide2.QtCore import QCoreApplication
+from PySide6.QtCore import QCoreApplication
 
 translate = QCoreApplication.translate
 
