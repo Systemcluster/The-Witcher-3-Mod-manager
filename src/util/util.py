@@ -147,7 +147,7 @@ def showAboutWindow():
         None,
         translate("MainWindow", "About"),
         ""+TITLE+"\n" +
-        translate("MainWindow", "Version: ")+VERSION+"\n" +
+        translate("MainWindow", "Version: ")+VERSION+"\n\n" +
         translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n" +
         "\n" +
         translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n" +
