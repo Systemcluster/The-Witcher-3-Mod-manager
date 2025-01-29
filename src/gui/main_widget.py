@@ -1148,6 +1148,9 @@ class CustomMainWidget(QWidget):
                 for modfile in mod.files:
                     modsize += getSize(data.config.mods + "/" + modfile)
                     modsize += getSize(data.config.mods + "/~" + modfile)
+                for dlcfile in mod.dlcs:
+                    modsize += getSize(data.config.dlc + "/" + dlcfile)
+                    modsize += getSize(data.config.dlc + "/~" + dlcfile)
                 userstr = translate("MainWindow", 'No')
                 if (mod.usersettings):
                     userstr = translate("MainWindow", 'Yes')
