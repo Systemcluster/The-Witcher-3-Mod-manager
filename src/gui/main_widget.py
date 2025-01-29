@@ -745,12 +745,18 @@ class CustomMainWidget(QWidget):
                 self.output(formatUserError(err))
 
     def openFolder(self):
-        '''Open folders of the selected mods'''
+        '''Open folders of the selected mods/DLCs'''
         selected = self.getSelectedMods()
         if selected:
             try:
                 for modname in selected:
-                    self.model.explore(modname)
+                    mod = self.model.get(modname)
+                    # Open mod folders
+                    for file in mod.files:
+                        self.model.explore(mod, file, is_dlc=False)
+                    # Open DLC folders
+                    for dlc in mod.dlcs:
+                        self.model.explore(mod, dlc, is_dlc=True)
             except Exception as err:
                 self.output(formatUserError(err))
 
