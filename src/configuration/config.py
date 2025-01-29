@@ -166,7 +166,7 @@ class Configuration:
     def get(self, section, option, default=None):
         try:
             return self.config.get(section, option)
-        except (NoSectionError, NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             return default
 
     def set(self, section: str, option: str, value, write: bool = True):
