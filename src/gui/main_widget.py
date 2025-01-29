@@ -42,6 +42,7 @@ from src.gui.details_dialog import DetailsDialog
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.util.syntax import *
 from src.util.util import *
+from src.gui.themes import get_dark_palette, get_light_palette, get_system_palette
 
 
 class ModsSettingsWatcher(QThread):
@@ -197,6 +198,8 @@ class CustomMainWidget(QWidget):
         self.menuConfigure_Settings.setObjectName("menuConfigure_Settings")
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
+        self.menuSelect_Theme = QMenu(self.menuSettings)
+        self.menuSelect_Theme.setObjectName("menuSelect_Theme")
         self.mainWindow.setMenuBar(self.menubar)
         self.toolBar = QToolBar(self.mainWindow)
         self.toolBar.setObjectName("toolBar")
@@ -295,6 +298,8 @@ class CustomMainWidget(QWidget):
         self.menuConfigure_Settings.addSeparator()
         self.menuSettings.addAction(self.menuConfigure_Settings.menuAction())
         self.menuSettings.addAction(self.menuSelect_Language.menuAction())
+        self.menuSelect_Theme.setTitle(translate("MainWindow", "Select Theme"))
+        self.menuSettings.addAction(self.menuSelect_Theme.menuAction())
 
         self.menuHelp.addAction(self.actionAbout)
         self.menuHelp.addAction(self.actionMain_Web_Page)
@@ -305,6 +310,13 @@ class CustomMainWidget(QWidget):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.actionAddToToolbar = None
+
+        self.themeActionGroup = QActionGroup(self.mainWindow)
+        for theme in ['Follow System', 'Light', 'Dark']:
+            action = QAction(theme, self.mainWindow, checkable=True)
+            action.triggered.connect(lambda _, t=theme: self.changeTheme(t))
+            self.themeActionGroup.addAction(action)
+            self.menuSelect_Theme.addAction(action)
 
         self.translateUi()
         self.configureUi()
@@ -1332,3 +1344,20 @@ class CustomMainWidget(QWidget):
             res = MessageAlertScript()
             if (res == QMessageBox.Yes):
                 self.runScriptMerger()
+
+    def changeTheme(self, theme):
+        data.config.theme = theme
+        if theme == 'Dark':
+            data.app.setPalette(get_dark_palette())
+        elif theme == 'Light':
+            data.app.setPalette(get_light_palette())
+        else:
+            data.app.setPalette(get_system_palette())
+        data.config.write_config()
+        
+    def checkTheme(self):
+        theme = data.config.theme
+        for action in self.menuSelect_Theme.actions():
+            if action.text() == theme:
+                action.setChecked(True)
+                break
