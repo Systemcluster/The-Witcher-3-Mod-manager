@@ -110,3 +110,6 @@ ENV/
 # editor and project files
 .idea/
 .vscode/
+
+# PDM
+.pdm-python
