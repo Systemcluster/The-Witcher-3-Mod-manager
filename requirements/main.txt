@@ -1,9 +1,0 @@
-# Main requirements
-fasteners
-pyside6
-watchdog
-charset-normalizer
-pywin32; sys_platform == 'win32'
-colorama; sys_platform == 'win32'
-patool; sys_platform != 'win32'
-patchelf; sys_platform != 'win32'
