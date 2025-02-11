@@ -20,12 +20,20 @@ On the first run, if no configuration can be found, configuration files will be 
 
 ### Python (Windows and Linux)
 
-Download the source and install the requirements with `pip install -r requirements/main.txt`. I recommend using `venv` to create a virtual environment. Afterwards run with `python main.py`.
+The project uses [PDM](https://pdm-project.org/en/latest/) for dependency management. Requires Python 3.9 or newer (3.9+), up to Python 3.12.
 
-On Linux, the configuration files will be created in `~/.config/TheWitcher3ModManager`, and `wine` has to be available to run Script Merger.
+1. Install PDM with [recommended installation method](https://pdm-project.org/en/latest/#recommended-installation-method)
+2. Clone the repository
+3. Install dependencies: `pdm install --prod`
+4. Run the application: `pdm run start`
+
+On Linux:
+- Configuration files are created in `~/.config/TheWitcher3ModManager`
+- `wine` must be available to run Script Merger
+- Consider using `pdm run` prefix for all commands
 
 ### Build Release (Windows)
 
-Download the source and install the requirements with `pip install -r requirements/dev.txt`. I recommend using `venv` to create a virtual environment. Afterwards run with `python setup.py build_exe` to build the executable.
-
-The files will be created in `build/exe.[platform identifier].[python version]`.
+1. Install dependencies with development tools: `pdm install`
+2. Build executable: `pdm run build-win`
+3. Find files in `build/exe.[platform identifier].[python version]`

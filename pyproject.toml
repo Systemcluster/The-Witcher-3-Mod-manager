@@ -6,19 +6,19 @@ authors = [
     {name = "George Burduli", email = "burduli01@pm.me"},
 ]
 dependencies = [
-    "fasteners>=0.19",
-    "pyside6>=6.8.2.1",
-    "watchdog>=6.0.0",
-    "charset-normalizer>=3.4.1",
+    "fasteners",
+    "pyside6",
+    "watchdog",
+    "charset-normalizer",
     "pywin32; sys_platform == 'win32'",
     "colorama; sys_platform == 'win32'",
     "patool; sys_platform != 'win32'",
     "easyprocess; sys_platform != 'win32'",
-    "patchelf; sys_platform != 'win32'"
+    "patchelf; sys_platform != 'win32'",
 ]
-requires-python = "==3.13.*"
 readme = "README.md"
 license = {text = "BSD-2-Clause"}
+requires-python = ">=3.9,<3.13"
 
 
 [tool.pdm]
@@ -26,9 +26,13 @@ distribution = false
 
 [dependency-groups]
 dev = [
-    "pylint>=3.3.4",
-    "mypy>=1.15.0",
-    "cx-freeze>=7.2.10",
-    "autopep8>=2.3.2",
-    "lief>=0.16.3",
+    "pylint",
+    "mypy",
+    "cx-freeze",
+    "autopep8",
+    "lief",
 ]
+
+[tool.pdm.scripts]
+start = "python -m main"
+build-win = "python setup.py build_exe"
