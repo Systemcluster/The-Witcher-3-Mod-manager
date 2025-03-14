@@ -28,6 +28,7 @@ def formatUserError(error: Exception) -> str:
 
 
 def getDocumentsFolder() -> str:
+    from src.globals import data
     from src.globals.constants import translate
     from src.gui.alerts import MessageUnsupportedOS
     path = ""
@@ -57,7 +58,8 @@ def getDocumentsFolder() -> str:
         sys.exit(1)
     if not path or not os.path.exists(path):
         dialog = QFileDialog(None, translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
-        dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+        dialog_options = QFileDialog.Option.DontUseNativeDialog if data.config.get('SETTINGS', 'usenativedialog', '0') != '1' else 0
+        dialog.setOptions(dialog_options)
         dialog.setFileMode(QFileDialog.FileMode.Directory)
         if dialog.exec():
             path = normalizePath(str(dialog.selectedFiles()[0]))
@@ -107,7 +109,8 @@ def reconfigureGamePath() -> bool:
         translate("MainWindow", "Select witcher3.exe"),
         data.config.gameexe or "witcher3.exe",
         "*.exe")
-    dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
+    dialog.setOptions(dialog_options)
     if dialog.exec():
         gamePath = normalizePath(str(dialog.selectedFiles()[0]))
         try:
@@ -134,7 +137,8 @@ def reconfigureScriptMergerPath():
         translate("MainWindow", "Select WitcherScriptMerger.exe"),
         data.config.scriptmerger or '',
         "*.exe")
-    dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
+    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
+    dialog.setOptions(dialog_options)
     if dialog.exec():
         mergerPath = normalizePath(str(dialog.selectedFiles()[0]))
         if mergerPath:
@@ -233,16 +237,17 @@ def restartProgram():
 
 def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
     '''Opens custom dialog for selecting multiple folders or files'''
+    from src.globals import data
     from src.globals.constants import translate
     if title is None:
         title = translate("MainWindow", "Select Files or Folders")
     dialog = QFileDialog(parent, title, directory, extensions)
-    dialog.setOptions(QFileDialog.Option.ReadOnly | 
-                     QFileDialog.Option.DontUseNativeDialog |
-                     QFileDialog.Option.HideNameFilterDetails)
+    dialog_options = QFileDialog.Option.ReadOnly | QFileDialog.Option.HideNameFilterDetails
+    if data.config.get('SETTINGS', 'usenativedialog', '0') != '1':
+        dialog_options |= QFileDialog.Option.DontUseNativeDialog
+    dialog.setOptions(dialog_options)
     dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
     dialog.setModal(True)
-    dialog.open()
     result = []
     if dialog.exec():
         result = dialog.selectedFiles()

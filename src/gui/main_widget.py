@@ -263,6 +263,9 @@ class CustomMainWidget(QWidget):
         self.actionAlert_to_run_Script_Merger.setCheckable(True)
         self.actionAlert_to_run_Script_Merger.setObjectName(
             "actionAlert_to_run_Script_Merger")
+        self.actionUseNativeFileDialogs = QAction(self.mainWindow)
+        self.actionUseNativeFileDialogs.setCheckable(True)
+        self.actionUseNativeFileDialogs.setObjectName("actionUseNativeFileDialogs")
         self.languageActionGroup = QActionGroup(self.mainWindow)
         for lang in os.listdir(getProgramRootFolder() + '/translations/'):
             temp = self.makeLangAction(lang)
@@ -295,9 +298,10 @@ class CustomMainWidget(QWidget):
         self.menuConfigure_Settings.addSeparator()
         self.menuConfigure_Settings.addAction(
             self.actionAlert_to_run_Script_Merger)
+        self.menuConfigure_Settings.addAction(
+            self.actionUseNativeFileDialogs)
         self.menuConfigure_Settings.addSeparator()
         self.menuSettings.addAction(self.menuConfigure_Settings.menuAction())
-        self.menuSettings.addAction(self.menuSelect_Language.menuAction())
         self.menuSelect_Theme.setTitle(translate("MainWindow", "Select Theme"))
         self.menuSettings.addAction(self.menuSelect_Theme.menuAction())
 
@@ -329,6 +333,11 @@ class CustomMainWidget(QWidget):
         self.mainWindow.resizeEvent = lambda e: self.onResize()  # type: ignore
         self.loadOrder.header().sectionResized.connect(lambda: self.onResize())
         self.treeWidget.header().sectionResized.connect(lambda: self.onResize())
+
+        self.actionAlert_to_run_Script_Merger.setChecked(
+            data.config.allowpopups == '1')
+        self.actionUseNativeFileDialogs.setChecked(
+            data.config.get('SETTINGS', 'usenativedialog', '0') == '1')
 
     @debounce(200)
     def onResize(self):
@@ -364,7 +373,6 @@ class CustomMainWidget(QWidget):
         self.pushButton_4.setText(translate("MainWindow", "Run Script Merger"))
         self.pushButton_5.setText(
             translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
-
         self.menuFile.setTitle(translate("MainWindow", "Mods"))
         self.menuEdit.setTitle(translate("MainWindow", "Edit"))
         self.menuSettings.setTitle(translate("MainWindow", "Settings"))
@@ -422,6 +430,8 @@ class CustomMainWidget(QWidget):
         self.actionGitHub.setShortcut("Ctrl+F2")
         self.actionAlert_to_run_Script_Merger.setText(
             translate("MainWindow", "Alert to run Script Merger"))
+        self.actionUseNativeFileDialogs.setText(
+            translate("MainWindow", "Use Native File Dialogs"))
         self.actionChange_Game_Path.setText(
             translate("MainWindow", "Change Game Path"))
         self.actionChange_Script_Merger_Path.setText(
@@ -493,6 +503,8 @@ class CustomMainWidget(QWidget):
         self.actionGitHub.triggered.connect(lambda: openUrl(URL_GIT))
         self.actionAlert_to_run_Script_Merger.triggered.connect(
             self.alertPopupChanged)
+        self.actionUseNativeFileDialogs.triggered.connect(
+            self.nativeFileDialogsChanged)
         self.actionChange_Game_Path.triggered.connect(self.changeGamePath)
         self.actionChange_Script_Merger_Path.triggered.connect(
             self.changeScriptMergerPath)
@@ -523,9 +535,6 @@ class CustomMainWidget(QWidget):
         self.treeWidget.header().setStretchLastSection(False)
 
         self.loadOrder.itemDoubleClicked.connect(self.loadOrderDoubleClicked)
-
-        self.actionAlert_to_run_Script_Merger.setChecked(
-            data.config.allowpopups == '1')
 
         self.searchWidget.textChanged.connect(self.setSearchString)
 
@@ -847,6 +856,15 @@ class CustomMainWidget(QWidget):
             data.config.allowpopups = '1'
         else:
             data.config.allowpopups = '0'
+
+        data.config.write_config()
+
+    def nativeFileDialogsChanged(self):
+        '''Triggered when option to use native file dialogs is changed. Saves the change'''
+        if (self.actionUseNativeFileDialogs.isChecked()):
+            data.config.set('SETTINGS', 'usenativedialog', '1')
+        else:
+            data.config.set('SETTINGS', 'usenativedialog', '0')
 
     def changeLanguage(self, language):
         '''Triggered when language is changed. Saves the change and restarts the program'''
