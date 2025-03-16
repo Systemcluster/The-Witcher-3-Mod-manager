@@ -28,7 +28,6 @@ def formatUserError(error: Exception) -> str:
 
 
 def getDocumentsFolder() -> str:
-    from src.globals import data
     from src.globals.constants import translate
     from src.gui.alerts import MessageUnsupportedOS
     path = ""
@@ -58,8 +57,6 @@ def getDocumentsFolder() -> str:
         sys.exit(1)
     if not path or not os.path.exists(path):
         dialog = QFileDialog(None, translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
-        dialog_options = QFileDialog.Option.DontUseNativeDialog if data.config.get('SETTINGS', 'usenativedialog', '0') != '1' else 0
-        dialog.setOptions(dialog_options)
         dialog.setFileMode(QFileDialog.FileMode.Directory)
         if dialog.exec():
             path = normalizePath(str(dialog.selectedFiles()[0]))
