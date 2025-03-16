@@ -1,9 +1,13 @@
 [project]
 name = "TW3MM"
 version = "0.9.3-beta.3"
-description = "Default template for PDM package"
+description = "Mod Manager for The Witcher 3"
 authors = [
-    {name = "George Burduli", email = "burduli01@pm.me"},
+    { name = "Stefan Kostic", email = "stekos@live.com" },
+    { name = "Christian Sdunek", email = "me@systemcluster.me" },
+    { name = "Adam Sunderman", email = "amsunderman@gmail.com" },
+    { name = "Henry Hsieh", email = "r901042004@yahoo.com.tw" },
+    { name = "George Burduli", email = "burduli01@pm.me" },
 ]
 dependencies = [
     "fasteners",
@@ -14,24 +18,21 @@ dependencies = [
     "colorama; sys_platform == 'win32'",
     "patool; sys_platform != 'win32'",
     "easyprocess; sys_platform != 'win32'",
-    "patchelf; sys_platform != 'win32'",
+    "patchelf; sys_platform != 'win32' and sys_platform != 'darwin'",
 ]
 readme = "README.md"
-license = {text = "BSD-2-Clause"}
-requires-python = ">=3.9,<3.13"
+license = { text = "BSD-2-Clause" }
+requires-python = ">=3.10,<3.13"
 
+[project.urls]
+Repository = "https://github.com/Systemcluster/The-Witcher-3-Mod-manager.git"
+NexusMods = "https://www.nexusmods.com/witcher3/mods/2678"
 
 [tool.pdm]
 distribution = false
 
 [dependency-groups]
-dev = [
-    "pylint",
-    "mypy",
-    "cx-freeze",
-    "autopep8",
-    "lief",
-]
+dev = ["pylint", "mypy", "cx-freeze", "autopep8", "lief"]
 
 [tool.pdm.scripts]
 start = "python -m main"

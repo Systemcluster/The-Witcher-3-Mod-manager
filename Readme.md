@@ -14,13 +14,13 @@ See the [Nexus Mods page](https://www.nexusmods.com/witcher3/mods/2678) for rele
 
 ### Release Versions (Windows)
 
-Download and unpack the latest release from Nexus Mods or from the GitHub releases. If you are upgrading from version 0.6 or later, directly overwrite the previous installation. Existing configuration files wll be searched in the same directory as the executable first, in `Documents\The Witcher 3 Mod Manager` second.
+Download and unpack the latest release from Nexus Mods or from the GitHub releases. If you are upgrading from version 0.6 or later, directly overwrite the previous installation. Existing configuration files will be searched in the same directory as the executable first, in `Documents\The Witcher 3 Mod Manager` second.
 
 On the first run, if no configuration can be found, configuration files will be created under `Documents\The Witcher 3 Mod Manager`. They can be freely relocated between the two searched locations as preferred.
 
 ### Python (Windows and Linux)
 
-The project uses [PDM](https://pdm-project.org/en/latest/) for dependency management. Requires Python 3.9 or newer (3.9+), up to Python 3.12.
+The project uses [PDM](https://pdm-project.org/en/latest/) for dependency management. Requires Python 3.10 or newer (3.10+), up to Python 3.12.
 
 1. Install PDM with [recommended installation method](https://pdm-project.org/en/latest/#recommended-installation-method)
 2. Clone the repository
