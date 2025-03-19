@@ -46,9 +46,13 @@ from src.util.util import *
 
 
 class ModsSettingsWatcher(QThread):
+    '''Watches for changes in mods.settings file and signals for UI updates'''
+
     refresh = Signal(object)
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.modsEventHandler = PatternMatchingEventHandler(
             patterns=["*mods.settings"], ignore_patterns=[], ignore_directories=True
         )
@@ -56,11 +60,11 @@ class ModsSettingsWatcher(QThread):
         self.running = False
         self.observer = Observer()
         self.observer.schedule(self.modsEventHandler, path=data.config.settings, recursive=False)
-        super().__init__(*args, **kwargs)
         self.observer.start()
 
-    def __drop__(self):
-        if self.observer:
+    def __del__(self):
+        '''Clean up the observer when this object is destroyed'''
+        if hasattr(self, "observer") and self.observer:
             self.observer.stop()
             self.observer.join()
             self.observer = None
@@ -79,115 +83,9 @@ class CustomMainWidget(QWidget):
         self.modsSettingsWatcher = ModsSettingsWatcher()
         self.modsSettingsWatcher.refresh.connect(lambda e: self.refreshLoadOrder())
 
-        self.mainWindow.setObjectName("MainWindow")
-
-        wini = int(data.config.get("WINDOW", "width")) if data.config.get("WINDOW", "width") else 1024
-        hini = int(data.config.get("WINDOW", "height")) if data.config.get("WINDOW", "height") else 720
-
-        self.mainWindow.resize(wini, hini)
-        self.mainWindow.setCursor(QCursor(Qt.ArrowCursor))
-        self.mainWindow.setWindowOpacity(1.0)
-        self.mainWindow.setStatusTip("")
-        self.mainWindow.setAutoFillBackground(False)
-        self.mainWindow.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.mainWindow.setAcceptDrops(True)
-
-        self.centralwidget = QWidget(self.mainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-
-        self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-
-        self.searchWidget = QLineEdit(self.centralwidget)
-        self.searchWidget.setObjectName("searchWidget")
-        self.searchWidget.setPlaceholderText(translate("MainWindow", "Search"))
-        self.verticalLayout_2.addWidget(self.searchWidget)
-
-        self.treeWidget = QTreeWidget(self.centralwidget)
-        self.treeWidget.setMinimumSize(QSize(600, 350))
-        self.treeWidget.setUniformRowHeights(True)
-        self.treeWidget.setAnimated(True)
-        self.treeWidget.setHeaderHidden(False)
-        self.treeWidget.setColumnCount(8)
-        self.treeWidget.setObjectName("treeWidget")
-        self.treeWidget.header().setCascadingSectionResizes(True)
-        self.treeWidget.header().setHighlightSections(False)
-        self.treeWidget.header().setSortIndicatorShown(True)
-        self.treeWidget.setSortingEnabled(True)
-
-        self.horizontalSplitter_tree = QSplitter()
-        self.horizontalSplitter_tree.setObjectName("horizontalSplitter_tree")
-        self.horizontalSplitter_tree.addWidget(self.treeWidget)
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-
-        self.loadOrder = QTreeWidget(self.centralwidget)
-        self.loadOrder.setUniformRowHeights(True)
-        self.loadOrder.setAnimated(True)
-        self.loadOrder.setHeaderHidden(False)
-        self.loadOrder.setColumnCount(2)
-        self.loadOrder.setObjectName("loadOrder")
-        self.loadOrder.setMinimumWidth(200)
-        self.loadOrder.setSortingEnabled(False)
-
-        self.horizontalSplitter_tree.addWidget(self.loadOrder)
-        self.horizontalSplitter_tree.setCollapsible(0, False)
-        self.horizontalSplitter_tree.setCollapsible(1, True)
-        self.horizontalSplitter_tree.setStretchFactor(0, 3)
-        self.horizontalSplitter_tree.setStretchFactor(1, 1)
-        self.verticalLayout_2.addWidget(self.horizontalSplitter_tree)
-
-        self.textEdit = QTextEdit(self.centralwidget)
-        self.textEdit.setMaximumSize(QSize(16777215, 16777215))
-        self.textEdit.setReadOnly(True)
-        self.textEdit.setObjectName("textEdit")
-
-        self.horizontalLayout_2.addWidget(self.textEdit)
-        self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
-
-        self.pushButton_4 = QPushButton(self.centralwidget)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_4.sizePolicy().hasHeightForWidth())
-        self.pushButton_4.setSizePolicy(sizePolicy)
-        self.pushButton_4.setMinimumSize(QSize(100, 50))
-        self.pushButton_4.setObjectName("pushButton_4")
-        self.verticalLayout.addWidget(self.pushButton_4)
-        self.pushButton_5 = QPushButton(self.centralwidget)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
-        self.pushButton_5.setSizePolicy(sizePolicy)
-        self.pushButton_5.setMinimumSize(QSize(100, 50))
-        self.pushButton_5.setObjectName("pushButton_5")
-        self.verticalLayout.addWidget(self.pushButton_5)
-        self.horizontalLayout_2.addLayout(self.verticalLayout)
-        self.horizontalLayout_2.setStretch(0, 3)
-        self.horizontalLayout_2.setStretch(1, 1)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-        self.progressBar = QProgressBar(self.centralwidget)
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setObjectName("progressBar")
-        self.verticalLayout_2.addWidget(self.progressBar)
-        self.verticalLayout_2.setStretch(0, 4)
-        self.verticalLayout_2.setStretch(1, 1)
-
-        self.mainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QMenuBar(self.mainWindow)
-        self.menubar.setGeometry(QRect(0, 0, 583, 21))
-        self.menubar.setObjectName("menubar")
-        self.mainWindow.setMenuBar(self.menubar)
-        self.toolBar = QToolBar(self.mainWindow)
-        self.toolBar.setObjectName("toolBar")
-        self.mainWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
-
-        self.menubar = QMenuBar(self.mainWindow)
-        self.menubar.setGeometry(QRect(0, 0, 583, 21))
-        self.menubar.setObjectName("menubar")
-        self.mainWindow.setMenuBar(self.menubar)
+        self.setupMainWindow()
+        self.setupUI()
+        self.setupMenuBar()
 
         self.createMenus()
         self.createActions()
@@ -211,84 +109,152 @@ class CustomMainWidget(QWidget):
 
     @debounce(200)
     def onResize(self):
+        '''Save window settings when resized'''
         data.config.saveWindowSettings(self, self.mainWindow)
 
     def resizeEvent(self, event: QResizeEvent):
+        '''Handle resize events'''
         self.onResize()
 
-    def translateUi(self):
-        self.mainWindow.setWindowTitle(translate("MainWindow", TITLE))
+    def setupMainWindow(self):
+        '''Configure main window properties'''
+        self.mainWindow.setObjectName("MainWindow")
 
-        self.treeWidget.headerItem().setText(0, translate("MainWindow", "Enabled"))
-        self.treeWidget.headerItem().setText(1, translate("MainWindow", "Mod Name"))
-        self.treeWidget.headerItem().setText(2, translate("MainWindow", "Priority"))
-        self.treeWidget.headerItem().setText(3, translate("MainWindow", "Data"))
-        self.treeWidget.headerItem().setText(4, translate("MainWindow", "DLC"))
-        self.treeWidget.headerItem().setText(5, translate("MainWindow", "Menu"))
-        self.treeWidget.headerItem().setText(6, translate("MainWindow", "Var"))
-        self.treeWidget.headerItem().setText(7, translate("MainWindow", "Hidden"))
-        self.treeWidget.headerItem().setText(8, translate("MainWindow", "Key"))
-        self.treeWidget.headerItem().setText(9, translate("MainWindow", "Settings"))
-        self.treeWidget.headerItem().setText(10, translate("MainWindow", "Size"))
-        self.treeWidget.headerItem().setText(11, translate("MainWindow", "Date Installed"))
+        wini = int(data.config.get("WINDOW", "width")) if data.config.get("WINDOW", "width") else 1024
+        hini = int(data.config.get("WINDOW", "height")) if data.config.get("WINDOW", "height") else 720
 
-        self.loadOrder.headerItem().setText(0, translate("MainWindow", "Load Order"))
-        self.loadOrder.headerItem().setText(1, translate("MainWindow", "Priority"))
+        self.mainWindow.resize(wini, hini)
+        self.mainWindow.setCursor(QCursor(Qt.ArrowCursor))
+        self.mainWindow.setWindowOpacity(1.0)
+        self.mainWindow.setStatusTip("")
+        self.mainWindow.setAutoFillBackground(False)
+        self.mainWindow.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.mainWindow.setAcceptDrops(True)
 
-        self.textEdit.setPlaceholderText(translate("MainWindow", "Output"))
-        self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
+    def setupMenuBar(self):
+        '''Setup the menu bar'''
+        self.menubar = QMenuBar(self.mainWindow)
+        self.menubar.setGeometry(QRect(0, 0, 583, 21))
+        self.menubar.setObjectName("menubar")
+        self.mainWindow.setMenuBar(self.menubar)
 
-        self.pushButton_4.setText(translate("MainWindow", "Run Script Merger"))
-        self.pushButton_5.setText(translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
-        self.toolBar.setWindowTitle(translate("MainWindow", "toolBar"))
+        self.toolBar = QToolBar(self.mainWindow)
+        self.toolBar.setObjectName("toolBar")
+        self.mainWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
 
-        self.actionInstall_Mods.setText(translate("MainWindow", "Install Mods"))
-        self.actionInstall_Mods.setToolTip(translate("MainWindow", "Install one or more Mods from folders or archives"))
-        self.actionInstall_Mods.setShortcut("Ctrl+E")
-        self.actionRestoreColumns.setText(translate("MainWindow", "Restore default column widths"))
-        self.actionRestoreColumns.setToolTip(translate("MainWindow", "Restore default column widths"))
-        self.actionUninstall_Mods.setText(translate("MainWindow", "Uninstall"))
-        self.actionUninstall_Mods.setToolTip(translate("MainWindow", "Uninstall one or more selected Mods"))
-        self.actionUninstall_Mods.setShortcut("Del")
-        self.actionEnable_Disable_Mods.setText(translate("MainWindow", "Enable/Disable"))
-        self.actionEnable_Disable_Mods.setToolTip(translate("MainWindow", "Enable or disable selected Mods"))
-        self.actionEnable_Disable_Mods.setShortcut("Ctrl+Q")
-        self.actionRefresh_Mod_List.setText(translate("MainWindow", "Refresh Mod List"))
-        self.actionRefresh_Mod_List.setShortcut("F5")
-        self.actionReinstall_Mods.setText(translate("MainWindow", "Reinstall"))
-        self.actionRefresh_Load_Order.setText(translate("MainWindow", "Refresh Load Order"))
-        self.actionRefresh_Load_Order.setShortcut("F6")
-        self.actionSelect_All_Mods.setText(translate("MainWindow", "Select All Mods"))
-        self.actionSelect_All_Mods.setShortcut("Ctrl+A")
-        self.actionRun_The_Game.setText(translate("MainWindow", "Run the Game"))
-        self.actionRun_The_Game.setShortcut("Ctrl+R")
-        self.actionRun_Script_Merger.setText(translate("MainWindow", "Run Script Merger"))
-        self.actionRun_Script_Merger.setShortcut("Ctrl+S")
-        self.actionAbout.setText(translate("MainWindow", "About"))
-        self.actionAbout.setShortcut("F1")
-        self.actionMain_Web_Page.setText(translate("MainWindow", "Main Web Page"))
-        self.actionGitHub.setText(translate("MainWindow", "GitHub"))
-        self.actionMain_Web_Page.setShortcut("Ctrl+F1")
-        self.actionGitHub.setShortcut("Ctrl+F2")
-        self.actionAlert_to_run_Script_Merger.setText(translate("MainWindow", "Alert to run Script Merger"))
-        self.actionUseNativeFileDialogs.setText(translate("MainWindow", "Use Native File Dialogs"))
-        self.actionChange_Game_Path.setText(translate("MainWindow", "Change Game Path"))
-        self.actionChange_Script_Merger_Path.setText(translate("MainWindow", "Change Script Merger Path"))
-        self.actionClearOutput.setText(translate("MainWindow", "Clear Output"))
-        self.actionRename.setText(translate("MainWindow", "Rename"))
-        self.actionRename.setShortcut("F2")
-        self.actionDetails.setShortcut("F3")
-        self.actionDetails.setText(translate("MainWindow", "Details"))
-        self.actionOpenFolder.setShortcut("Ctrl+L")
-        self.actionOpenFolder.setText(translate("MainWindow", "Open Folder"))
-        self.actionIncreasePriority.setShortcut("Ctrl+Up")
-        self.actionIncreasePriority.setText(translate("MainWindow", "Increase Priority"))
-        self.actionDecreasePriority.setShortcut("Ctrl+Down")
-        self.actionDecreasePriority.setText(translate("MainWindow", "Decrease Priority"))
-        self.actionSetPriority.setShortcut("Ctrl+P")
-        self.actionSetPriority.setText(translate("MainWindow", "Set Priority"))
-        self.actionUnsetPriority.setShortcut("Ctrl+U")
-        self.actionUnsetPriority.setText(translate("MainWindow", "Remove Priority"))
+    def setupUI(self):
+        '''Setup all UI components'''
+        # Central widget
+        self.centralwidget = QWidget(self.mainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+
+        # Search widget
+        self.searchWidget = QLineEdit(self.centralwidget)
+        self.searchWidget.setObjectName("searchWidget")
+        self.searchWidget.setPlaceholderText(translate("MainWindow", "Search"))
+        self.verticalLayout_2.addWidget(self.searchWidget)
+
+        # Setup tree widget
+        self.setupTreeWidget()
+
+        # Setup text output and buttons
+        self.setupOutputArea()
+
+        # Progress bar
+        self.progressBar = QProgressBar(self.centralwidget)
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setObjectName("progressBar")
+        self.verticalLayout_2.addWidget(self.progressBar)
+
+        # Stretch factors
+        self.verticalLayout_2.setStretch(0, 4)
+        self.verticalLayout_2.setStretch(1, 1)
+
+        self.mainWindow.setCentralWidget(self.centralwidget)
+
+    def setupTreeWidget(self):
+        '''Setup tree widget and load order panel'''
+        # Mod list tree widget
+        self.treeWidget = QTreeWidget(self.centralwidget)
+        self.treeWidget.setMinimumSize(QSize(600, 350))
+        self.treeWidget.setUniformRowHeights(True)
+        self.treeWidget.setAnimated(True)
+        self.treeWidget.setHeaderHidden(False)
+        self.treeWidget.setColumnCount(8)
+        self.treeWidget.setObjectName("treeWidget")
+        self.treeWidget.header().setCascadingSectionResizes(True)
+        self.treeWidget.header().setHighlightSections(False)
+        self.treeWidget.header().setSortIndicatorShown(True)
+        self.treeWidget.setSortingEnabled(True)
+
+        # Splitter for the tree and load order
+        self.horizontalSplitter_tree = QSplitter()
+        self.horizontalSplitter_tree.setObjectName("horizontalSplitter_tree")
+        self.horizontalSplitter_tree.addWidget(self.treeWidget)
+
+        # Load order tree widget
+        self.loadOrder = QTreeWidget(self.centralwidget)
+        self.loadOrder.setUniformRowHeights(True)
+        self.loadOrder.setAnimated(True)
+        self.loadOrder.setHeaderHidden(False)
+        self.loadOrder.setColumnCount(2)
+        self.loadOrder.setObjectName("loadOrder")
+        self.loadOrder.setMinimumWidth(200)
+        self.loadOrder.setSortingEnabled(False)
+
+        # Configure splitter
+        self.horizontalSplitter_tree.addWidget(self.loadOrder)
+        self.horizontalSplitter_tree.setCollapsible(0, False)
+        self.horizontalSplitter_tree.setCollapsible(1, True)
+        self.horizontalSplitter_tree.setStretchFactor(0, 3)
+        self.horizontalSplitter_tree.setStretchFactor(1, 1)
+        self.verticalLayout_2.addWidget(self.horizontalSplitter_tree)
+
+    def setupOutputArea(self):
+        '''Setup output text area and action buttons'''
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+
+        # Output text widget
+        self.textEdit = QTextEdit(self.centralwidget)
+        self.textEdit.setMaximumSize(QSize(16777215, 16777215))
+        self.textEdit.setReadOnly(True)
+        self.textEdit.setObjectName("textEdit")
+        self.horizontalLayout_2.addWidget(self.textEdit)
+
+        # Button layout
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+
+        # Script merger button
+        self.scriptMergerButton = QPushButton(self.centralwidget)
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.scriptMergerButton.sizePolicy().hasHeightForWidth())
+        self.scriptMergerButton.setSizePolicy(sizePolicy)
+        self.scriptMergerButton.setMinimumSize(QSize(100, 50))
+        self.scriptMergerButton.setObjectName("scriptMergerButton")
+        self.verticalLayout.addWidget(self.scriptMergerButton)
+
+        # Run game button
+        self.runGameButton = QPushButton(self.centralwidget)
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.runGameButton.sizePolicy().hasHeightForWidth())
+        self.runGameButton.setSizePolicy(sizePolicy)
+        self.runGameButton.setMinimumSize(QSize(100, 50))
+        self.runGameButton.setObjectName("runGameButton")
+        self.verticalLayout.addWidget(self.runGameButton)
+
+        # Add button layout to horizontal layout
+        self.horizontalLayout_2.addLayout(self.verticalLayout)
+        self.horizontalLayout_2.setStretch(0, 3)
+        self.horizontalLayout_2.setStretch(1, 1)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
     def configureUi(self):
         for i in range(self.treeWidget.header().count()):
@@ -333,8 +299,8 @@ class CustomMainWidget(QWidget):
         self.actionUnsetPriority.triggered.connect(self.unsetPriority)
         self.actionRestoreColumns.triggered.connect(self.restoreColumns)
 
-        self.pushButton_4.clicked.connect(self.runScriptMerger)
-        self.pushButton_5.clicked.connect(self.runTheGame)
+        self.scriptMergerButton.clicked.connect(self.runScriptMerger)
+        self.runGameButton.clicked.connect(self.runTheGame)
 
         self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.openMenu)
@@ -1417,3 +1383,77 @@ class CustomMainWidget(QWidget):
         self.menuSettings.addAction(self.menuSelect_Theme.menuAction())
         self.menuSettings.addAction(self.menuSelect_Language.menuAction())
         self.menuSettings.addAction(self.menuConfigure_Settings.menuAction())
+
+    def translateUi(self):
+        self.mainWindow.setWindowTitle(translate("MainWindow", TITLE))
+
+        self.treeWidget.headerItem().setText(0, translate("MainWindow", "Enabled"))
+        self.treeWidget.headerItem().setText(1, translate("MainWindow", "Mod Name"))
+        self.treeWidget.headerItem().setText(2, translate("MainWindow", "Priority"))
+        self.treeWidget.headerItem().setText(3, translate("MainWindow", "Data"))
+        self.treeWidget.headerItem().setText(4, translate("MainWindow", "DLC"))
+        self.treeWidget.headerItem().setText(5, translate("MainWindow", "Menu"))
+        self.treeWidget.headerItem().setText(6, translate("MainWindow", "Var"))
+        self.treeWidget.headerItem().setText(7, translate("MainWindow", "Hidden"))
+        self.treeWidget.headerItem().setText(8, translate("MainWindow", "Key"))
+        self.treeWidget.headerItem().setText(9, translate("MainWindow", "Settings"))
+        self.treeWidget.headerItem().setText(10, translate("MainWindow", "Size"))
+        self.treeWidget.headerItem().setText(11, translate("MainWindow", "Date Installed"))
+
+        self.loadOrder.headerItem().setText(0, translate("MainWindow", "Load Order"))
+        self.loadOrder.headerItem().setText(1, translate("MainWindow", "Priority"))
+
+        self.textEdit.setPlaceholderText(translate("MainWindow", "Output"))
+        self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
+
+        self.scriptMergerButton.setText(translate("MainWindow", "Run Script Merger"))
+        self.runGameButton.setText(translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
+        self.toolBar.setWindowTitle(translate("MainWindow", "toolBar"))
+
+        self.actionInstall_Mods.setText(translate("MainWindow", "Install Mods"))
+        self.actionInstall_Mods.setToolTip(translate("MainWindow", "Install one or more Mods from folders or archives"))
+        self.actionInstall_Mods.setShortcut("Ctrl+E")
+        self.actionRestoreColumns.setText(translate("MainWindow", "Restore default column widths"))
+        self.actionRestoreColumns.setToolTip(translate("MainWindow", "Restore default column widths"))
+        self.actionUninstall_Mods.setText(translate("MainWindow", "Uninstall"))
+        self.actionUninstall_Mods.setToolTip(translate("MainWindow", "Uninstall one or more selected Mods"))
+        self.actionUninstall_Mods.setShortcut("Del")
+        self.actionEnable_Disable_Mods.setText(translate("MainWindow", "Enable/Disable"))
+        self.actionEnable_Disable_Mods.setToolTip(translate("MainWindow", "Enable or disable selected Mods"))
+        self.actionEnable_Disable_Mods.setShortcut("Ctrl+Q")
+        self.actionRefresh_Mod_List.setText(translate("MainWindow", "Refresh Mod List"))
+        self.actionRefresh_Mod_List.setShortcut("F5")
+        self.actionReinstall_Mods.setText(translate("MainWindow", "Reinstall"))
+        self.actionRefresh_Load_Order.setText(translate("MainWindow", "Refresh Load Order"))
+        self.actionRefresh_Load_Order.setShortcut("F6")
+        self.actionSelect_All_Mods.setText(translate("MainWindow", "Select All Mods"))
+        self.actionSelect_All_Mods.setShortcut("Ctrl+A")
+        self.actionRun_The_Game.setText(translate("MainWindow", "Run the Game"))
+        self.actionRun_The_Game.setShortcut("Ctrl+R")
+        self.actionRun_Script_Merger.setText(translate("MainWindow", "Run Script Merger"))
+        self.actionRun_Script_Merger.setShortcut("Ctrl+S")
+        self.actionAbout.setText(translate("MainWindow", "About"))
+        self.actionAbout.setShortcut("F1")
+        self.actionMain_Web_Page.setText(translate("MainWindow", "Main Web Page"))
+        self.actionGitHub.setText(translate("MainWindow", "GitHub"))
+        self.actionMain_Web_Page.setShortcut("Ctrl+F1")
+        self.actionGitHub.setShortcut("Ctrl+F2")
+        self.actionAlert_to_run_Script_Merger.setText(translate("MainWindow", "Alert to run Script Merger"))
+        self.actionUseNativeFileDialogs.setText(translate("MainWindow", "Use Native File Dialogs"))
+        self.actionChange_Game_Path.setText(translate("MainWindow", "Change Game Path"))
+        self.actionChange_Script_Merger_Path.setText(translate("MainWindow", "Change Script Merger Path"))
+        self.actionClearOutput.setText(translate("MainWindow", "Clear Output"))
+        self.actionRename.setText(translate("MainWindow", "Rename"))
+        self.actionRename.setShortcut("F2")
+        self.actionDetails.setShortcut("F3")
+        self.actionDetails.setText(translate("MainWindow", "Details"))
+        self.actionOpenFolder.setShortcut("Ctrl+L")
+        self.actionOpenFolder.setText(translate("MainWindow", "Open Folder"))
+        self.actionIncreasePriority.setShortcut("Ctrl+Up")
+        self.actionIncreasePriority.setText(translate("MainWindow", "Increase Priority"))
+        self.actionDecreasePriority.setShortcut("Ctrl+Down")
+        self.actionDecreasePriority.setText(translate("MainWindow", "Decrease Priority"))
+        self.actionSetPriority.setShortcut("Ctrl+P")
+        self.actionSetPriority.setText(translate("MainWindow", "Set Priority"))
+        self.actionUnsetPriority.setShortcut("Ctrl+U")
+        self.actionUnsetPriority.setText(translate("MainWindow", "Remove Priority"))
