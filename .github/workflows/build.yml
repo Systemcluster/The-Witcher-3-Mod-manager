@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches:
+        - Custom
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          show-progress: false
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pdm install
+
+      - name: Build release
+        run: |
+          pdm run build-win
+
+      - name: Pack release
+        run: Compress-Archive -Path build/exe.win-amd64-3.12/* -Destination TW3MM.zip
+
+      - name: Upload release
+        uses: Systemcluster/actions@release-github-v0
+        with:
+          tag: snapshot
+          name: Snapshot
+          prerelease: true
+          files: |
+            TW3MM.zip
