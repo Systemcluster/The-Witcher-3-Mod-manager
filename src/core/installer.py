@@ -7,7 +7,7 @@ from shutil import copyfile
 from time import gmtime, strftime
 from typing import Any, Callable
 
-from PySide2.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 from src.core.fetcher import *
 from src.core.model import Model

@@ -21,7 +21,7 @@ from src.util.util import (
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
 INPUTPATTERN = re.compile(
-    r"(\[.*\]\s*(IK_.+=\(Action=.+\)\s*)+\s*)+", re.UNICODE)
+    r"\[.+\]\s+(?:(?:IK_.+=\(Action=.+\)|Version=\d+)\s*)*", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
@@ -194,17 +194,26 @@ def fetchAllXmlKeys(file: str, filetext: str, mod: Mod) -> None:
 
 def fetchInputSettings(filetext: str) -> List[Key]:
     found = []
-    inputsettings = INPUTPATTERN.search(filetext)
+    filetext = re.sub(r"(\r\n+)|(\n+)", "\n", filetext)
+    inputsettings = ''.join(INPUTPATTERN.findall(filetext))
     if (inputsettings):
-        res = re.sub(r"(\r\n+)|(\n+)", "\n", inputsettings.group(0))
-        arr = filter(lambda s: s != '', str(res).split('\n'))
+        arr = list(filter(lambda s: s != '', inputsettings.split('\n')))
         context = ''
+        empty = True
         for line in arr:
             line = line.strip()
             if line[0] == "[" and line[-1] == "]":
+                if empty and context != '':
+                    found.append(Key(context))
+                elif line == arr[-1]:
+                    context = line
+                    found.append(Key(context))
+                    continue
                 context = line
+                empty = True
             elif context != '':
                 found.append(Key(context, line))
+                empty = False
     return found
 
 
@@ -274,7 +283,7 @@ def extractArchive(modPath: str) -> str:
         try:
             import shutil
             shutil.unpack_archive(modPath, extractedDir)
-        except ValueError:
+        except (ValueError, shutil.ReadError):
             import patoolib  # type: ignore
             patoolib.extract_archive(
                 modPath, outdir=extractedDir, interactive=False)

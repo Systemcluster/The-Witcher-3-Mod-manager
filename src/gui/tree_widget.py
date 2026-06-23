@@ -2,7 +2,7 @@
 # pylint: disable=invalid-name
 
 import sys
-from PySide2.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 
 
 class CustomTreeWidgetItem(QTreeWidgetItem):
@@ -15,7 +15,7 @@ class CustomTreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, otherItem):
         column = self.treeWidget().sortColumn()
         if (not self.text(column) and not otherItem.text(column)):
-            return self.checkState(column) < otherItem.checkState(column)
+            return self.checkState(column).value < otherItem.checkState(column).value
         try:
             left = int(self.text(column)) if self.text(
                 column) != "-" else sys.maxsize

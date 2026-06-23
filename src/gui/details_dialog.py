@@ -2,9 +2,9 @@
 '''Details Dialog'''
 # pylint: disable=invalid-name
 
-from PySide2 import QtCore
-from PySide2.QtGui import QTextDocument
-from PySide2.QtWidgets import QWidget, QHBoxLayout, QTextEdit
+from PySide6 import QtCore
+from PySide6.QtGui import QTextDocument
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QTextEdit
 
 from src.globals.constants import translate
 from src.domain.mod import Mod

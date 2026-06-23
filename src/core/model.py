@@ -92,12 +92,11 @@ class Model:
         self.write()
         return True
 
-    def explore(self, modname: str) -> None:
-        mod = self.modList[modname]
-        for file in mod.files:
-            moddir = data.config.mods + \
-                ('/~' if not mod.enabled else '/') + file
-            openFolder(moddir)
+    def explore(self, mod: Mod, target_name: str, is_dlc: bool = False) -> None:
+        base_dir = data.config.dlc if is_dlc else data.config.mods
+        prefix = '/~' if not mod.enabled else '/'
+        target_dir = f"{base_dir}{prefix}{target_name}"
+        openFolder(target_dir)
 
     @property
     def xmlfile(self) -> str:

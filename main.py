@@ -7,7 +7,7 @@ from os import environ
 
 if __name__ == "__main__":
     try:
-        from PySide2.QtWidgets import QApplication, QMessageBox
+        from PySide6.QtWidgets import QApplication, QMessageBox
 
         from src.configuration.config import Configuration
         from src.core.model import Model
@@ -15,6 +15,7 @@ if __name__ == "__main__":
         from src.gui.alerts import *
         from src.gui.main_widget import CustomMainWidget
         from src.gui.main_window import CustomMainWindow
+        from src.gui.themes import get_dark_palette, get_light_palette, get_system_palette
         from src.util.util import *
 
         # correct screen scaling
@@ -58,6 +59,19 @@ if __name__ == "__main__":
 
         data.app = QApplication(sys.argv)
         data.config = Configuration(documentsPath, gamePath, configPath)
+        
+        data.app.setStyle("Fusion")
+
+        data.dark_palette = get_dark_palette()
+        data.light_palette = get_light_palette()
+
+        if data.config.theme == 'Dark':
+            data.app.setPalette(data.dark_palette)
+        elif data.config.theme == 'Light':
+            data.app.setPalette(data.light_palette)
+        else:  # Follow System
+            data.app.setPalette(get_system_palette())
+
         translateToChosenLanguage()
 
         if not Configuration.getCorrectGamePath(data.config.gameexe):
@@ -80,12 +94,13 @@ if __name__ == "__main__":
 
         mainWindow = CustomMainWindow()
         mainWidget = CustomMainWidget(mainWindow, modModel)
+        mainWidget.checkTheme()
         mainWindow.dropCallback = mainWidget.installModFiles
         data.app.setWindowIcon(getIcon("w3a.ico"))
 
         mainWindow.show()
 
-        ret = data.app.exec_()
+        ret = data.app.exec()
         data.config.saveWindowSettings(mainWidget, mainWindow)
         data.config.write_priority().join()
         data.config.write_config().join()

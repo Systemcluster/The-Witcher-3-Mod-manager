@@ -14,8 +14,8 @@ from sys import platform
 from threading import Timer
 from typing import Any, Callable
 
-from PySide2 import QtGui, __version__
-from PySide2.QtWidgets import QFileDialog, QMessageBox
+from PySide6 import QtGui, __version__
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 
 def formatUserError(error: Exception) -> str:
@@ -56,11 +56,10 @@ def getDocumentsFolder() -> str:
         MessageUnsupportedOS(platform)
         sys.exit(1)
     if not path or not os.path.exists(path):
-        path = normalizePath(str(QFileDialog.getExistingDirectory(
-            None,
-            translate("MainWindow",
-                      "Select \"My Documents\" directory containing the Witcher 3 config directory"),
-            "My Documents")))
+        dialog = QFileDialog(None, translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
+        dialog.setFileMode(QFileDialog.FileMode.Directory)
+        if dialog.exec():
+            path = normalizePath(str(dialog.selectedFiles()[0]))
     return path
 
 
@@ -102,22 +101,27 @@ def reconfigureGamePath() -> bool:
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfigured
     MessageNotConfigured()
-    gamePath = str(QFileDialog.getOpenFileName(
+    dialog = QFileDialog(
         None,
         translate("MainWindow", "Select witcher3.exe"),
         data.config.gameexe or "witcher3.exe",
-        "*.exe")[0])
-    try:
-        data.config.gameexe = gamePath
-    except ValueError as err:
-        print(str(err), file=sys.stderr)
-        QMessageBox.critical(
-            None,
-            translate("MainWindow", "Selected file not correct"),
-            translate("MainWindow", "'witcher3.exe' file not selected"),
-            QMessageBox.StandardButton.Ok)
-        return False
-    return True
+        "*.exe")
+    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
+    dialog.setOptions(dialog_options)
+    if dialog.exec():
+        gamePath = normalizePath(str(dialog.selectedFiles()[0]))
+        try:
+            data.config.gameexe = gamePath
+        except ValueError as err:
+            print(str(err), file=sys.stderr)
+            QMessageBox.critical(
+                None,
+                translate("MainWindow", "Selected file not correct"),
+                translate("MainWindow", "'witcher3.exe' file not selected"),
+                QMessageBox.StandardButton.Ok)
+            return False
+        return True
+    return False
 
 
 def reconfigureScriptMergerPath():
@@ -125,13 +129,17 @@ def reconfigureScriptMergerPath():
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfiguredScriptMerger
     MessageNotConfiguredScriptMerger()
-    mergerPath = str(QFileDialog.getOpenFileName(
+    dialog = QFileDialog(
         None,
         translate("MainWindow", "Select WitcherScriptMerger.exe"),
         data.config.scriptmerger or '',
-        "*.exe")[0])
-    if mergerPath:
-        data.config.scriptmerger = mergerPath
+        "*.exe")
+    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
+    dialog.setOptions(dialog_options)
+    if dialog.exec():
+        mergerPath = normalizePath(str(dialog.selectedFiles()[0]))
+        if mergerPath:
+            data.config.scriptmerger = mergerPath
 
 
 def showAboutWindow():
@@ -140,11 +148,11 @@ def showAboutWindow():
         None,
         translate("MainWindow", "About"),
         ""+TITLE+"\n" +
-        translate("MainWindow", "Version: ")+VERSION+"\n" +
+        translate("MainWindow", "Version: ")+VERSION+"\n\n" +
         translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n" +
         "\n" +
         translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n" +
-        translate("MainWindow", "GUI: PySide2 ")+__version__+"\n" +
+        translate("MainWindow", "GUI: PySide6 ")+__version__+"\n" +
         "\n" +
         translate("MainWindow", "Thank you for using ")+TITLE+translate("MainWindow", "!"))
 
@@ -226,16 +234,19 @@ def restartProgram():
 
 def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
     '''Opens custom dialog for selecting multiple folders or files'''
+    from src.globals import data
     from src.globals.constants import translate
     if title is None:
         title = translate("MainWindow", "Select Files or Folders")
     dialog = QFileDialog(parent, title, directory, extensions)
-    dialog.setOptions(QFileDialog.Option.ReadOnly)
+    dialog_options = QFileDialog.Option.ReadOnly | QFileDialog.Option.HideNameFilterDetails
+    if data.config.get('SETTINGS', 'usenativedialog', '0') != '1':
+        dialog_options |= QFileDialog.Option.DontUseNativeDialog
+    dialog.setOptions(dialog_options)
     dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
     dialog.setModal(True)
-    dialog.open()
     result = []
-    if dialog.exec_():
+    if dialog.exec():
         result = dialog.selectedFiles()
     return [normalizePath(file) for file in result if os.path.isfile(file)]
 

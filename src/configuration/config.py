@@ -9,7 +9,7 @@ import sys
 from copy import deepcopy
 from typing import Union
 
-from PySide2.QtWidgets import QMainWindow, QMessageBox, QWidget
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QWidget
 from fasteners import ReaderWriterLock
 
 from src.globals.constants import translate
@@ -163,10 +163,11 @@ class Configuration:
                     os.fsync(file.fileno())
             self.priorityLastWritten = deepcopy(self.priority)
 
-    def get(self, section: str, option: str):
-        if self.config.has_option(section, option):
+    def get(self, section, option, default=None):
+        try:
             return self.config.get(section, option)
-        return None
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return default
 
     def set(self, section: str, option: str, value, write: bool = True):
         if not self.config.has_section(section):
@@ -320,6 +321,18 @@ class Configuration:
     @property
     def gamelaunchcommand(self):
         return self.get("PATHS", "gamelaunchcommand")
+
+    @property
+    def mergerlaunchcommand(self):
+        return self.get("PATHS", "mergerlaunchcommand")
+
+    @property
+    def theme(self):
+        return self.get('SETTINGS', 'theme', 'Follow System')
+    
+    @theme.setter
+    def theme(self, value):
+        self.set('SETTINGS', 'theme', value)
 
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
         self.set('WINDOW', 'width', str(window.width()))
