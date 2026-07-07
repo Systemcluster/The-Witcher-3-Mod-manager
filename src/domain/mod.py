@@ -172,7 +172,7 @@ class Mod:
                     text = text + '\n' + menu_line
             with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
                 text = text.replace('\n\n', '\n')
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
             with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
@@ -183,7 +183,7 @@ class Mod:
                     text = text + '\n' + menu_line
             with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
                 text = text.replace('\n\n', '\n')
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
 
@@ -198,7 +198,7 @@ class Mod:
                         '<!-- [BASE_CharacterMovement] -->',
                         xml+'\n<!-- [BASE_CharacterMovement] -->')
             with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
         if (self.hidden):
@@ -211,7 +211,7 @@ class Mod:
                         '</VisibleVars>',
                         xml+'\n</VisibleVars>')
             with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
 
@@ -226,7 +226,7 @@ class Mod:
                         text = text.replace('\n'+menu_line, '')
                 with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
                     text = text.replace('\n\n', '\n')
-                    text = userfile.write(text)
+                    userfile.write(text)
                     userfile.flush()
                     os.fsync(userfile.fileno())
             if path.exists(data.config.menu + "/dx12filelist.txt"):
@@ -238,7 +238,7 @@ class Mod:
                         text = text.replace('\n'+menu_line, '')
                 with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
                     text = text.replace('\n\n', '\n')
-                    text = userfile.write(text)
+                    userfile.write(text)
                     userfile.flush()
                     os.fsync(userfile.fileno())
 
@@ -251,7 +251,7 @@ class Mod:
                 if xml in text:
                     text = text.replace(xml+"\n", '')
             with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
         if (self.hidden) and path.exists(data.config.menu + "/hidden.xml"):
@@ -262,7 +262,7 @@ class Mod:
                 if xml in text:
                     text = text.replace(xml+"\n", '')
             with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
-                text = userfile.write(text)
+                userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
 
