@@ -127,8 +127,8 @@ class Configuration:
                     self.config.read(file, encoding=util.detectEncoding(file))
                 except Exception as e:
                     MessageAlertReadingConfigINI(file, e)
-                else:
-                    print("config.ini not found, creating new file")
+            else:
+                print("config.ini not found, creating new file")
 
     @util.debounce(25)
     def write_config(self, space_around_delimiters: bool = False):
