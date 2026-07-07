@@ -43,8 +43,8 @@ class Action:
 
     def __getitem__(self, name: str):
         for part in self.parts:
-            part.startswith(name + '=')
-            return part.split('=')[1]
+            if part.startswith(name + '='):
+                return part.split('=')[1]
         return None
 
     def __setitem__(self, name: str, value: str):
@@ -132,7 +132,7 @@ class Key:
         if self.context == other.context:
             if self.key == other.key:
                 if not self.empty:
-                    return self.action > other.action
+                    return self.action < other.action
             return self.key < other.key
         return self.context < other.context
 
@@ -140,7 +140,7 @@ class Key:
         if self.context == other.context:
             if self.key == other.key:
                 if not self.empty:
-                    return self.action > other.action
+                    return self.action >= other.action
             return self.key >= other.key
         return self.context >= other.context
 
@@ -148,7 +148,7 @@ class Key:
         if self.context == other.context:
             if self.key == other.key:
                 if not self.empty:
-                    return self.action > other.action
+                    return self.action <= other.action
             return self.key <= other.key
         return self.context <= other.context
 
