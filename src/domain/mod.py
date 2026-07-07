@@ -80,10 +80,10 @@ class Mod:
         if (re.match("^mod.*", name)):
             name = name[3:]
 
-        lenght = len(name)
+        length = len(name)
         for match in re.finditer(r"-[0-9]+-.+", name):
-            lenght = match.span()[0]
-        name = name[0:lenght]
+            length = match.span()[0]
+        name = name[0:length]
 
         if (re.search(r".*\.(zip|rar)$", name)):
             name = name[:-4]
