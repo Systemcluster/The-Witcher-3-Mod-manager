@@ -1,6 +1,6 @@
 [project]
 name = "TW3MM"
-version = "0.9.3-beta.3"
+version = "0.10.0-pre"
 description = "Mod Manager for The Witcher 3"
 authors = [
     { name = "Stefan Kostic", email = "stekos@live.com" },
