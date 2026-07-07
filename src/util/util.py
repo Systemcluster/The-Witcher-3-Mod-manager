@@ -16,6 +16,7 @@ from typing import Any, Callable
 
 from PySide6 import QtGui, __version__
 from PySide6.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtCore import QStandardPaths
 
 
 def formatUserError(error: Exception) -> str:
@@ -29,7 +30,6 @@ def formatUserError(error: Exception) -> str:
 
 def getDocumentsFolder() -> str:
     from src.globals.constants import translate
-    from src.gui.alerts import MessageUnsupportedOS
     path = ""
     if platform == "win32" or platform == "cygwin":
         from ctypes import create_unicode_buffer, windll, wintypes
@@ -52,7 +52,10 @@ def getDocumentsFolder() -> str:
             # try steam proton documents path on steam deck sd card
             path = normalizePath(
                 "/run/media/mmcblk0p1/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents")
+        if not path or not os.path.exists(path):
+            path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
     else:
+        from src.gui.alerts import MessageUnsupportedOS
         MessageUnsupportedOS(platform)
         sys.exit(1)
     if not path or not os.path.exists(path):
@@ -64,13 +67,19 @@ def getDocumentsFolder() -> str:
 
 
 def getConfigFolder() -> str:
-    from src.gui.alerts import MessageUnsupportedOS
+    path = ""
     if platform == "win32" or platform == "cygwin":
-        return getDocumentsFolder()
+        path= getDocumentsFolder()
     if platform == "linux" or platform == "darwin":
-        return normalizePath(os.path.expanduser("~/.config"))
-    MessageUnsupportedOS(platform)
-    sys.exit(1)
+        path = normalizePath(os.path.expanduser("~/.config"))
+    if not path or path == "":
+        from src.gui.alerts import MessageUnsupportedOS
+        MessageUnsupportedOS(platform)
+        sys.exit(1)
+    path = path + '/' + getConfigFolderName()
+    if not os.path.exists(path):
+        path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.ConfigLocation) + '/' + getConfigFolderName()
+    return path
 
 
 def getConfigFolderName() -> str:

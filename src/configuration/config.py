@@ -40,7 +40,7 @@ class Configuration:
             if path.isfile(path.realpath(path.curdir) + '/config.ini'):
                 self.__configPath = path.realpath(path.curdir)
             else:
-                self.__configPath = util.getConfigFolder() + '/' + util.getConfigFolderName()
+                self.__configPath = util.getConfigFolder()
 
         self.config = configparser.ConfigParser(
             allow_no_value=True, delimiters='=', strict=False)
@@ -329,7 +329,7 @@ class Configuration:
     @property
     def theme(self):
         return self.get('SETTINGS', 'theme', 'Follow System')
-    
+
     @theme.setter
     def theme(self, value):
         self.set('SETTINGS', 'theme', value)
