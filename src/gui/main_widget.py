@@ -949,12 +949,12 @@ class CustomMainWidget(QWidget):
 
     def setSearchString(self, searchString):
         self.searchString = searchString
-        self.refreshList()
+        self.refreshList(False)
 
     # Helpers
 
     @throttle(200)
-    def refreshList(self):
+    def refreshList(self, write=True):
         '''Refreshes mod list'''
         try:
             selected = self.getSelectedMods()
@@ -994,8 +994,9 @@ class CustomMainWidget(QWidget):
                 if rows:
                     for row in rows:
                         row.setSelected(True)
-            self.refreshLoadOrder()
-            self.model.write()
+            if write:
+                self.refreshLoadOrder()
+                self.model.write()
         except Exception as err:
             self.output(translate("MainWindow", "Couldn't refresh list: ") + f"{formatUserError(err)}")
             return err
