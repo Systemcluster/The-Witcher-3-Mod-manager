@@ -9,7 +9,7 @@ class Usersetting:
         while context[:1] == "[" and context[-1:] == "]":
             context = context[1:-1]
         self.context = context
-        self.option, self.value = config.split('=')
+        self.option, self.value = config.split('=', 1)
 
     def __repr__(self):
         return self.option + "=" + self.value
