@@ -139,7 +139,8 @@ def fetchReadmes(current_dir: str) -> List[str]:
     readmes = []
     for file in getAllFilesFromDirectory(current_dir):
         if bool(re.match(r"^(.*readme.*)\.(txt|md)$", file, re.IGNORECASE)):
-            with open(join(current_dir, file), 'r', encoding=detectEncoding(file)) as f:
+            file = join(current_dir, file)
+            with open(file, 'r', encoding=detectEncoding(file)) as f:
                 readmes.append(f.read())
     return readmes
 
