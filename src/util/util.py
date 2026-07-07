@@ -115,8 +115,8 @@ def reconfigureGamePath() -> bool:
         translate("MainWindow", "Select witcher3.exe"),
         data.config.gameexe or "witcher3.exe",
         "*.exe")
-    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
-    dialog.setOptions(dialog_options)
+    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
+        dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
     if dialog.exec():
         gamePath = normalizePath(str(dialog.selectedFiles()[0]))
         try:
@@ -143,8 +143,8 @@ def reconfigureScriptMergerPath():
         translate("MainWindow", "Select WitcherScriptMerger.exe"),
         data.config.scriptmerger or '',
         "*.exe")
-    dialog_options = QFileDialog.Option.DontUseNativeDialog if getattr(data.config, 'usenativedialog', '0') != '1' else 0
-    dialog.setOptions(dialog_options)
+    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
+        dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
     if dialog.exec():
         mergerPath = normalizePath(str(dialog.selectedFiles()[0]))
         if mergerPath:
@@ -249,7 +249,7 @@ def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
         title = translate("MainWindow", "Select Files or Folders")
     dialog = QFileDialog(parent, title, directory, extensions)
     dialog_options = QFileDialog.Option.ReadOnly | QFileDialog.Option.HideNameFilterDetails
-    if data.config.get('SETTINGS', 'usenativedialog', '0') != '1':
+    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
         dialog_options |= QFileDialog.Option.DontUseNativeDialog
     dialog.setOptions(dialog_options)
     dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)

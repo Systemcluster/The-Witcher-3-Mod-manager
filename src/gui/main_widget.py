@@ -105,7 +105,7 @@ class CustomMainWidget(QWidget):
         self.treeWidget.header().sectionResized.connect(lambda: self.onResize())
 
         self.actionAlert_to_run_Script_Merger.setChecked(data.config.allowpopups == "1")
-        self.actionUseNativeFileDialogs.setChecked(data.config.get("SETTINGS", "usenativedialog", "0") == "1")
+        self.actionUseNativeFileDialogs.setChecked(data.config.get("SETTINGS", "usenativedialog", "1") == "1")
 
     @debounce(200)
     def onResize(self):
