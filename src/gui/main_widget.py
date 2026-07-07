@@ -295,6 +295,8 @@ class CustomMainWidget(QWidget):
         self.actionOpenFolder.triggered.connect(self.openFolder)
         self.actionIncreasePriority.triggered.connect(self.increasePriority)
         self.actionDecreasePriority.triggered.connect(self.decreasePriority)
+        self.actionIncreaseLoadOrderPriority.triggered.connect(self.increaseLoadOrderPriority)
+        self.actionDecreaseLoadOrderPriority.triggered.connect(self.decreaseLoadOrderPriority)
         self.actionSetPriority.triggered.connect(self.setPriority)
         self.actionUnsetPriority.triggered.connect(self.unsetPriority)
         self.actionRestoreColumns.triggered.connect(self.restoreColumns)
@@ -624,11 +626,11 @@ class CustomMainWidget(QWidget):
             if selectedvalue:
                 value = max(-1, int(selectedvalue) - 1)
                 if value < 0:
-                    data.config.removeSection(str(selected))
+                    data.config.removePriority(str(selected))
                     item.setText(1, "")
                 else:
                     data.config.setPriority(str(selected), str(value))
-                    item.setText(0, str(value))
+                    item.setText(1, str(value))
                 data.config.write_priority()
 
     def alertPopupChanged(self):
@@ -1249,6 +1251,12 @@ class CustomMainWidget(QWidget):
         self.actionDecreasePriority = QAction(self.mainWindow)
         self.actionDecreasePriority.setObjectName("actionDecreasePriority")
 
+        self.actionIncreaseLoadOrderPriority = QAction(self.mainWindow)
+        self.actionIncreaseLoadOrderPriority.setObjectName("actionIncreaseLoadOrderPriority")
+
+        self.actionDecreaseLoadOrderPriority = QAction(self.mainWindow)
+        self.actionDecreaseLoadOrderPriority.setObjectName("actionDecreaseLoadOrderPriority")
+
         self.actionMain_Web_Page = QAction(self.mainWindow)
         self.actionMain_Web_Page.setObjectName("actionMain_Web_Page")
 
@@ -1362,6 +1370,8 @@ class CustomMainWidget(QWidget):
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionIncreasePriority)
         self.menuEdit.addAction(self.actionDecreasePriority)
+        self.menuEdit.addAction(self.actionIncreaseLoadOrderPriority)
+        self.menuEdit.addAction(self.actionDecreaseLoadOrderPriority)
 
         # --- Build Help menu ---
         self.menuHelp.addAction(self.actionAbout)
@@ -1453,6 +1463,10 @@ class CustomMainWidget(QWidget):
         self.actionIncreasePriority.setText(translate("MainWindow", "Increase Priority"))
         self.actionDecreasePriority.setShortcut("Ctrl+Down")
         self.actionDecreasePriority.setText(translate("MainWindow", "Decrease Priority"))
+        self.actionIncreaseLoadOrderPriority.setShortcut("Ctrl+Shift+Up")
+        self.actionIncreaseLoadOrderPriority.setText(translate("MainWindow", "Increase Load Order Priority"))
+        self.actionDecreaseLoadOrderPriority.setShortcut("Ctrl+Shift+Down")
+        self.actionDecreaseLoadOrderPriority.setText(translate("MainWindow", "Decrease Load Order Priority"))
         self.actionSetPriority.setShortcut("Ctrl+P")
         self.actionSetPriority.setText(translate("MainWindow", "Set Priority"))
         self.actionUnsetPriority.setShortcut("Ctrl+U")
