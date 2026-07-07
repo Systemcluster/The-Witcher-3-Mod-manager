@@ -8,7 +8,7 @@ def get_dark_palette():
     palette.setColor(QPalette.WindowText, Qt.white)
     palette.setColor(QPalette.Base, QColor(25, 25, 25))
     palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    palette.setColor(QPalette.ToolTipBase, Qt.white)
+    palette.setColor(QPalette.ToolTipBase, Qt.black)
     palette.setColor(QPalette.ToolTipText, Qt.white)
     palette.setColor(QPalette.Text, Qt.white)
     palette.setColor(QPalette.Button, QColor(53, 53, 53))
@@ -37,4 +37,4 @@ def get_light_palette():
     return palette
 
 def get_system_palette():
-    return QApplication.style().standardPalette() 
+    return QApplication.style().standardPalette()
