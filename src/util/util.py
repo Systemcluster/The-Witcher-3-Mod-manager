@@ -179,7 +179,10 @@ def openFile(path: str):
         elif os.path.isfile(path):
             if platform == "linux" or platform == "darwin":
                 try:
-                    subprocess.call(["xdg-open", path])
+                    if platform == "linux":
+                        subprocess.call(["xdg-open", path])
+                    if platform == "darwin":
+                        subprocess.Popen(["open", "-t", path])
                 except OSError:
                     editor = os.getenv('EDITOR')
                     if editor:
@@ -204,7 +207,10 @@ def openFolder(path: str):
         path, _ = os.path.split(path)
     if platform == "linux" or platform == "darwin":
         try:
-            subprocess.Popen(["xdg-open", path])
+            if platform == "linux":
+                subprocess.call(["xdg-open", path])
+            if platform == "darwin":
+                subprocess.Popen(["open", path])
         except OSError:
             webbrowser.open(path, new=1)
     else:
