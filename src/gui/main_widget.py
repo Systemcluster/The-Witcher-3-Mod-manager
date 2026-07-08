@@ -600,6 +600,7 @@ class CustomMainWidget(QWidget):
         except Exception as err:
             self.output(formatUserError(err))
 
+    @throttle(25)
     def increaseLoadOrderPriority(self):
         '''Increases the priority of the selected mods in the load order list'''
         items = self.loadOrder.selectedItems()
@@ -616,6 +617,7 @@ class CustomMainWidget(QWidget):
             item.setText(1, str(value))
             data.config.write_priority()
 
+    @throttle(25)
     def decreaseLoadOrderPriority(self):
         '''Decreases the priority of the selected mods in the load order list'''
         items = self.loadOrder.selectedItems()
@@ -712,6 +714,7 @@ class CustomMainWidget(QWidget):
             data.config.write_priority()
             self.refreshList()
 
+    @throttle(25)
     def increasePriority(self):
         '''Increases the priority of the selected mods'''
         selected = self.getSelectedMods()
@@ -721,6 +724,7 @@ class CustomMainWidget(QWidget):
             data.config.write_priority()
             self.refreshList()
 
+    @throttle(25)
     def decreasePriority(self):
         '''Decreases the priority of the selected mods'''
         selected = self.getSelectedMods()
