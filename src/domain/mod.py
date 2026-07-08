@@ -350,7 +350,7 @@ class Mod:
                     "dx12user.settings")
                 if added != dx12AdditionCount:
                     raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
-                                    + added + 'dx12 count: ' + dx12AdditionCount)
+                                    + str(added) + 'dx12 count: ' + str(dx12AdditionCount))
         return added
 
     def installUserSettingsToFile(self, fileName) -> int:
