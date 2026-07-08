@@ -301,7 +301,7 @@ def isExecutable(name: str) -> bool:
 def translateToChosenLanguage() -> bool:
     from src.globals import data
     language = data.config.language
-    if (language and os.path.exists("translations/" + language)):
+    if (language and os.path.exists(getProgramRootFolder() + "/translations/" + language)):
         print("loading translation", language)
         data.translator.load("translations/" + language)
         if not data.app.installTranslator(data.translator):
