@@ -380,15 +380,18 @@ def throttle(ms: int):
 def debounce(ms: int) -> Callable[[Callable[..., None]], Callable[..., Timer]]:
     """Debounce a functions execution by {ms} milliseconds"""
     def decorator(fun: Callable[..., None]) -> Callable[..., Timer]:
+        timer_attr = f'_debounce_timer_{fun.__name__}'
         def debounced(*args: Any, **kwargs: Any) -> Timer:
             def deferred():
                 fun(*args, **kwargs)
+            owner = args[0] if args else debounced
             try:
-                debounced.timer.cancel()
+                getattr(owner, timer_attr).cancel()
             except AttributeError:
                 pass
-            debounced.timer = Timer(ms / 1000.0, deferred)
-            debounced.timer.start()
-            return debounced.timer
+            timer = Timer(ms / 1000.0, deferred)
+            setattr(owner, timer_attr, timer)
+            timer.start()
+            return timer
         return debounced
     return decorator
