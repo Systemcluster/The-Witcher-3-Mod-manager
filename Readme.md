@@ -14,9 +14,10 @@ See the [Nexus Mods page](https://www.nexusmods.com/witcher3/mods/2678) for rele
 
 ### Release Versions (Windows)
 
-Download and unpack the latest release from Nexus Mods or from the GitHub releases. If you are upgrading from version 0.6 or later, directly overwrite the previous installation. Existing configuration files will be searched in the same directory as the executable first, in `Documents\The Witcher 3 Mod Manager` second.
+Download and unpack the latest release from Nexus Mods or from the [GitHub releases](https://github.com/Systemcluster/The-Witcher-3-Mod-manager/releases). If you are upgrading from version 0.6 or later, directly overwrite the previous installation.
 
-On the first run, if no configuration can be found, configuration files will be created under `Documents\The Witcher 3 Mod Manager`. They can be freely relocated between the two searched locations as preferred.
+On the first run, if no configuration can be found, configuration files will be created under `AppData\Local\The Witcher 3 Mod Manager`.
+Existing configuration files will be read from the directory of the executable first and in `Documents\The Witcher 3 Mod Manager` second for compatibility with prior versions. They can be freely relocated between the searched locations as preferred.
 
 ### Python (Windows and Linux)
 

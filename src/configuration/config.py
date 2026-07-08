@@ -48,7 +48,7 @@ class Configuration:
             allow_no_value=True, delimiters='=', strict=False)
 
         if not path.exists(self.__configPath):
-            os.mkdir(self.__configPath)
+            os.makedirs(self.__configPath)
 
         self.__writing_config = ReaderWriterLock()
         self.__writing_priority = ReaderWriterLock()
@@ -76,7 +76,7 @@ class Configuration:
 
         self.__userSettingsPath = self.documents + '/The Witcher 3'
         if not path.exists(self.__userSettingsPath):
-            os.mkdir(self.__userSettingsPath)
+            os.makedirs(self.__userSettingsPath)
 
         self.set('PATHS', 'documents', self.documents, False)
 

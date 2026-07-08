@@ -78,7 +78,7 @@ def getConfigFolder() -> str:
         sys.exit(1)
     path = path + '/' + getConfigFolderName()
     if not os.path.exists(path):
-        path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.ConfigLocation) + '/' + getConfigFolderName()
+        path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.GenericConfigLocation) + '/' + getConfigFolderName()
     return path
 
 
