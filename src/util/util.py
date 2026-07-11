@@ -317,7 +317,8 @@ def detectEncoding(path: str) -> str:
     import charset_normalizer
     if os.path.exists(path):
         with open(path, 'rb') as file:
-            text = file.read()
+            # only sample the start of the file for encoding detection
+            text = file.read(4 * 1024 * 1024)
             detected = charset_normalizer.detect(
                 text, should_rename_legacy=True)
             print("detected", path, "as", detected)
