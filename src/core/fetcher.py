@@ -272,7 +272,7 @@ def extractArchive(modPath: str) -> str:
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         exe = getProgramRootFolder() + "/tools/7zip/7z.exe"
         result = subprocess.run(
-            [exe, "x", modPath, "-o" + extractedDir, "-y"],
+            [exe, "x", modPath, "-o" + extractedDir, "-y", "-bso0", "-bsp0"],
             creationflags=CREATE_NO_WINDOW, startupinfo=si,
             stdin=subprocess.DEVNULL, capture_output=True)
         if result.returncode != 0:
