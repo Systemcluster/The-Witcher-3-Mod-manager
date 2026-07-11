@@ -335,8 +335,16 @@ class Configuration:
         self.set('SETTINGS', 'theme', value)
 
     def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
-        self.set('WINDOW', 'width', str(window.width()))
-        self.set('WINDOW', 'height', str(window.height()))
+        # only save the non-maximized size
+        if not window.isMaximized() and not window.isFullScreen():
+            self.set('WINDOW', 'width', str(window.width()))
+            self.set('WINDOW', 'height', str(window.height()))
+        self.set('WINDOW', 'maximized', '1' if window.isMaximized() else '0')
+        try:
+            self.set('WINDOW', 'state', bytes(
+                window.saveState().toBase64().data()).decode('ascii'))
+        except Exception as err:
+            print('failed to save window state', err, file=sys.stderr)
         for i in range(0, ui.treeWidget.header().count()+1):
             self.set('WINDOW', 'section'+str(i),
                      str(ui.treeWidget.header().sectionSize(i)))

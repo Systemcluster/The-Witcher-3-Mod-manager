@@ -4,7 +4,7 @@
 from os import path
 from sys import platform
 
-from PySide6.QtCore import QFileInfo, QMetaObject, QRect, QSize, Qt, QThread, Signal
+from PySide6.QtCore import QByteArray, QFileInfo, QMetaObject, QRect, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCursor, QResizeEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -94,6 +94,7 @@ class CustomMainWidget(QWidget):
         self.translateUi()
         self.configureUi()
         self.configureToolbar()
+        self.restoreWindowState()
         self.checkLanguage()
         self.checkTheme()
         self.refreshList()
@@ -116,6 +117,16 @@ class CustomMainWidget(QWidget):
         '''Handle resize events'''
         self.onResize()
 
+    def restoreWindowState(self):
+        '''Restore the toolbar position/layout saved from a previous session'''
+        state = data.config.get("WINDOW", "state")
+        if state:
+            try:
+                self.mainWindow.restoreState(
+                    QByteArray.fromBase64(state.encode("ascii")))
+            except Exception as err:
+                print("failed to restore window state:", err)
+
     def setupMainWindow(self):
         '''Configure main window properties'''
         self.mainWindow.setObjectName("MainWindow")
@@ -124,6 +135,9 @@ class CustomMainWidget(QWidget):
         hini = int(data.config.get("WINDOW", "height")) if data.config.get("WINDOW", "height") else 720
 
         self.mainWindow.resize(wini, hini)
+        if data.config.get("WINDOW", "maximized") == "1":
+            self.mainWindow.setWindowState(
+                self.mainWindow.windowState() | Qt.WindowMaximized)
         self.mainWindow.setCursor(QCursor(Qt.ArrowCursor))
         self.mainWindow.setWindowOpacity(1.0)
         self.mainWindow.setStatusTip("")
