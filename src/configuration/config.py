@@ -6,6 +6,7 @@ import glob
 import os
 import os.path as path
 import sys
+import time
 from copy import deepcopy
 from typing import Union
 
@@ -31,6 +32,8 @@ class Configuration:
 
     configLastWritten: configparser.ConfigParser = None  # type: ignore
     priorityLastWritten: configparser.ConfigParser = None  # type: ignore
+
+    __lastPriorityWriteTime: float = 0.0
 
     def __init__(self, documentsPath: str = '', gamePath: str = '', configPath: str = ''):
 
@@ -158,10 +161,16 @@ class Configuration:
                 with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8') as file:
                     print(
                         f"writing mods.settings to {self.__userSettingsPath + '/mods.settings'}")
+                    self.__lastPriorityWriteTime = time.monotonic()
                     priority.write(file, space_around_delimiters)
                     file.flush()
                     os.fsync(file.fileno())
             self.priorityLastWritten = deepcopy(self.priority)
+
+    def write_priority_elapsed(self) -> float:
+        '''Returns elapsed time since last priority write.'''
+        elapsed_ms = (time.monotonic() - self.__lastPriorityWriteTime) * 1000
+        return elapsed_ms
 
     def get(self, section, option, default=None):
         try:

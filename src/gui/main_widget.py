@@ -120,6 +120,8 @@ class CustomMainWidget(QWidget):
 
     def onModsSettingsChanged(self, _event=None):
         '''Handle external mods.settings changes'''
+        if data.config.write_priority_elapsed() < 350:
+            return
         self.refreshLoadOrder()
 
     def restoreWindowState(self):
