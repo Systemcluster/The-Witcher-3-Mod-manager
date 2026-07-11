@@ -383,9 +383,9 @@ def throttle(ms: int):
         def wrapped(*args, **kwargs):
             nonlocal last_modified
             if not last_modified or datetime.now() - last_modified > timedelta(milliseconds=ms):
-                result = f(*args, **kwargs)
                 last_modified = datetime.now()
-                return result
+                return f(*args, **kwargs)
+            return None
         return wrapped
     return decorate
 
