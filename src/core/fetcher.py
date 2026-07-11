@@ -118,12 +118,17 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
             mod.menus.append(file)
             mod_xmls.append(normalizePath(current_dir + "/" + file))
         elif isTxtOrInputXmlFile(file):
-            with open(current_dir + "/" + file, 'rb') as file_:
+            filepath = current_dir + "/" + file
+            with open(filepath, 'rb') as file_:
                 file_contents = file_.read()
                 try:
                     text = file_contents.decode("utf-8")
                 except UnicodeError:
-                    text = file_contents.decode("utf-16")
+                    try:
+                        text = file_contents.decode("utf-16")
+                    except UnicodeError:
+                        text = file_contents.decode(
+                            detectEncoding(filepath), errors="replace")
                 if file == "input.xml":
                     text = fetchRelevantDataFromInputXml(text, mod)
                 fetchAllXmlKeys(file, text, mod)
