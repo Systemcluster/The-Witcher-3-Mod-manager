@@ -23,6 +23,22 @@ if __name__ == "__main__":
             del environ["QT_DEVICE_PIXEL_RATIO"]
         environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
+        # log and show uncaught exceptions
+        def _logUncaughtException(exc_type, exc_value, exc_traceback):
+            import traceback
+            tb_text = "".join(traceback.format_exception(
+                exc_type, exc_value, exc_traceback))
+            traceback.print_exception(
+                exc_type, exc_value, exc_traceback, file=sys.stderr)
+            msg = QMessageBox(None)
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setWindowTitle("Unexpected Error")
+            msg.setText(str(exc_value))
+            msg.setDetailedText(tb_text)
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
+        sys.excepthook = _logUncaughtException
+
         documentsPath: str = ''
         gamePath: str = ''
         configPath: str = ''
@@ -59,7 +75,7 @@ if __name__ == "__main__":
 
         data.app = QApplication(sys.argv)
         data.config = Configuration(documentsPath, gamePath, configPath)
-        
+
         data.app.setStyle("Fusion")
 
         data.dark_palette = get_dark_palette()
@@ -82,7 +98,7 @@ if __name__ == "__main__":
             modModel = Model()
         except IOError as err:
             print(err, file=sys.stderr)
-            if MessageAlertOtherInstance() == QMessageBox.Yes:
+            if MessageAlertOtherInstance() == QMessageBox.StandardButton.Yes:
                 modModel = Model(ignorelock=True)
             else:
                 sys.exit(1)
@@ -112,12 +128,18 @@ if __name__ == "__main__":
         import traceback
 
         from src.util.util import formatUserError
+        tb_text = traceback.format_exc()
         print(formatUserError(e), file=sys.stderr)
         try:
-            if sys.platform == "win32":
-                import win32api  # pylint: disable=import-error # type: ignore
-                win32api.MessageBox(
-                    0, f'{str(e)}\n\n{traceback.format_exc()}', "Unexpected Error", 0x10)
+            from PySide6.QtWidgets import QApplication, QMessageBox
+            _app = QApplication.instance() or QApplication(sys.argv)
+            msg = QMessageBox(None)
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setWindowTitle("Unexpected Error")
+            msg.setText(str(e))
+            msg.setDetailedText(tb_text)
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
         except Exception as x:
             print("Failed to show error message: " +
                   formatUserError(x), file=sys.stderr)
