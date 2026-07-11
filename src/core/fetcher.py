@@ -17,6 +17,7 @@ from src.util.util import (
     getProgramRootFolder,
     normalizePath,
     removeDirectory,
+    waitForDirectoryRemoval,
 )
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
@@ -263,8 +264,7 @@ def extractArchive(modPath: str) -> str:
     modPath = normalizePath(modPath)
     if (path.exists(extractedDir)):
         removeDirectory(extractedDir)
-        while path.isdir(extractedDir):
-            pass
+        waitForDirectoryRemoval(extractedDir)
     mkdir(extractedDir)
     if platform == "win32" or platform == "cygwin":
         si = subprocess.STARTUPINFO()

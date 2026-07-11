@@ -224,8 +224,7 @@ def copyFolder(src, dst):
     print(
         f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
     removeDirectory(dst)
-    while os.path.isdir(dst):
-        pass
+    waitForDirectoryRemoval(dst)
     copytree(src, dst)
 
 
@@ -236,6 +235,17 @@ def removeDirectory(directory: str) -> None:
         func(directory)
     if os.path.isdir(directory):
         rmtree(directory, onerror=getWriteAccess)
+
+
+def waitForDirectoryRemoval(directory: str, timeout: float = 30.0) -> None:
+    '''Wait until a directory is removed, up to {timeout} seconds.'''
+    import time
+    deadline = time.monotonic() + timeout
+    while os.path.isdir(directory):
+        if time.monotonic() > deadline:
+            raise TimeoutError(
+                f"Timed out waiting for '{directory}' to be removed")
+        time.sleep(0.05)
 
 
 def restartProgram():
