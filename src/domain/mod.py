@@ -303,20 +303,20 @@ class Mod:
                             e, key, e.context, justModifiers)
                     else:
                         msg = saved
-                    if msg == QMessageBox.Yes:
+                    if msg == QMessageBox.StandardButton.Yes:
                         existing.remove(e)
                         existing.append(key)
                         added += 1
-                    elif msg == QMessageBox.No:
+                    elif msg == QMessageBox.StandardButton.No:
                         skipped += 1
-                    elif msg == QMessageBox.YesToAll:
+                    elif msg == QMessageBox.StandardButton.YesToAll:
                         existing.remove(e)
                         existing.append(key)
                         added += 1
-                        saved = QMessageBox.Yes
-                    elif msg == QMessageBox.NoToAll:
+                        saved = QMessageBox.StandardButton.Yes
+                    elif msg == QMessageBox.StandardButton.NoToAll:
                         skipped += 1
-                        saved = QMessageBox.No
+                        saved = QMessageBox.StandardButton.No
         existing.sort()
         text = ''
         category = None

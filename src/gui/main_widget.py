@@ -142,12 +142,12 @@ class CustomMainWidget(QWidget):
         self.mainWindow.resize(wini, hini)
         if data.config.get("WINDOW", "maximized") == "1":
             self.mainWindow.setWindowState(
-                self.mainWindow.windowState() | Qt.WindowMaximized)
-        self.mainWindow.setCursor(QCursor(Qt.ArrowCursor))
+                self.mainWindow.windowState() | Qt.WindowState.WindowMaximized)
+        self.mainWindow.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.mainWindow.setWindowOpacity(1.0)
         self.mainWindow.setStatusTip("")
         self.mainWindow.setAutoFillBackground(False)
-        self.mainWindow.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.mainWindow.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.mainWindow.setAcceptDrops(True)
 
     def setupMenuBar(self):
@@ -159,7 +159,7 @@ class CustomMainWidget(QWidget):
 
         self.toolBar = QToolBar(self.mainWindow)
         self.toolBar.setObjectName("toolBar")
-        self.mainWindow.addToolBar(Qt.TopToolBarArea, self.toolBar)
+        self.mainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolBar)
 
     def setupUI(self):
         '''Setup all UI components'''
@@ -249,7 +249,7 @@ class CustomMainWidget(QWidget):
 
         # Script merger button
         self.scriptMergerButton = QPushButton(self.centralwidget)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.scriptMergerButton.sizePolicy().hasHeightForWidth())
@@ -260,7 +260,7 @@ class CustomMainWidget(QWidget):
 
         # Run game button
         self.runGameButton = QPushButton(self.centralwidget)
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.runGameButton.sizePolicy().hasHeightForWidth())
@@ -281,14 +281,14 @@ class CustomMainWidget(QWidget):
                 data.config.setDefaultWindow()
                 break
 
-        self.treeWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.treeWidget.header().setDefaultAlignment(Qt.AlignCenter)
-        self.treeWidget.sortByColumn(1, Qt.AscendingOrder)
+        self.treeWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeWidget.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.treeWidget.sortByColumn(1, Qt.SortOrder.AscendingOrder)
 
-        self.loadOrder.header().setDefaultAlignment(Qt.AlignCenter)
+        self.loadOrder.header().setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
         self.loadOrder.header().setStretchLastSection(False)
-        self.loadOrder.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.loadOrder.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.loadOrder.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.loadOrder.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
         self.resizeColumns()
 
@@ -323,13 +323,13 @@ class CustomMainWidget(QWidget):
         self.scriptMergerButton.clicked.connect(self.runScriptMerger)
         self.runGameButton.clicked.connect(self.runTheGame)
 
-        self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.openMenu)
 
-        self.toolBar.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.toolBar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.toolBar.customContextMenuRequested.connect(self.toolbarMenu)
 
-        self.textEdit.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.textEdit.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.textEdit.customContextMenuRequested.connect(self.openEditMenu)
 
         self.treeWidget.itemChanged.connect(self.modToggled)
@@ -527,7 +527,7 @@ class CustomMainWidget(QWidget):
                         None,
                         translate("MainWindow", "Rename") + " " + oldname,
                         translate("MainWindow", "Enter new mod name") + ": ",
-                        QLineEdit.Normal,
+                        QLineEdit.EchoMode.Normal,
                         oldname,
                     )
                     if ok:
@@ -569,7 +569,7 @@ class CustomMainWidget(QWidget):
         '''Triggered when the mod check state is changed.
         Enables or disables the mod based on the current check state'''
         try:
-            if item.checkState(column) == Qt.Checked:
+            if item.checkState(column) == Qt.CheckState.Checked:
                 incomplete = self.model.get(item.text(1)).enable()
                 if incomplete:
                     for i in incomplete:
@@ -578,7 +578,7 @@ class CustomMainWidget(QWidget):
                             + i
                             + translate("MainWindow", " could not be automatically installed.")
                         )
-            elif item.checkState(column) == Qt.Unchecked:
+            elif item.checkState(column) == Qt.CheckState.Unchecked:
                 self.model.get(item.text(1)).disable()
             self.model.write()
             self.refreshLoadOrder()
@@ -679,10 +679,10 @@ class CustomMainWidget(QWidget):
             translate("MainWindow", "You need to restart the program to apply the changes.")
             + "\n"
             + translate("MainWindow", "Do you want to restart it now?"),
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
         )
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
             restartProgram()
 
     def checkLanguage(self):
@@ -832,10 +832,10 @@ class CustomMainWidget(QWidget):
                     translate("MainWindow", "Are you sure you want to uninstall ")
                     + str(len(selected))
                     + translate("MainWindow", " selected mods?"),
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.Yes,
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes,
                 )
-                if clicked == QMessageBox.Yes:
+                if clicked == QMessageBox.StandardButton.Yes:
                     progress = 0
                     progressMax = len(selected)
                     installer = Installer(self.model, output=self.output)
@@ -878,10 +878,10 @@ class CustomMainWidget(QWidget):
                         "MainWindow",
                         "This will override the mods settings with " + "their defaults.",
                     ),
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.Yes,
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes,
                 )
-                if clicked == QMessageBox.Yes:
+                if clicked == QMessageBox.StandardButton.Yes:
                     self.setProgress(20)
                     installer = Installer(self.model, output=self.output)
                     for modname in selected:
@@ -957,10 +957,10 @@ class CustomMainWidget(QWidget):
             progress = 0
             progressMax = len(selected)
             for item in selected:
-                if item.checkState(0) == Qt.Checked:
-                    item.setCheckState(0, Qt.Unchecked)
+                if item.checkState(0) == Qt.CheckState.Checked:
+                    item.setCheckState(0, Qt.CheckState.Unchecked)
                 else:
-                    item.setCheckState(0, Qt.Checked)
+                    item.setCheckState(0, Qt.CheckState.Checked)
                 progress += 1
                 self.setProgress(100 * progress / progressMax)
             self.refreshList()
@@ -1013,7 +1013,7 @@ class CustomMainWidget(QWidget):
                     mod.date,
                 )
             for item in selected:
-                rows = self.treeWidget.findItems(item, Qt.MatchEndsWith, 1)
+                rows = self.treeWidget.findItems(item, Qt.MatchFlag.MatchEndsWith, 1)
                 if rows:
                     for row in rows:
                         row.setSelected(True)
@@ -1052,10 +1052,10 @@ class CustomMainWidget(QWidget):
                         res = str(directory[1])
                     dirlist = [directory[0], res]
                     item = CustomTreeWidgetItem(dirlist)
-                    item.setTextAlignment(1, Qt.AlignCenter)
+                    item.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                     self.loadOrder.addTopLevelItem(item)
             for item in selected:
-                rows = self.loadOrder.findItems(item.replace("~", ""), Qt.MatchEndsWith, 0)
+                rows = self.loadOrder.findItems(item.replace("~", ""), Qt.MatchFlag.MatchEndsWith, 0)
                 if rows:
                     for row in rows:
                         row.setSelected(True)
@@ -1129,21 +1129,21 @@ class CustomMainWidget(QWidget):
             str(date),
         ]
         item = CustomTreeWidgetItem(proplist)
-        item.setTextAlignment(2, Qt.AlignCenter)
-        item.setTextAlignment(3, Qt.AlignCenter)
-        item.setTextAlignment(4, Qt.AlignCenter)
-        item.setTextAlignment(5, Qt.AlignCenter)
-        item.setTextAlignment(6, Qt.AlignCenter)
-        item.setTextAlignment(7, Qt.AlignCenter)
-        item.setTextAlignment(8, Qt.AlignCenter)
-        item.setTextAlignment(9, Qt.AlignCenter)
-        item.setTextAlignment(10, Qt.AlignRight)
-        item.setTextAlignment(11, Qt.AlignCenter)
+        item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(6, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(7, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(8, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(9, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(10, Qt.AlignmentFlag.AlignRight)
+        item.setTextAlignment(11, Qt.AlignmentFlag.AlignCenter)
         if "~" not in name:
             if on:
-                item.setCheckState(0, Qt.Checked)
+                item.setCheckState(0, Qt.CheckState.Checked)
             else:
-                item.setCheckState(0, Qt.Unchecked)
+                item.setCheckState(0, Qt.CheckState.Unchecked)
         self.treeWidget.addTopLevelItem(item)
         return item
 
@@ -1189,7 +1189,7 @@ class CustomMainWidget(QWidget):
         '''Shows previous dialog based on settings'''
         if data.config.allowpopups == "1":
             res = MessageAlertScript()
-            if res == QMessageBox.Yes:
+            if res == QMessageBox.StandardButton.Yes:
                 self.runScriptMerger()
 
     def changeTheme(self, theme):
@@ -1438,7 +1438,7 @@ class CustomMainWidget(QWidget):
         self.loadOrder.headerItem().setText(1, translate("MainWindow", "Priority"))
 
         self.textEdit.setPlaceholderText(translate("MainWindow", "Output"))
-        self.textEdit.setCursor(QCursor(Qt.ArrowCursor))
+        self.textEdit.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
         self.scriptMergerButton.setText(translate("MainWindow", "Run Script Merger"))
         self.runGameButton.setText(translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")

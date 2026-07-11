@@ -16,7 +16,7 @@ class DetailsDialog(QWidget):
     def __init__(self, parent: QWidget, mod: Mod):
         super().__init__(parent)
 
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(QtCore.Qt.WindowType.Window)
         self.setObjectName("Details")
         self.resize(700, 800)
         self.setMinimumSize(600, 600)
@@ -27,9 +27,9 @@ class DetailsDialog(QWidget):
         self.text = QTextEdit(self)
         self.text.setObjectName("text")
         self.text.setDocument(self.document)
-        self.text.setAutoFormatting(QTextEdit.AutoAll)
+        self.text.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.text.setReadOnly(True)
-        self.text.setLineWrapMode(QTextEdit.NoWrap)
+        self.text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.layout.addWidget(self.text)
 
         self.setWindowTitle(mod.name + " " + translate("Details", "Details"))
@@ -50,5 +50,5 @@ class DetailsDialog(QWidget):
 
     def keyPressEvent(self, event):
         '''Qt KeyPressEvent override'''
-        if event.key() == QtCore.Qt.Key_Escape:
+        if event.key() == QtCore.Qt.Key.Key_Escape:
             self.close()

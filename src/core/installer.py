@@ -2,7 +2,7 @@
 # pylint: disable=invalid-name,superfluous-parens,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring
 
 from dataclasses import dataclass
-from os import listdir, mkdir, path, remove
+from os import listdir, path, remove
 from shutil import copyfile
 from time import gmtime, strftime
 from typing import Any, Callable
@@ -76,16 +76,16 @@ class Installer:
                         if self.ask:
                             res = MessageOverwrite(
                                 name, translate("MainWindow", 'Mod') if modfolder else translate("MainWindow", 'DLC'))
-                        if res == QMessageBox.Yes:
+                        if res == QMessageBox.StandardButton.Yes:
                             copyFolder(directory, datapath)
                             installCount += 1
-                        elif res == QMessageBox.YesToAll:
+                        elif res == QMessageBox.StandardButton.YesToAll:
                             self.ask = False
                             copyFolder(directory, datapath)
                             installCount += 1
-                        elif res == QMessageBox.No:
+                        elif res == QMessageBox.StandardButton.No:
                             pass
-                        elif res == QMessageBox.NoToAll:
+                        elif res == QMessageBox.StandardButton.NoToAll:
                             self.ask = False
                     else:
                         copyFolder(directory, datapath)
