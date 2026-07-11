@@ -81,7 +81,8 @@ class CustomMainWidget(QWidget):
         self.searchString = ""
 
         self.modsSettingsWatcher = ModsSettingsWatcher()
-        self.modsSettingsWatcher.refresh.connect(lambda e: self.refreshLoadOrder())
+        # connect to a method so the refresh always runs on the GUI thread
+        self.modsSettingsWatcher.refresh.connect(self.onModsSettingsChanged)
 
         self.setupMainWindow()
         self.setupUI()
@@ -116,6 +117,10 @@ class CustomMainWidget(QWidget):
     def resizeEvent(self, event: QResizeEvent):
         '''Handle resize events'''
         self.onResize()
+
+    def onModsSettingsChanged(self, _event=None):
+        '''Handle external mods.settings changes'''
+        self.refreshLoadOrder()
 
     def restoreWindowState(self):
         '''Restore the toolbar position/layout saved from a previous session'''
