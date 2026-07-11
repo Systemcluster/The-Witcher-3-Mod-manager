@@ -107,7 +107,7 @@ class CustomMainWidget(QWidget):
         self.actionAlert_to_run_Script_Merger.setChecked(data.config.allowpopups == "1")
         self.actionUseNativeFileDialogs.setChecked(data.config.get("SETTINGS", "usenativedialog", "1") == "1")
 
-    @debounce(200)
+    @debounceGui(200)
     def onResize(self):
         '''Save window settings when resized'''
         data.config.saveWindowSettings(self, self.mainWindow)
@@ -1006,7 +1006,7 @@ class CustomMainWidget(QWidget):
             return err
         return None
 
-    @debounce(100)
+    @debounceGui(100)
     def refreshLoadOrder(self):
         '''Refreshes right panel list - load order'''
         try:

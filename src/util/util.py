@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from PySide6 import QtGui, __version__
 from PySide6.QtWidgets import QFileDialog, QMessageBox
-from PySide6.QtCore import QStandardPaths
+from PySide6.QtCore import QStandardPaths, QTimer
 
 
 def formatUserError(error: Exception) -> str:
@@ -382,6 +382,7 @@ def debounce(ms: int) -> Callable[[Callable[..., None]], Callable[..., Timer]]:
     """Debounce a functions execution by {ms} milliseconds"""
     def decorator(fun: Callable[..., None]) -> Callable[..., Timer]:
         timer_attr = f'_debounce_timer_{fun.__name__}'
+
         def debounced(*args: Any, **kwargs: Any) -> Timer:
             def deferred():
                 fun(*args, **kwargs)
@@ -393,6 +394,31 @@ def debounce(ms: int) -> Callable[[Callable[..., None]], Callable[..., Timer]]:
             timer = Timer(ms / 1000.0, deferred)
             setattr(owner, timer_attr, timer)
             timer.start()
+            return timer
+        return debounced
+    return decorator
+
+
+def debounceGui(ms: int) -> Callable[[Callable[..., None]], Callable[..., Any]]:
+    """Debounce a methods execution by {ms} milliseconds using QTimer"""
+    def decorator(fun: Callable[..., None]) -> Callable[..., Any]:
+        timer_attr = f'_debounce_qtimer_{fun.__name__}'
+        pending_attr = f'_debounce_pending_{fun.__name__}'
+
+        def debounced(self: Any, *args: Any, **kwargs: Any) -> QTimer:
+            setattr(self, pending_attr, (args, kwargs))
+            timer = getattr(self, timer_attr, None)
+            if timer is None:
+                timer = QTimer(self)
+                timer.setSingleShot(True)
+
+                def fire():
+                    pending_args, pending_kwargs = getattr(
+                        self, pending_attr, ((), {}))
+                    fun(self, *pending_args, **pending_kwargs)
+                timer.timeout.connect(fire)
+                setattr(self, timer_attr, timer)
+            timer.start(ms)
             return timer
         return debounced
     return decorator
