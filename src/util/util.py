@@ -335,11 +335,11 @@ def detectEncoding(path: str) -> str:
 def fixUserSettingsDuplicateBrackets():
     '''Fix invalid section names in user.settings'''
     from src.globals import data
+    settingsPath = data.config.settings + "/user.settings"
     try:
         config = ConfigParser(strict=False)
         config.optionxform = str
-        config.read(data.config.settings + "/user.settings",
-                    encoding=detectEncoding(data.config.settings + "/user.settings"))
+        config.read(settingsPath, encoding=detectEncoding(settingsPath))
         for section in config.sections():
             newSection = section
             while newSection[:1] == "[":
@@ -353,12 +353,14 @@ def fixUserSettingsDuplicateBrackets():
                     for item in items:
                         config.set(newSection, item[0], item[1])
                 config.remove_section(section)
-        with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
+        # write to a temporary file first to prevent corruption
+        with open(settingsPath + ".new", 'w', encoding="utf-8") as userfile:
             config.write(userfile, space_around_delimiters=False)
             userfile.flush()
             os.fsync(userfile.fileno())
-    except:
-        print("fixing duplicate brackets failed")
+        os.replace(settingsPath + ".new", settingsPath)
+    except Exception as e:
+        print(f"fixing duplicate brackets failed: {str(e)}")
 
 
 def throttle(ms: int):
