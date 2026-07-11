@@ -62,9 +62,8 @@ class ModsSettingsWatcher(QThread):
         self.observer.schedule(self.modsEventHandler, path=data.config.settings, recursive=False)
         self.observer.start()
 
-    def __del__(self):
-        '''Clean up the observer when this object is destroyed'''
-        if hasattr(self, "observer") and self.observer:
+    def stop(self):
+        if hasattr(self, "observer") and self.observer is not None:
             self.observer.stop()
             self.observer.join()
             self.observer = None
@@ -83,6 +82,8 @@ class CustomMainWidget(QWidget):
         self.modsSettingsWatcher = ModsSettingsWatcher()
         # connect to a method so the refresh always runs on the GUI thread
         self.modsSettingsWatcher.refresh.connect(self.onModsSettingsChanged)
+        from PySide6.QtWidgets import QApplication
+        QApplication.instance().aboutToQuit.connect(self.modsSettingsWatcher.stop)
 
         self.setupMainWindow()
         self.setupUI()
