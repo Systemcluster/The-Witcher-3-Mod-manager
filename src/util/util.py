@@ -335,8 +335,9 @@ def detectEncoding(path: str) -> str:
             if detected and "encoding" in detected:
                 if detected["encoding"] == "ascii":
                     return "utf-8"
-                if float(detected["confidence"]) > 0.5:
-                    return str(detected["encoding"])
+                if detected["confidence"] is not None and detected["encoding"] is not None \
+                        and float(detected["confidence"]) > 0.5:
+                    return str(detected["encoding"].replace("_", "-"))
             return "utf-8"
     else:
         return "utf-8"
