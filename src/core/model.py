@@ -3,6 +3,7 @@
 
 from typing import Dict, List, KeysView, ValuesView
 from os import path
+import re
 import xml.etree.ElementTree as XML
 from base64 import b64decode, b64encode
 
@@ -34,7 +35,10 @@ class Model:
             try:
                 encoding = detectEncoding(self.xmlfile)
                 with open(self.xmlfile, 'r', encoding=encoding) as file:
-                    tree = XML.parse(file)
+                    text = re.sub(
+                        r"\A(\s*<\?xml[^?\n]*encoding=['\"])utf_8(['\"])(?=[^?\n]*\?>)",
+                        r"\1utf-8\2", file.read(), count=1)
+                tree = XML.parse(StringIO(text))
                 root = tree.getroot()
                 for xmlmod in root.findall('mod'):
                     mod = self.populateModFromXml(Mod(), xmlmod)
@@ -53,7 +57,8 @@ class Model:
             # write to a copy first to work around writing errors
             encoding = detectEncoding(self.xmlfile)
             with open(self.xmlfile + ".new", 'wb') as file:
-                root.write(file, encoding=encoding)
+                root.write(file, encoding=encoding.upper(),
+                           xml_declaration=True)
                 file.flush()
                 os.fsync(file.fileno())
             if os.path.isfile(self.xmlfile + ".old"):
