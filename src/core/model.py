@@ -1,6 +1,7 @@
 '''Mod management model'''
 # pylint: disable=invalid-name,missing-docstring,wildcard-import,unused-wildcard-import
 
+from io import StringIO
 from typing import Dict, List, KeysView, ValuesView
 from os import path
 import re
