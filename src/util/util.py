@@ -330,19 +330,22 @@ def translateToChosenLanguage() -> bool:
 def detectEncoding(path: str) -> str:
     import charset_normalizer
     if os.path.exists(path):
-        with open(path, 'rb') as file:
-            # only sample the start of the file for encoding detection
-            text = file.read(4 * 1024 * 1024)
-            detected = charset_normalizer.detect(
-                text, should_rename_legacy=True)
-            print("detected", path, "as", detected)
-            if detected and "encoding" in detected:
-                if detected["encoding"] == "ascii":
-                    return "utf-8"
-                if detected["confidence"] is not None and detected["encoding"] is not None \
-                        and float(detected["confidence"]) > 0.5:
-                    return str(detected["encoding"].replace("_", "-"))
-            return "utf-8"
+        try:
+            with open(path, 'rb') as file:
+                # only sample the start of the file for encoding detection
+                text = file.read(4 * 1024 * 1024)
+                detected = charset_normalizer.detect(
+                    text, should_rename_legacy=True)
+                print("detected", path, "as", detected)
+                if detected and "encoding" in detected:
+                    if detected["encoding"] == "ascii":
+                        return "utf-8"
+                    if detected["confidence"] is not None and detected["encoding"] is not None \
+                            and float(detected["confidence"]) > 0.5:
+                        return str(detected["encoding"].replace("_", "-"))
+        except OSError:
+            pass
+        return "utf-8"
     else:
         return "utf-8"
 

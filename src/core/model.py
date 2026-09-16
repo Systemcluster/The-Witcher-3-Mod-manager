@@ -47,6 +47,8 @@ class Model:
                 for xmlmod in root.findall('mod'):
                     mod = self.populateModFromXml(Mod(), xmlmod)
                     self.modList[mod.name] = mod
+            except (OSError, UnicodeError) as e:
+                MessageAlertReadingConfigurationFailed(self.xmlfile, e)
             except XML.ParseError as e:
                 MessageAlertReadingConfigurationFailed(self.xmlfile, e)
                 raise e
