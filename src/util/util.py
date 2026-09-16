@@ -7,16 +7,17 @@ import subprocess
 import sys
 import traceback
 import webbrowser
+from collections.abc import Callable
 from configparser import ConfigParser
 from platform import python_version
 from shutil import copytree, rmtree
 from sys import platform
 from threading import Timer
-from typing import Any, Callable
+from typing import Any
 
 from PySide6 import QtGui, __version__
-from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtCore import QStandardPaths, QTimer
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 
 def formatUserError(error: Exception) -> str:
@@ -53,13 +54,15 @@ def getDocumentsFolder() -> str:
             path = normalizePath(
                 "/run/media/mmcblk0p1/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents")
         if not path or not os.path.exists(path):
-            path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+            path = QStandardPaths.writableLocation(
+                QStandardPaths.StandardLocation.DocumentsLocation)
     else:
         from src.gui.alerts import MessageUnsupportedOS
         MessageUnsupportedOS(platform)
         sys.exit(1)
     if not path or not os.path.exists(path):
-        dialog = QFileDialog(None, translate("MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
+        dialog = QFileDialog(None, translate(
+            "MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
         dialog.setFileMode(QFileDialog.FileMode.Directory)
         if dialog.exec():
             path = normalizePath(str(dialog.selectedFiles()[0]))
@@ -69,7 +72,7 @@ def getDocumentsFolder() -> str:
 def getConfigFolder() -> str:
     path = ""
     if platform == "win32" or platform == "cygwin":
-        path= getDocumentsFolder()
+        path = getDocumentsFolder()
     if platform == "linux" or platform == "darwin":
         path = normalizePath(os.path.expanduser("~/.config"))
     if not path or path == "":
@@ -78,7 +81,8 @@ def getConfigFolder() -> str:
         sys.exit(1)
     path = path + '/' + getConfigFolderName()
     if not os.path.exists(path):
-        path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.GenericConfigLocation) + '/' + getConfigFolderName()
+        path = QStandardPaths.writableLocation(
+            QStandardPaths.StandardLocation.GenericConfigLocation) + '/' + getConfigFolderName()
     return path
 
 
@@ -371,7 +375,7 @@ def fixUserSettingsDuplicateBrackets():
             os.fsync(userfile.fileno())
         os.replace(settingsPath + ".new", settingsPath)
     except Exception as e:
-        print(f"fixing duplicate brackets failed: {str(e)}")
+        print(f"fixing duplicate brackets failed: {e!s}")
 
 
 def throttle(ms: int):

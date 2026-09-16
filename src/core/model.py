@@ -1,22 +1,25 @@
 '''Mod management model'''
 # pylint: disable=invalid-name,missing-docstring,wildcard-import,unused-wildcard-import
 
-from io import StringIO
-from typing import Dict, List, KeysView, ValuesView
-from os import path
 import re
 import xml.etree.ElementTree as XML
 from base64 import b64decode, b64encode
+from collections.abc import KeysView, ValuesView
+from io import StringIO
+from os import path
 
 from fasteners import InterProcessLock
 
-from src.domain.mod import Mod
-from src.domain.key import Key
-from src.globals import data
 from src.core.fetcher import *
-from src.util.util import *
+from src.domain.key import Key
+from src.domain.mod import Mod
+from src.globals import data
+from src.gui.alerts import (
+    MessageAlertReadingConfigurationFailed,
+    MessageAlertWritingFailed,
+)
 from src.util.syntax import *
-from src.gui.alerts import MessageAlertReadingConfigurationFailed, MessageAlertWritingFailed
+from src.util.util import *
 
 
 class Model:
@@ -26,8 +29,8 @@ class Model:
         if not ignorelock:
             self.lock = InterProcessLock(self.lockfile)
             if not self.lock.acquire(False):
-                raise IOError('could not lock ' + self.lockfile)
-        self.modList: Dict[str, Mod] = {}
+                raise OSError('could not lock ' + self.lockfile)
+        self.modList: dict[str, Mod] = {}
         self.reload()
 
     def reload(self) -> None:
