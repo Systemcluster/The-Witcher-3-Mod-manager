@@ -1,6 +1,7 @@
 '''Mod management model'''
 # pylint: disable=invalid-name,missing-docstring,wildcard-import,unused-wildcard-import
 
+import os
 import re
 import xml.etree.ElementTree as XML
 from base64 import b64decode, b64encode
@@ -59,19 +60,26 @@ class Model:
             root = self.writeModToXml(mod, root)
         indent(root.getroot())
         print(f"writing mod list to {self.xmlfile}")
+        newfile = self.xmlfile + ".new"
+        oldfile = self.xmlfile + ".old"
         try:
-            # write to a copy first to work around writing errors
+            # write to a copy first so a failed write cannot destroy the previous list
             encoding = detectEncoding(self.xmlfile)
-            with open(self.xmlfile + ".new", 'wb') as file:
+            with open(newfile, 'wb') as file:
                 root.write(file, encoding=encoding.upper(),
                            xml_declaration=True)
                 file.flush()
                 os.fsync(file.fileno())
-            if os.path.isfile(self.xmlfile + ".old"):
-                os.remove(self.xmlfile + ".old")
             if os.path.isfile(self.xmlfile):
-                os.rename(self.xmlfile, self.xmlfile + ".old")
-            os.rename(self.xmlfile + ".new", self.xmlfile)
+                os.replace(self.xmlfile, oldfile)
+            try:
+                os.replace(newfile, self.xmlfile)
+            except OSError:
+                if os.path.isfile(oldfile) and not os.path.isfile(self.xmlfile):
+                    os.rename(oldfile, self.xmlfile)
+                if os.path.isfile(newfile):
+                    os.remove(newfile)
+                raise
         except Exception as e:
             MessageAlertWritingFailed(self.xmlfile, e)
 
