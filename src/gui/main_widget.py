@@ -4,7 +4,16 @@
 from os import path
 from sys import platform
 
-from PySide6.QtCore import QByteArray, QFileInfo, QMetaObject, QRect, QSize, Qt, QThread, Signal
+from PySide6.QtCore import (
+    QByteArray,
+    QFileInfo,
+    QMetaObject,
+    QRect,
+    QSize,
+    Qt,
+    QThread,
+    Signal,
+)
 from PySide6.QtGui import QAction, QActionGroup, QCursor, QResizeEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -923,7 +932,7 @@ class CustomMainWidget(QWidget):
                 if platform == "win32" or platform == "cygwin":
                     subprocess.Popen([gamepath], cwd=directory)
                 else:
-                    MessageUnsupportedOSAction(translate("MainWindow", "Please run the game through Steam."))
+                    openUrl("steam://rungameid/292030")
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -1445,7 +1454,10 @@ class CustomMainWidget(QWidget):
         self.textEdit.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
         self.scriptMergerButton.setText(translate("MainWindow", "Run Script Merger"))
-        self.runGameButton.setText(translate("MainWindow", "Run the Game") + " (" + data.config.graphicsapi + ")")
+        launchLabel = data.config.graphicsapi
+        if platform != "win32" and platform != "cygwin" and not data.config.gamelaunchcommand:
+            launchLabel = "Steam"
+        self.runGameButton.setText(translate("MainWindow", "Run the Game") + " (" + launchLabel + ")")
         self.toolBar.setWindowTitle(translate("MainWindow", "toolBar"))
 
         self.actionInstall_Mods.setText(translate("MainWindow", "Install Mods"))
