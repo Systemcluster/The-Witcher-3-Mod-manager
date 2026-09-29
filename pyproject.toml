@@ -37,3 +37,7 @@ dev = ["pylint", "mypy", "cx-freeze", "autopep8", "lief"]
 [tool.pdm.scripts]
 start = "python -m main"
 build-win = "python setup.py build_exe"
+
+# Add this block to force source-only installation:
+[tool.pdm.resolution]
+no-binary = ["charset-normalizer"]
