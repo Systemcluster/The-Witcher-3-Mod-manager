@@ -260,29 +260,38 @@ class Installer:
             return (False, False)
 
     def removeModData(self, mod):
-        '''Removes mod data'''
+        '''Removes mod data, including folders left behind while the mod was disabled'''
         if not data.config.mods or not path.exists(data.config.mods):
             return
         for file in mod.files:
-            if path.exists(data.config.mods + "/" + file):
-                removeDirectory(data.config.mods + "/" + file)
+            self._removeInstalledDirectory(data.config.mods, file)
 
     def removeModDlcs(self, mod):
-        '''Removes dlc data'''
+        '''Removes dlc data, including folders left behind while the mod was disabled'''
         if not data.config.dlc or not path.exists(data.config.dlc):
             return
         for dlc in mod.dlcs:
-            if path.exists(data.config.dlc + "/" + dlc):
-                removeDirectory(data.config.dlc + "/" + dlc)
+            self._removeInstalledDirectory(data.config.dlc, dlc)
+
+    @staticmethod
+    def _removeInstalledDirectory(base: str, name: str) -> None:
+        for installed in (name, "~" + name):
+            target = path.join(base, installed)
+            if path.exists(target):
+                removeDirectory(target)
 
     def removeModMenus(self, mod):
         '''Removes menu data'''
         if not data.config.menu or not path.exists(data.config.menu):
             return
         for menu in mod.menus:
-            if path.exists(data.config.menu + "/" + menu):
+            disabled = menu if menu.endswith(".disabled") else menu + ".disabled"
+            for installed in (menu, disabled):
+                target = path.join(data.config.menu, installed)
+                if not path.exists(target):
+                    continue
                 if menu in ("audio.xml", "display.xml", "dx11filelist.txt", "dx12filelist.txt", "gameplay.xml", "gamma.xml", "graphics.xml", "graphicsdx11.xml", "hidden.xml", "hud.xml", "input.xml", "localization.xml", "postprocess.xml", "rendering.xml"):
                     self.output(translate("MainWindow", "Note: Additions to ") +
                                 menu + translate("MainWindow", " will not be removed."))
-                else:
-                    remove(data.config.menu + "/" + menu)
+                    break
+                remove(target)
