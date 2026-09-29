@@ -163,29 +163,34 @@ class Mod:
                     self.priority = data.config.getPriority(filedata)
 
     def installMenus(self):
-        if (data.config.gameversion == "ng" and self.menus):
-            with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
-                text = userfile.read()
-            for menu in iter(self.menus):
-                menu_line = menu + ";"
-                if (menu_line not in text):
-                    text = text + '\n' + menu_line
-            with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
-                text = text.replace('\n\n', '\n')
-                userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
-            with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
-                text = userfile.read()
-            for menu in iter(self.menus):
-                menu_line = menu + ";"
-                if (menu_line not in text):
-                    text = text + '\n' + menu_line
-            with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
-                text = text.replace('\n\n', '\n')
-                userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
+        if (data.config.gameversion in ("ng", "re") and self.menus):
+            dx11_filelist = data.config.menu + "/dx11filelist.txt"
+            if path.exists(dx11_filelist):
+                with open(dx11_filelist, 'r', encoding=detectEncoding(dx11_filelist)) as userfile:
+                    text = userfile.read()
+                for menu in iter(self.menus):
+                    menu_line = menu + ";"
+                    if (menu_line not in text):
+                        text = text + '\n' + menu_line
+                with open(dx11_filelist, 'w', encoding="utf-16") as userfile:
+                    text = text.replace('\n\n', '\n')
+                    userfile.write(text)
+                    userfile.flush()
+                    os.fsync(userfile.fileno())
+
+            dx12_filelist = data.config.menu + "/dx12filelist.txt"
+            if path.exists(dx12_filelist):
+                with open(dx12_filelist, 'r', encoding=detectEncoding(dx12_filelist)) as userfile:
+                    text = userfile.read()
+                for menu in iter(self.menus):
+                    menu_line = menu + ";"
+                    if (menu_line not in text):
+                        text = text + '\n' + menu_line
+                with open(dx12_filelist, 'w', encoding="utf-16") as userfile:
+                    text = text.replace('\n\n', '\n')
+                    userfile.write(text)
+                    userfile.flush()
+                    os.fsync(userfile.fileno())
 
     def installXmlKeys(self):
         if (self.xmlkeys):
@@ -216,7 +221,7 @@ class Mod:
                 os.fsync(userfile.fileno())
 
     def uninstallMenus(self):
-        if (data.config.gameversion == "ng" and self.menus):
+        if (data.config.gameversion in ("ng", "re") and self.menus):
             if path.exists(data.config.menu + "/dx11filelist.txt"):
                 with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
                     text = userfile.read()
@@ -345,7 +350,7 @@ class Mod:
         if self.usersettings:
             added = self.installUserSettingsToFile("user.settings")
 
-            if data.config.gameversion == "ng":
+            if data.config.gameversion in ("ng", "re"):
                 dx12AdditionCount = self.installUserSettingsToFile(
                     "dx12user.settings")
                 if added != dx12AdditionCount:
@@ -375,7 +380,7 @@ class Mod:
         if self.usersettings:
             self.uninstallUserSettingsFromFile("user.settings")
 
-            if data.config.gameversion == "ng":
+            if data.config.gameversion in ("ng", "re"):
                 self.uninstallUserSettingsFromFile("dx12user.settings")
 
     def uninstallUserSettingsFromFile(self, fileName):

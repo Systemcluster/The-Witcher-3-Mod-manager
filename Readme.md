@@ -1,8 +1,10 @@
 # The Witcher 3 Mod Manager
 
-Mod Manager for The Witcher 3.
+**Mod Manager for The Witcher 3.**
 
-Supports the Steam and GOG releases on Windows and the Steam Proton release on Linux.
+Supports the Steam and GOG releases on Windows, the Steam Proton release on Linux, and the Steam release on macOS.
+
+Works with Witcher 3 Original, Next Generation, and Remastered.
 
 ## Description
 
