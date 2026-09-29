@@ -94,7 +94,7 @@ class Model:
         self.write()
 
     def rename(self, modname: str, newname: str) -> bool:
-        if not modname in self.modList:
+        if modname not in self.modList or not newname:
             return False
         mod = self.modList[modname]
         del self.modList[modname]

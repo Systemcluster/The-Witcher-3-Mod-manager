@@ -533,9 +533,10 @@ class CustomMainWidget(QWidget):
                         QLineEdit.EchoMode.Normal,
                         oldname,
                     )
-                    if ok:
-                        self.model.rename(oldname, newname)
+                    if ok and self.model.rename(oldname, newname):
                         renamed += 1
+                    elif ok:
+                        self.output(translate("MainWindow", "Couldn't rename") + " " + oldname)
                 if renamed:
                     self.refreshList()
             except Exception as err:
