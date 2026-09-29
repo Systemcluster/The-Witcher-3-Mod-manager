@@ -88,7 +88,7 @@ class Configuration:
         if gamePath:
             correctGamePath = self.getCorrectGamePath(gamePath)
             if correctGamePath:
-                self.game = correctGamePath
+                self.gameexe = correctGamePath
             else:
                 print(
                     f'game path override {gamePath} is invalid, starting with existing configuration')
@@ -253,17 +253,18 @@ class Configuration:
 
     @property
     def gameversion(self):
-        if path.exists(self.game + "/bin/x64_dx12"):
+        # Remastered drops bin/x64 entirely. Next-gen and classic still ship it.
+        if path.isdir(self.game + "/bin/x64_dx12") and not path.isdir(self.game + "/bin/x64"):
+            return "re"
+        if path.isdir(self.game + "/bin/x64_dx12"):
             return "ng"
-        else:
-            return "og"
+        return "og"
 
     @property
     def graphicsapi(self):
-        if "x64_dx12" in self.gameexe:
+        if "x64_dx12" in self.gameexe.replace('\\', '/'):
             return "dx12"
-        else:
-            return "dx11"
+        return "dx11"
 
     @property
     def allowpopups(self):
@@ -382,17 +383,36 @@ class Configuration:
 
     @staticmethod
     def getCorrectGamePath(gameExePath: Union[str, None]) -> str:
-        '''Checks and corrects game path'''
+        '''Checks and corrects game path.
+
+        Accepts witcher3.exe from classic/next-gen bin/x64 or bin/x64_dx12,
+        and from the remastered edition which only ships bin/x64_dx12.
+        A game directory may also be given; the installed exe is then selected.
+        '''
         if not gameExePath:
             return ''
-        _, ext = path.splitext(gameExePath)
-        gameDirectory = gameExePath
-        if ext == '.exe':
+        normalized = util.normalizePath(gameExePath)
+        _, ext = path.splitext(normalized)
+        gameDirectory = normalized
+        if ext.lower() == '.exe':
             for _ in range(3):
                 gameDirectory, _ = path.split(gameDirectory)
-        return util.normalizePath(gameExePath) if path.exists(gameDirectory) \
-            and path.exists(gameDirectory + '/content') \
-            and path.isfile(gameDirectory + '/bin/x64/witcher3.exe') else ''
+        if not path.isdir(gameDirectory) or not path.isdir(gameDirectory + '/content'):
+            return ''
+
+        dx11 = gameDirectory + '/bin/x64/witcher3.exe'
+        dx12 = gameDirectory + '/bin/x64_dx12/witcher3.exe'
+        if ext.lower() == '.exe':
+            selected = path.basename(normalized).lower()
+            parent = path.basename(path.dirname(normalized)).lower()
+            if selected == 'witcher3.exe' and parent in ('x64', 'x64_dx12') and path.isfile(normalized):
+                return normalized
+            return ''
+        if path.isfile(dx12):
+            return util.normalizePath(dx12)
+        if path.isfile(dx11):
+            return util.normalizePath(dx11)
+        return ''
 
     @staticmethod
     def verifyInternalPath(internalPath: str | None, create: bool = False) -> str | None:
