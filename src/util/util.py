@@ -1,5 +1,4 @@
 '''Global Helpers'''
-# pylint: disable=invalid-name,superfluous-parens,missing-docstring,wildcard-import,unused-wildcard-import,import-outside-toplevel
 
 import os
 import re
@@ -20,8 +19,14 @@ from PySide6.QtCore import QStandardPaths, QTimer
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 
+class CaseSensitiveConfigParser(ConfigParser):
+    def optionxform(self, optionstr: str) -> str:
+        return optionstr
+
+
 def formatUserError(error: Exception) -> str:
     from src.globals import data
+
     print(traceback.format_exc(), error, file=sys.stderr)
     if data.debug:
         return traceback.format_exc() + str(error)
@@ -31,38 +36,51 @@ def formatUserError(error: Exception) -> str:
 
 def getDocumentsFolder() -> str:
     from src.globals.constants import translate
+
     path = ""
-    if platform == "win32" or platform == "cygwin":
+    if sys.platform == "win32" or sys.platform == "cygwin":
         from ctypes import create_unicode_buffer, windll, wintypes
+
         buf = create_unicode_buffer(wintypes.MAX_PATH)
         windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
         path = normalizePath(buf.value)
     elif platform == "linux" or platform == "darwin":
         # try steam proton documents path default (1)
-        path = normalizePath(os.path.expanduser(
-            "~/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"))
+        path = normalizePath(
+            os.path.expanduser(
+                "~/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"
+            )
+        )
         if not path or not os.path.exists(path):
             # try steam proton documents path default (2)
-            path = normalizePath(os.path.expanduser(
-                "~/.steam/steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"))
+            path = normalizePath(
+                os.path.expanduser(
+                    "~/.steam/steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"
+                )
+            )
         if not path or not os.path.exists(path):
             # try steam proton documents path on steam deck internal storage
             path = normalizePath(
-                "/home/deck/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents")
+                "/home/deck/.local/share/Steam/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"
+            )
         if not path or not os.path.exists(path):
             # try steam proton documents path on steam deck sd card
             path = normalizePath(
-                "/run/media/mmcblk0p1/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents")
+                "/run/media/mmcblk0p1/steamapps/compatdata/292030/pfx/drive_c/users/steamuser/My Documents"
+            )
         if not path or not os.path.exists(path):
-            path = QStandardPaths.writableLocation(
-                QStandardPaths.StandardLocation.DocumentsLocation)
+            path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
     else:
         from src.gui.alerts import MessageUnsupportedOS
+
         MessageUnsupportedOS(platform)
         sys.exit(1)
     if not path or not os.path.exists(path):
-        dialog = QFileDialog(None, translate(
-            "MainWindow", "Select \"My Documents\" directory containing the Witcher 3 config directory"), "My Documents")
+        dialog = QFileDialog(
+            None,
+            translate("MainWindow", 'Select "My Documents" directory containing the Witcher 3 config directory'),
+            "My Documents",
+        )
         dialog.setFileMode(QFileDialog.FileMode.Directory)
         if dialog.exec():
             path = normalizePath(str(dialog.selectedFiles()[0]))
@@ -77,12 +95,16 @@ def getConfigFolder() -> str:
         path = normalizePath(os.path.expanduser("~/.config"))
     if not path or path == "":
         from src.gui.alerts import MessageUnsupportedOS
+
         MessageUnsupportedOS(platform)
         sys.exit(1)
     path = path + '/' + getConfigFolderName()
     if not os.path.exists(path):
-        path = QStandardPaths.writableLocation(
-            QStandardPaths.StandardLocation.GenericConfigLocation) + '/' + getConfigFolderName()
+        path = (
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.GenericConfigLocation)
+            + "/"
+            + getConfigFolderName()
+        )
     return path
 
 
@@ -94,6 +116,7 @@ def getConfigFolderName() -> str:
 
 def getVersionString() -> str:
     from src.globals.constants import TITLE, VERSION
+
     return TITLE + " " + VERSION
 
 
@@ -102,7 +125,7 @@ def getProgramRootFolder() -> str:
         # The application is frozen
         return normalizePath(os.path.dirname(sys.executable))
     else:
-        return normalizePath(os.path.dirname(os.path.abspath(__file__))+"/../../")
+        return normalizePath(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
 
 def normalizePath(path: str) -> str:
@@ -113,25 +136,28 @@ def reconfigureGamePath() -> bool:
     from src.globals import data
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfigured
+
     MessageNotConfigured()
     dialog = QFileDialog(
         None,
         translate("MainWindow", "Select witcher3.exe"),
-        data.config.gameexe or "witcher3.exe",
-        "witcher3.exe (witcher3.exe);;Executables (*.exe)")
-    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
+        data.getConfig().gameexe or "witcher3.exe",
+        "witcher3.exe (witcher3.exe);;Executables (*.exe)",
+    )
+    if data.getConfig().get("SETTINGS", "usenativedialog", "1") != "1":
         dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
     if dialog.exec():
         gamePath = normalizePath(str(dialog.selectedFiles()[0]))
         try:
-            data.config.gameexe = gamePath
+            data.getConfig().gameexe = gamePath
         except ValueError as err:
             print(str(err), file=sys.stderr)
             QMessageBox.critical(
                 None,
                 translate("MainWindow", "Selected file not correct"),
                 translate("MainWindow", "'witcher3.exe' file not selected"),
-                QMessageBox.StandardButton.Ok)
+                QMessageBox.StandardButton.Ok,
+            )
             return False
         return True
     return False
@@ -141,33 +167,47 @@ def reconfigureScriptMergerPath():
     from src.globals import data
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfiguredScriptMerger
+
     MessageNotConfiguredScriptMerger()
     dialog = QFileDialog(
-        None,
-        translate("MainWindow", "Select WitcherScriptMerger.exe"),
-        data.config.scriptmerger or '',
-        "*.exe")
-    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
+        None, translate("MainWindow", "Select WitcherScriptMerger.exe"), data.getConfig().scriptmerger or "", "*.exe"
+    )
+    if data.getConfig().get("SETTINGS", "usenativedialog", "1") != "1":
         dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)
     if dialog.exec():
         mergerPath = normalizePath(str(dialog.selectedFiles()[0]))
         if mergerPath:
-            data.config.scriptmerger = mergerPath
+            data.getConfig().scriptmerger = mergerPath
 
 
 def showAboutWindow():
     from src.globals.constants import AUTHORS, TITLE, VERSION, translate
+
     QMessageBox.about(
         None,
         translate("MainWindow", "About"),
-        ""+TITLE+"\n" +
-        translate("MainWindow", "Version: ")+VERSION+"\n\n" +
-        translate("MainWindow", "Authors: ")+(", ".join(AUTHORS))+"\n" +
-        "\n" +
-        translate("MainWindow", "Written in: ")+"Python "+python_version()+"\n" +
-        translate("MainWindow", "GUI: PySide6 ")+__version__+"\n" +
-        "\n" +
-        translate("MainWindow", "Thank you for using ")+TITLE+translate("MainWindow", "!"))
+        ""
+        + TITLE
+        + "\n"
+        + translate("MainWindow", "Version: ")
+        + VERSION
+        + "\n\n"
+        + translate("MainWindow", "Authors: ")
+        + (", ".join(AUTHORS))
+        + "\n"
+        + "\n"
+        + translate("MainWindow", "Written in: ")
+        + "Python "
+        + python_version()
+        + "\n"
+        + translate("MainWindow", "GUI: PySide6 ")
+        + __version__
+        + "\n"
+        + "\n"
+        + translate("MainWindow", "Thank you for using ")
+        + TITLE
+        + translate("MainWindow", "!"),
+    )
 
 
 def openUrl(url: str):
@@ -176,6 +216,7 @@ def openUrl(url: str):
 
 def openFile(path: str):
     from src.gui.alerts import MessageCouldntOpenFile
+
     try:
         if isExecutable(path):
             directory, _ = os.path.split(path)
@@ -193,11 +234,13 @@ def openFile(path: str):
                         subprocess.Popen([editor, path])
                     else:
                         webbrowser.open(path, new=1)
-            else:
+            elif sys.platform == "win32" or sys.platform == "cygwin":
                 try:
                     os.startfile(path)
                 except Exception:
                     webbrowser.open(path, new=1)
+            else:
+                webbrowser.open(path, new=1)
         elif os.path.isdir(path):
             openFolder(path)
         else:
@@ -217,16 +260,17 @@ def openFolder(path: str):
                 subprocess.Popen(["open", path])
         except OSError:
             webbrowser.open(path, new=1)
-    else:
+    elif sys.platform == "win32" or sys.platform == "cygwin":
         os.startfile(path, "explore")
+    else:
+        webbrowser.open(path, new=1)
 
 
 def copyFolder(src, dst):
     '''Copy folder from src to dst'''
     dst = os.path.normpath(dst)
     src = os.path.normpath(src)
-    print(
-        f'copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})')
+    print(f"copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})")
     removeDirectory(dst)
     waitForDirectoryRemoval(dst)
     copytree(src, dst)
@@ -235,8 +279,10 @@ def copyFolder(src, dst):
 def removeDirectory(directory: str) -> None:
     def getWriteAccess(func: Callable, directory: str, exc_info: Any) -> None:
         import stat
+
         os.chmod(directory, stat.S_IWRITE)
         func(directory)
+
     if os.path.isdir(directory):
         rmtree(directory, onerror=getWriteAccess)
 
@@ -244,19 +290,20 @@ def removeDirectory(directory: str) -> None:
 def waitForDirectoryRemoval(directory: str, timeout: float = 30.0) -> None:
     '''Wait until a directory is removed, up to {timeout} seconds.'''
     import time
+
     deadline = time.monotonic() + timeout
     while os.path.isdir(directory):
         if time.monotonic() > deadline:
-            raise TimeoutError(
-                f"Timed out waiting for '{directory}' to be removed")
+            raise TimeoutError(f"Timed out waiting for '{directory}' to be removed")
         time.sleep(0.05)
 
 
 def restartProgram():
     '''Restarts the program'''
     from src.globals import data
-    data.config.write_priority().join()
-    data.config.write_config().join()
+
+    data.getConfig().write_priority().join()
+    data.getConfig().write_config().join()
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
@@ -265,11 +312,12 @@ def getFile(parent=None, directory="", extensions="", title=None) -> list[str]:
     '''Opens custom dialog for selecting multiple folders or files'''
     from src.globals import data
     from src.globals.constants import translate
+
     if title is None:
         title = translate("MainWindow", "Select Files or Folders")
     dialog = QFileDialog(parent, title, directory, extensions)
     dialog_options = QFileDialog.Option.ReadOnly | QFileDialog.Option.HideNameFilterDetails
-    if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
+    if data.getConfig().get("SETTINGS", "usenativedialog", "1") != "1":
         dialog_options |= QFileDialog.Option.DontUseNativeDialog
     dialog.setOptions(dialog_options)
     dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
@@ -314,11 +362,12 @@ def isExecutable(name: str) -> bool:
 
 def translateToChosenLanguage() -> bool:
     from src.globals import data
-    language = data.config.language
-    if (language and os.path.exists(getProgramRootFolder() + "/translations/" + language)):
+
+    language = data.getConfig().language
+    if language and os.path.exists(getProgramRootFolder() + "/translations/" + language):
         print("loading translation", language)
         data.translator.load("translations/" + language)
-        if not data.app.installTranslator(data.translator):
+        if not data.getApp().installTranslator(data.translator):
             print("loading translation failed", file=sys.stderr)
             return False
         return True
@@ -329,19 +378,22 @@ def translateToChosenLanguage() -> bool:
 
 def detectEncoding(path: str) -> str:
     import charset_normalizer
+
     if os.path.exists(path):
         try:
             with open(path, 'rb') as file:
                 # only sample the start of the file for encoding detection
                 text = file.read(4 * 1024 * 1024)
-                detected = charset_normalizer.detect(
-                    text, should_rename_legacy=True)
+                detected = charset_normalizer.detect(text, should_rename_legacy=True)
                 print("detected", path, "as", detected)
                 if detected and "encoding" in detected:
                     if detected["encoding"] == "ascii":
                         return "utf-8"
-                    if detected["confidence"] is not None and detected["encoding"] is not None \
-                            and float(detected["confidence"]) > 0.5:
+                    if (
+                        detected["confidence"] is not None
+                        and detected["encoding"] is not None
+                        and float(detected["confidence"]) > 0.5
+                    ):
                         return str(detected["encoding"].replace("_", "-"))
         except OSError:
             pass
@@ -353,10 +405,10 @@ def detectEncoding(path: str) -> str:
 def fixUserSettingsDuplicateBrackets():
     '''Fix invalid section names in user.settings'''
     from src.globals import data
-    settingsPath = data.config.settings + "/user.settings"
+
+    settingsPath = data.getConfig().settings + "/user.settings"
     try:
-        config = ConfigParser(strict=False)
-        config.optionxform = str
+        config = CaseSensitiveConfigParser(strict=False)
         config.read(settingsPath, encoding=detectEncoding(settingsPath))
         for section in config.sections():
             newSection = section
@@ -394,18 +446,22 @@ def throttle(ms: int):
                 last_modified = datetime.now()
                 return f(*args, **kwargs)
             return None
+
         return wrapped
+
     return decorate
 
 
 def debounce(ms: int) -> Callable[[Callable[..., None]], Callable[..., Timer]]:
     """Debounce a functions execution by {ms} milliseconds"""
+
     def decorator(fun: Callable[..., None]) -> Callable[..., Timer]:
-        timer_attr = f'_debounce_timer_{fun.__name__}'
+        timer_attr = f"_debounce_timer_{fun.__name__}"
 
         def debounced(*args: Any, **kwargs: Any) -> Timer:
             def deferred():
                 fun(*args, **kwargs)
+
             owner = args[0] if args else debounced
             try:
                 getattr(owner, timer_attr).cancel()
@@ -415,15 +471,18 @@ def debounce(ms: int) -> Callable[[Callable[..., None]], Callable[..., Timer]]:
             setattr(owner, timer_attr, timer)
             timer.start()
             return timer
+
         return debounced
+
     return decorator
 
 
-def debounceGui(ms: int) -> Callable[[Callable[..., None]], Callable[..., Any]]:
+def debounceGui(ms: int) -> Callable[[Callable[..., object]], Callable[..., QTimer]]:
     """Debounce a methods execution by {ms} milliseconds using QTimer"""
-    def decorator(fun: Callable[..., None]) -> Callable[..., Any]:
-        timer_attr = f'_debounce_qtimer_{fun.__name__}'
-        pending_attr = f'_debounce_pending_{fun.__name__}'
+
+    def decorator(fun: Callable[..., object]) -> Callable[..., QTimer]:
+        timer_attr = f"_debounce_qtimer_{fun.__name__}"
+        pending_attr = f"_debounce_pending_{fun.__name__}"
 
         def debounced(self: Any, *args: Any, **kwargs: Any) -> QTimer:
             setattr(self, pending_attr, (args, kwargs))
@@ -433,12 +492,14 @@ def debounceGui(ms: int) -> Callable[[Callable[..., None]], Callable[..., Any]]:
                 timer.setSingleShot(True)
 
                 def fire():
-                    pending_args, pending_kwargs = getattr(
-                        self, pending_attr, ((), {}))
+                    pending_args, pending_kwargs = getattr(self, pending_attr, ((), {}))
                     fun(self, *pending_args, **pending_kwargs)
+
                 timer.timeout.connect(fire)
                 setattr(self, timer_attr, timer)
             timer.start(ms)
             return timer
+
         return debounced
+
     return decorator

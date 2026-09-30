@@ -35,9 +35,7 @@ class ConfigurationPathTests(unittest.TestCase):
                     self.assertEqual(Configuration.getGameRoot(exe), normalizePath(root))
 
     def test_game_version_falls_back_to_installed_renderers(self):
-        for directories, expected in ((('x64',), 'og'),
-                                      (('x64', 'x64_dx12'), 'ng'),
-                                      (('x64_dx12',), 're')):
+        for directories, expected in ((("x64",), "og"), (("x64", "x64_dx12"), "ng"), (("x64_dx12",), "re")):
             with self.subTest(directories=directories), tempfile.TemporaryDirectory() as root:
                 os.makedirs(os.path.join(root, 'content'))
                 for directory in directories:
@@ -47,8 +45,7 @@ class ConfigurationPathTests(unittest.TestCase):
                         pass
                 config = Configuration.__new__(Configuration)
                 config.config = configparser.ConfigParser()
-                config.config['PATHS'] = {
-                    'gameexe': os.path.join(root, 'bin', directories[0], 'witcher3.exe')}
+                config.config["PATHS"] = {"gameexe": os.path.join(root, "bin", directories[0], "witcher3.exe")}
                 self.assertEqual(config.gameversion, expected)
 
     def test_edition_and_store_use_launcher_metadata(self):
@@ -66,8 +63,9 @@ class ConfigurationPathTests(unittest.TestCase):
             for store in ('steam', 'gog'):
                 with self.subTest(store=store):
                     with open(os.path.join(root, 'launcher-configuration.json'), 'w', encoding='utf-8') as file:
-                        json.dump({'gameId': 'witcher3', 'platform': store,
-                                   'editions': [{'name': 'remasteredEdition'}]}, file)
+                        json.dump(
+                            {"gameId": "witcher3", "platform": store, "editions": [{"name": "remasteredEdition"}]}, file
+                        )
                     self.assertEqual(config.gameversion, 're')
                     self.assertEqual(config.steam, store == 'steam')
                     self.assertEqual(config.usersettings, 'dx12user.settings')
@@ -76,8 +74,9 @@ class ConfigurationPathTests(unittest.TestCase):
         config = Configuration.__new__(Configuration)
         config.config = configparser.ConfigParser()
         for exe, expected in (
-                ('/games/x64_dx12 backup/bin/x64/witcher3.exe', 'dx11'),
-                ('C:\\Games\\bin\\X64_DX12\\WITCHER3.EXE', 'dx12')):
+            ('/games/x64_dx12 backup/bin/x64/witcher3.exe', 'dx11'),
+            ("C:\\Games\\bin\\X64_DX12\\WITCHER3.EXE", "dx12"),
+        ):
             with self.subTest(exe=exe):
                 config.config['PATHS'] = {'gameexe': exe}
                 self.assertEqual(config.graphicsapi, expected)
@@ -92,8 +91,13 @@ class ConfigurationPathTests(unittest.TestCase):
             config = Configuration.__new__(Configuration)
             config.config = configparser.ConfigParser()
             config.config['PATHS'] = {'gameexe': str(exe)}
-            for text in ('{', 'null', '[]', '{"gameId":"other","platform":"steam"}',
-                         '{"gameId":"witcher3","editions":null}'):
+            for text in (
+                "{",
+                "null",
+                "[]",
+                '{"gameId":"other","platform":"steam"}',
+                '{"gameId":"witcher3","editions":null}',
+            ):
                 with self.subTest(text=text):
                     (root / 'launcher-configuration.json').write_text(text, encoding='utf-8')
                     self.assertEqual(config.gameversion, 're')
@@ -112,8 +116,9 @@ class ConfigurationPathTests(unittest.TestCase):
             config.config = configparser.ConfigParser()
             config.config['PATHS'] = {'gameexe': str(exe)}
             self.assertTrue(config.steam)
-            (root / 'launcher-configuration.json').write_text(
-                '{"gameId":"witcher3","platform":"gog"}', encoding='utf-8')
+            (root / "launcher-configuration.json").write_text(
+                '{"gameId":"witcher3","platform":"gog"}', encoding="utf-8"
+            )
             self.assertFalse(config.steam)
 
     def test_fresh_configuration_and_game_path_override(self):
@@ -160,9 +165,11 @@ class ConfigurationPathTests(unittest.TestCase):
             exe.touch()
             config = Configuration.__new__(Configuration)
             config.config = configparser.ConfigParser()
-            with patch('src.globals.data.config', config), \
-                    patch('src.gui.alerts.MessageNotConfigured'), \
-                    patch('src.util.util.QFileDialog') as dialog:
+            with (
+                patch("src.globals.data.config", config),
+                patch("src.gui.alerts.MessageNotConfigured"),
+                patch("src.util.util.QFileDialog") as dialog,
+            ):
                 dialog.return_value.exec.return_value = False
                 self.assertFalse(reconfigureGamePath())
                 self.assertIsNone(config.gameexe)
@@ -227,14 +234,13 @@ class ConfigurationUpgradeTests(unittest.TestCase):
             if edition == 'ng':
                 dx12.parent.mkdir()
                 dx12.touch()
-                (game / 'launcher-configuration.json').write_text(json.dumps({
-                    'gameId': 'witcher3', 'platform': 'steam', 'editions': []
-                }), encoding='utf-8')
+                (game / "launcher-configuration.json").write_text(
+                    json.dumps({"gameId": "witcher3", "platform": "steam", "editions": []}), encoding="utf-8"
+                )
 
             selected = dx11 if renderer == 'dx11' else dx12
             saved = configparser.ConfigParser()
-            saved['PATHS'] = {'gameexe': selected.as_posix(), 'documents': str(documents),
-                              'scriptmerger': ''}
+            saved["PATHS"] = {"gameexe": selected.as_posix(), "documents": str(documents), "scriptmerger": ""}
             saved['SETTINGS'] = {'AllowPopups': '1', 'language': 'English.qm'}
             saved['TOOLBAR'] = {}
             config_file = manager / 'config.ini'
@@ -245,8 +251,7 @@ class ConfigurationUpgradeTests(unittest.TestCase):
             self.assertEqual(config.gameversion, edition)
             self.assertEqual(config.graphicsapi, renderer)
             self.assertEqual(config.gameexe, selected.as_posix())
-            self.assertEqual(config.usersettings,
-                             'user.settings' if renderer == 'dx11' else 'dx12user.settings')
+            self.assertEqual(config.usersettings, "user.settings" if renderer == "dx11" else "dx12user.settings")
             self.assertEqual(config.mods, str(game / 'Mods'))
             self.assertEqual(config.dlc, str(game / 'DLC'))
 
@@ -254,15 +259,24 @@ class ConfigurationUpgradeTests(unittest.TestCase):
             dx11.parent.rmdir()
             dx12.parent.mkdir(exist_ok=True)
             dx12.touch()
-            (game / 'launcher-configuration.json').write_text(json.dumps({
-                'gameId': 'witcher3', 'platform': 'steam',
-                'editions': [{'name': 'remasteredEdition'}],
-                'executables': [{'description': 'DirectX 12', 'executable': {
-                    'directoryPath': 'bin\\x64_dx12', 'fileName': 'witcher3.exe'}}]
-            }), encoding='utf-8')
+            (game / "launcher-configuration.json").write_text(
+                json.dumps(
+                    {
+                        "gameId": "witcher3",
+                        "platform": "steam",
+                        'editions': [{'name': 'remasteredEdition'}],
+                        "executables": [
+                            {
+                                "description": "DirectX 12",
+                                "executable": {"directoryPath": "bin\\x64_dx12", "fileName": "witcher3.exe"},
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
 
-            for state, current in (('running', config),
-                                   ('restarted', Configuration(configPath=str(manager)))):
+            for state, current in (("running", config), ("restarted", Configuration(configPath=str(manager)))):
                 with self.subTest(state=state):
                     self.assertEqual(current.gameversion, 're')
                     self.assertEqual(current.gameexe, dx12.as_posix())
@@ -282,17 +296,17 @@ class ConfigurationUpgradeTests(unittest.TestCase):
                 dx12.parent.rmdir()
                 (game / 'launcher-configuration.json').unlink()
             else:
-                (game / 'launcher-configuration.json').write_text(json.dumps({
-                    'gameId': 'witcher3', 'platform': 'steam', 'editions': []
-                }), encoding='utf-8')
-            for state, current in (('running', config),
-                                   ('restarted', Configuration(configPath=str(manager)))):
+                (game / "launcher-configuration.json").write_text(
+                    json.dumps({"gameId": "witcher3", "platform": "steam", "editions": []}), encoding="utf-8"
+                )
+            for state, current in (("running", config), ("restarted", Configuration(configPath=str(manager)))):
                 with self.subTest(state=state, phase='rollback'):
                     self.assertEqual(current.gameversion, edition)
                     self.assertEqual(current.gameexe, selected.as_posix())
                     self.assertEqual(current.graphicsapi, renderer)
-                    self.assertEqual(current.usersettings,
-                                     'user.settings' if renderer == 'dx11' else 'dx12user.settings')
+                    self.assertEqual(
+                        current.usersettings, "user.settings" if renderer == "dx11" else "dx12user.settings"
+                    )
                     self.assertEqual(current.steam, edition == 'ng')
                     self.assertEqual(current.config, saved)
             self.assertEqual(config_file.read_bytes(), original_bytes)

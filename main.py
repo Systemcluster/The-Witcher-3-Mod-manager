@@ -1,5 +1,4 @@
 '''Witcher 3 Mod Manager main module'''
-# pylint: disable=invalid-name,missing-docstring,bare-except,broad-except,wildcard-import,unused-wildcard-import
 
 import sys
 from argparse import ArgumentParser
@@ -26,10 +25,9 @@ if __name__ == "__main__":
         # log and show uncaught exceptions
         def _logUncaughtException(exc_type, exc_value, exc_traceback):
             import traceback
-            tb_text = "".join(traceback.format_exception(
-                exc_type, exc_value, exc_traceback))
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stderr)
+
+            tb_text = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
             msg = QMessageBox(None)
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.setWindowTitle("Unexpected Error")
@@ -37,6 +35,7 @@ if __name__ == "__main__":
             msg.setDetailedText(tb_text)
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
+
         sys.excepthook = _logUncaughtException
 
         documentsPath: str = ''
@@ -45,23 +44,27 @@ if __name__ == "__main__":
         try:
             parser = ArgumentParser(description=getVersionString())
             parser.add_argument(
-                "-d", "--debug", dest="debug", action="store_true", default=False,
-                help="show debug information on errors")
-            parser.add_argument(
-                "-v", "--version", dest="version", action="store_true", default=False,
-                help="show version information and exit")
-            dirs = parser.add_argument_group(
-                title='start overrides'
+                "-d",
+                "--debug",
+                dest="debug",
+                action="store_true",
+                default=False,
+                help="show debug information on errors",
             )
+            parser.add_argument(
+                "-v",
+                "--version",
+                dest="version",
+                action="store_true",
+                default=False,
+                help="show version information and exit",
+            )
+            dirs = parser.add_argument_group(title="start overrides")
             dirs.add_argument(
-                "-u", "--userdocuments", dest="userdocuments", type=str, default="",
-                help="override the documents path")
-            dirs.add_argument(
-                "-g", "--game", dest="game", type=str, default="",
-                help="override the game path")
-            dirs.add_argument(
-                "-c", "--config", dest="config", type=str, default="",
-                help="override the config path")
+                "-u", "--userdocuments", dest="userdocuments", type=str, default="", help="override the documents path"
+            )
+            dirs.add_argument("-g", "--game", dest="game", type=str, default="", help="override the game path")
+            dirs.add_argument("-c", "--config", dest="config", type=str, default="", help="override the config path")
             args = parser.parse_args()
             data.debug = args.debug
             if args.version:
@@ -128,10 +131,12 @@ if __name__ == "__main__":
         import traceback
 
         from src.util.util import formatUserError
+
         tb_text = traceback.format_exc()
         print(formatUserError(e), file=sys.stderr)
         try:
             from PySide6.QtWidgets import QApplication, QMessageBox
+
             _app = QApplication.instance() or QApplication(sys.argv)
             msg = QMessageBox(None)
             msg.setIcon(QMessageBox.Icon.Critical)
@@ -141,6 +146,5 @@ if __name__ == "__main__":
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
         except Exception as x:
-            print("Failed to show error message: " +
-                  formatUserError(x), file=sys.stderr)
+            print("Failed to show error message: " + formatUserError(x), file=sys.stderr)
         sys.exit(1)

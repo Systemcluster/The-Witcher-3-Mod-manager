@@ -106,10 +106,13 @@ ENV/
 
 # mypy
 .mypy_cache/
+.ruff_cache/
 
 # editor and project files
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # PDM
 .pdm-python

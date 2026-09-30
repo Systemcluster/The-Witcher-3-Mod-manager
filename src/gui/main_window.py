@@ -1,7 +1,7 @@
 '''Main Window'''
-# pylint: disable=invalid-name,wildcard-import,unused-wildcard-import
 
 from PySide6.QtWidgets import QMainWindow
+
 from src.core.fetcher import *
 
 
@@ -28,6 +28,5 @@ class CustomMainWindow(QMainWindow):
     def dropEvent(self, event):
         '''Qt dropEvent override'''
         if self.dropCallback:
-            filelist = list(
-                map(lambda url: url.toLocalFile(), event.mimeData().urls()))
+            filelist = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
             self.dropCallback(filelist)

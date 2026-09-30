@@ -1,11 +1,11 @@
 '''XML Fetcher'''
-# pylint: disable=invalid-name,superfluous-parens,missing-docstring
 
 import re
+import shutil
 import subprocess
+import sys
 from os import listdir, mkdir, path, walk
 from os.path import isfile, join
-from sys import platform
 from typing import List, Tuple
 
 from src.domain.key import Key
@@ -21,8 +21,7 @@ from src.util.util import (
 )
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
-INPUTPATTERN = re.compile(
-    r"\[.+\]\s+(?:(?:IK_.+=\(Action=.+\)|Version=\d+)\s*)*", re.UNICODE)
+INPUTPATTERN = re.compile(r"\[.+\]\s+(?:(?:IK_.+=\(Action=.+\)|Version=\d+)\s*)*", re.UNICODE)
 USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
@@ -32,8 +31,8 @@ def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
         modPath = extractArchive(modPath)
     if isValidModFolder(modPath):
         return fetchModFromDirectory(modPath)
-    raise IOError(
-        "Not detected as a valid mod (manual installation may be required)")
+    raise IOError("Not detected as a valid mod (manual installation may be required)")
+
 
 # tested
 
@@ -41,9 +40,8 @@ def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
 def isValidModFolder(modPath: str) -> bool:
     for current_dir, _, _ in walk(modPath):
         if containContentFolder(current_dir) and (
-                isModFolder(path.split(current_dir)[1], path.split(current_dir)[0]) or
-                isDlcFolder(path.split(current_dir)[
-                            1], path.split(current_dir)[0])
+            isModFolder(path.split(current_dir)[1], path.split(current_dir)[0])
+            or isDlcFolder(path.split(current_dir)[1], path.split(current_dir)[0])
         ):
             return True
     return False
@@ -62,6 +60,7 @@ def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     mod.readmes = mod_readmes
     return mod, mod_dirs, mod_xmls
 
+
 # tested
 
 
@@ -74,8 +73,12 @@ def isModFolder(directory: str, parent: str):
 
 
 def isDlcFolder(directory: str, parent: str):
-    return isDataFolder(directory) and bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or \
-        bool(re.match("^dlc", directory, re.IGNORECASE))
+    return (
+        isDataFolder(directory)
+        and bool(re.match("^dlc[s]?$", parent, re.IGNORECASE))
+        or bool(re.match("^dlc", directory, re.IGNORECASE))
+    )
+
 
 # tested
 
@@ -84,17 +87,20 @@ def containContentFolder(directory: str) -> bool:
     dr = getAllFoldersFromDirectory(directory)
     return "content" in (dr.lower() for dr in dr)
 
+
 # tested
 
 
 def getAllFoldersFromDirectory(directory: str) -> List[str]:
     return [f for f in listdir(directory) if path.isdir(join(directory, f))]
 
+
 # tested
 
 
 def getAllFilesFromDirectory(directory: str) -> List[str]:
     return [f for f in listdir(directory) if isfile(join(directory, f))]
+
 
 # tested
 
@@ -127,8 +133,7 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
                     try:
                         text = file_contents.decode("utf-16")
                     except UnicodeError:
-                        text = file_contents.decode(
-                            detectEncoding(filepath), errors="replace")
+                        text = file_contents.decode(detectEncoding(filepath), errors="replace")
                 if file == "input.xml":
                     text = fetchRelevantDataFromInputXml(text, mod)
                 fetchAllXmlKeys(file, text, mod)
@@ -150,11 +155,13 @@ def fetchReadmes(current_dir: str) -> List[str]:
                 readmes.append(f.read())
     return readmes
 
+
 # tested
 
 
 def isMenuXmlFile(file: str) -> bool:
     return bool(re.match(r".+\.xml$", file) and not re.match(r"^input\.xml$", file, re.IGNORECASE))
+
 
 # tested
 
@@ -174,13 +181,14 @@ def fetchRelevantDataFromInputXml(filetext: str, mod: Mod) -> str:
 
 def getHiddenKeysIfExistFromInputXml(filetext: str, mod: Mod) -> None:
     temp = re.search('id="Hidden".+id="PCInput"', filetext, re.DOTALL)
-    if (temp):
+    if temp:
         hiddentext = temp.group(0)
         hiddentext = removeXmlComments(hiddentext)
         xmlkeys = XMLPATTERN.findall(hiddentext)
         for key in xmlkeys:
             key = removeMultiWhiteSpace(key)
             mod.hidden.append(key)
+
 
 # tested
 
@@ -203,7 +211,7 @@ def fetchInputSettings(filetext: str) -> List[Key]:
     found = []
     filetext = re.sub(r"(\r\n+)|(\n+)", "\n", filetext)
     inputsettings = ''.join(INPUTPATTERN.findall(filetext))
-    if (inputsettings):
+    if inputsettings:
         arr = list(filter(lambda s: s != '', inputsettings.split('\n')))
         context = ''
         empty = True
@@ -227,7 +235,7 @@ def fetchInputSettings(filetext: str) -> List[Key]:
 def fetchUserSettings(filetext: str) -> List[Usersetting]:
     found = []
     usersettings = USERPATTERN.search(filetext)
-    if (usersettings):
+    if usersettings:
         res = re.sub(r"(\r\n+)|(\n+)", "\n", usersettings.group(0))
         arr = filter(lambda s: s != '', str(res).split('\n'))
         context = ''
@@ -250,12 +258,14 @@ def fetchXmlKeys(filetext: str) -> List[str]:
         found.append(key)
     return found
 
+
 # tested
 
 
 def removeMultiWhiteSpace(key: str) -> str:
     key = re.sub(r"\s+", " ", key)
     return key
+
 
 # tested
 
@@ -265,32 +275,31 @@ def isArchive(modPath: str) -> bool:
 
 
 def extractArchive(modPath: str) -> str:
-    extractedDir = normalizePath(data.config.extracted)
+    extractedDir = normalizePath(data.getConfig().extracted)
     modPath = normalizePath(modPath)
-    if (path.exists(extractedDir)):
+    if path.exists(extractedDir):
         removeDirectory(extractedDir)
         waitForDirectoryRemoval(extractedDir)
     mkdir(extractedDir)
-    if platform == "win32" or platform == "cygwin":
+    if sys.platform == "win32" or sys.platform == "cygwin":
         si = subprocess.STARTUPINFO()
         CREATE_NO_WINDOW = 0x08000000
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         exe = getProgramRootFolder() + "/tools/7zip/7z.exe"
         result = subprocess.run(
             [exe, "x", modPath, "-o" + extractedDir, "-y", "-bso0", "-bsp0"],
-            creationflags=CREATE_NO_WINDOW, startupinfo=si,
-            stdin=subprocess.DEVNULL, capture_output=True)
+            creationflags=CREATE_NO_WINDOW,
+            startupinfo=si,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+        )
         if result.returncode != 0:
-            raise IOError(
-                result.stderr.decode(
-                    'utf-8') if result.stderr else 'Could not extract archive'
-            )
+            raise IOError(result.stderr.decode("utf-8") if result.stderr else "Could not extract archive")
     else:
         try:
-            import shutil
             shutil.unpack_archive(modPath, extractedDir)
         except (ValueError, shutil.ReadError):
             import patoolib  # type: ignore
-            patoolib.extract_archive(
-                modPath, outdir=extractedDir, interactive=False)
+
+            patoolib.extract_archive(modPath, outdir=extractedDir, interactive=False)
     return extractedDir

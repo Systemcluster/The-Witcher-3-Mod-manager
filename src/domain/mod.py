@@ -1,16 +1,15 @@
 '''Mod Class'''
-# pylint: disable=invalid-name,wildcard-import,unused-wildcard-import,superfluous-parens,missing-docstring
 
 import re
-from configparser import ConfigParser
 from dataclasses import dataclass, field
 from os import path, rename, walk
 from time import gmtime, strftime
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
 from PySide6.QtWidgets import QMessageBox
 
 from src.domain.key import Key
+from src.domain.usersetting import Usersetting
 from src.globals import data
 from src.globals.constants import translate
 from src.gui.alerts import MessageRebindKeys
@@ -31,8 +30,8 @@ class Mod:
     dlcs: List[str] = field(default_factory=list)
     menus: List[str] = field(default_factory=list)
     xmlkeys: List[str] = field(default_factory=list)
-    usersettings: List[object] = field(default_factory=list)
-    inputsettings: List[object] = field(default_factory=list)
+    usersettings: List[Usersetting] = field(default_factory=list)
+    inputsettings: List[Key] = field(default_factory=list)
     hidden: List[str] = field(default_factory=list)
     readmes: List[str] = field(default_factory=list)
 
@@ -55,21 +54,19 @@ class Mod:
     def priority(self, value: Union[str, int, None]):
         if value is None or not str(value).isdecimal():
             for modfile in iter(self.files):
-                data.config.removePriority(modfile)
+                data.getConfig().removePriority(modfile)
             self._priority = None
         else:
             for filedata in iter(self.files):
-                data.config.setPriority(filedata, str(int(value)))
+                data.getConfig().setPriority(filedata, str(int(value)))
             self._priority = str(int(value))
 
     def increasePriority(self):
-        new_priority = int(self.priority) + \
-            1 if self.priority and self.priority.isdecimal() else 0
+        new_priority = int(self.priority) + 1 if self.priority and self.priority.isdecimal() else 0
         self.priority = new_priority
 
     def decreasePriority(self):
-        new_priority = int(self.priority) - \
-            1 if self.priority and self.priority.isdecimal() else -1
+        new_priority = int(self.priority) - 1 if self.priority and self.priority.isdecimal() else -1
         if new_priority < 0:
             self.priority = None
         else:
@@ -77,7 +74,7 @@ class Mod:
 
     @staticmethod
     def formatName(name: str) -> str:
-        if (re.match("^mod.*", name)):
+        if re.match("^mod.*", name):
             name = name[3:]
 
         length = len(name)
@@ -85,9 +82,9 @@ class Mod:
             length = match.span()[0]
         name = name[0:length]
 
-        if (re.search(r".*\.(zip|rar)$", name)):
+        if re.search(r".*\.(zip|rar)$", name):
             name = name[:-4]
-        elif (re.search(r".*\.7z$", name)):
+        elif re.search(r".*\.7z$", name):
             name = name[:-3]
 
         name = re.sub(r"([a-z]{2,})([A-Z1-9])", r"\1 \2", name)
@@ -99,7 +96,7 @@ class Mod:
 
     def enable(self) -> list[str]:
         incomplete = []
-        if (not self.enabled):
+        if not self.enabled:
             try:
                 self.installXmlKeys()
             except Exception as e:
@@ -111,65 +108,66 @@ class Mod:
                 incomplete.append(translate("MainWindow", "menu xml files"))
                 print("failed to install menus", e)
             for menu in iter(self.menus):
-                if path.exists(data.config.menu + "/" + menu + ".disabled"):
-                    rename(
-                        data.config.menu + "/" + menu + ".disabled",
-                        data.config.menu + "/" + menu)
+                if path.exists(data.getConfig().menu + "/" + menu + ".disabled"):
+                    rename(data.getConfig().menu + "/" + menu + ".disabled", data.getConfig().menu + "/" + menu)
             for dlc in iter(self.dlcs):
-                if path.exists(data.config.dlc + "/" + dlc):
-                    for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
+                dlc_directory = data.getConfig().dlc
+                if dlc_directory is None:
+                    raise ValueError("No game directory configured for DLC files")
+                if path.exists(dlc_directory + "/" + dlc):
+                    for subdir, _, fls in walk(dlc_directory + "/" + dlc):
                         for file in fls:
-                            if (path.exists(subdir + "/" + file)):
+                            if path.exists(subdir + "/" + file):
                                 if file.endswith(".disabled") and not file.startswith("."):
-                                    rename(subdir + "/" + file,
-                                           subdir + "/" + file[:-9])
+                                    rename(subdir + "/" + file, subdir + "/" + file[:-9])
             for filedata in iter(self.files):
-                if path.exists(data.config.mods + "/~" + filedata):
-                    rename(
-                        data.config.mods + "/~" + filedata,
-                        data.config.mods + "/" + filedata)
+                mods_directory = data.getConfig().mods
+                if mods_directory is None:
+                    raise ValueError("No game directory configured for mod files")
+                if path.exists(mods_directory + "/~" + filedata):
+                    rename(mods_directory + "/~" + filedata, mods_directory + "/" + filedata)
             self.enabled = True
         return incomplete
 
     def disable(self):
-        if (self.enabled):
+        if self.enabled:
             self.uninstallXmlKeys()
             self.uninstallMenus()
             for menu in iter(self.menus):
-                if path.exists(data.config.menu + "/" + menu) and not menu.endswith(".disabled"):
-                    rename(
-                        data.config.menu + "/" + menu,
-                        data.config.menu + "/" + menu + ".disabled")
+                if path.exists(data.getConfig().menu + "/" + menu) and not menu.endswith(".disabled"):
+                    rename(data.getConfig().menu + "/" + menu, data.getConfig().menu + "/" + menu + ".disabled")
             for dlc in iter(self.dlcs):
-                if path.exists(data.config.dlc + "/" + dlc):
-                    for subdir, _, fls in walk(data.config.dlc + "/" + dlc):
+                dlc_directory = data.getConfig().dlc
+                if dlc_directory is None:
+                    raise ValueError("No game directory configured for DLC files")
+                if path.exists(dlc_directory + "/" + dlc):
+                    for subdir, _, fls in walk(dlc_directory + "/" + dlc):
                         for file in fls:
                             if not file.endswith(".disabled") and not file.startswith("."):
-                                rename(
-                                    path.join(subdir, file),
-                                    path.join(subdir, file) + ".disabled")
+                                rename(path.join(subdir, file), path.join(subdir, file) + ".disabled")
             for filedata in iter(self.files):
-                if path.exists(data.config.mods + "/" + filedata):
+                mods_directory = data.getConfig().mods
+                if mods_directory is None:
+                    raise ValueError("No game directory configured for mod files")
+                if path.exists(mods_directory + "/" + filedata):
                     if not filedata.startswith("~"):
-                        rename(
-                            data.config.mods + "/" + filedata,
-                            data.config.mods + "/~" + filedata)
+                        rename(mods_directory + "/" + filedata, mods_directory + "/~" + filedata)
             self.enabled = False
 
     def checkPriority(self):
-        if (not self.priority):
+        if not self.priority:
             for filedata in iter(self.files):
-                if (data.config.priority.has_section(filedata)):
-                    self.priority = data.config.getPriority(filedata)
+                if data.getConfig().priority.has_section(filedata):
+                    self.priority = data.getConfig().getPriority(filedata)
 
     def installMenus(self):
         self.updateMenuFileLists(install=True)
 
     def updateMenuFileLists(self, install: bool):
-        if not self.menus or not data.config.menu:
+        if not self.menus or not data.getConfig().menu:
             return
         for filename in ('dx11filelist.txt', 'dx12filelist.txt'):
-            filelist = path.join(data.config.menu, filename)
+            filelist = path.join(data.getConfig().menu, filename)
             if not path.isfile(filelist):
                 continue
             with open(filelist, 'r', encoding=detectEncoding(filelist)) as userfile:
@@ -189,29 +187,33 @@ class Mod:
                     os.fsync(userfile.fileno())
 
     def installXmlKeys(self):
-        if (self.xmlkeys):
+        if self.xmlkeys:
             text = ''
-            with open(data.config.menu + "/input.xml", 'r', encoding=detectEncoding(data.config.menu + "/input.xml")) as userfile:
+            with open(
+                data.getConfig().menu + "/input.xml", "r", encoding=detectEncoding(data.getConfig().menu + "/input.xml")
+            ) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
-                if (xml not in text):
+                if xml not in text:
                     text = text.replace(
-                        '<!-- [BASE_CharacterMovement] -->',
-                        xml+'\n<!-- [BASE_CharacterMovement] -->')
-            with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
+                        "<!-- [BASE_CharacterMovement] -->", xml + "\n<!-- [BASE_CharacterMovement] -->"
+                    )
+            with open(data.getConfig().menu + "/input.xml", "w", encoding="utf-16") as userfile:
                 userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
-        if (self.hidden):
+        if self.hidden:
             text = ''
-            with open(data.config.menu + "/hidden.xml", 'r', encoding=detectEncoding(data.config.menu + "/hidden.xml")) as userfile:
+            with open(
+                data.getConfig().menu + "/hidden.xml",
+                "r",
+                encoding=detectEncoding(data.getConfig().menu + "/hidden.xml"),
+            ) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
-                if (xml not in text):
-                    text = text.replace(
-                        '</VisibleVars>',
-                        xml+'\n</VisibleVars>')
-            with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
+                if xml not in text:
+                    text = text.replace("</VisibleVars>", xml + "\n</VisibleVars>")
+            with open(data.getConfig().menu + "/hidden.xml", "w", encoding="utf-16") as userfile:
                 userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
@@ -220,25 +222,31 @@ class Mod:
         self.updateMenuFileLists(install=False)
 
     def uninstallXmlKeys(self):
-        if (self.xmlkeys) and path.exists(data.config.menu + "/input.xml"):
+        if (self.xmlkeys) and path.exists(data.getConfig().menu + "/input.xml"):
             text = ''
-            with open(data.config.menu + "/input.xml", 'r', encoding=detectEncoding(data.config.menu + "/input.xml")) as userfile:
+            with open(
+                data.getConfig().menu + "/input.xml", "r", encoding=detectEncoding(data.getConfig().menu + "/input.xml")
+            ) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if xml in text:
-                    text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/input.xml", 'w', encoding="utf-16") as userfile:
+                    text = text.replace(xml + "\n", '')
+            with open(data.getConfig().menu + "/input.xml", "w", encoding="utf-16") as userfile:
                 userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
-        if (self.hidden) and path.exists(data.config.menu + "/hidden.xml"):
+        if (self.hidden) and path.exists(data.getConfig().menu + "/hidden.xml"):
             text = ''
-            with open(data.config.menu + "/hidden.xml", 'r', encoding=detectEncoding(data.config.menu + "/hidden.xml")) as userfile:
+            with open(
+                data.getConfig().menu + "/hidden.xml",
+                "r",
+                encoding=detectEncoding(data.getConfig().menu + "/hidden.xml"),
+            ) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if xml in text:
-                    text = text.replace(xml+"\n", '')
-            with open(data.config.menu + "/hidden.xml", 'w', encoding="utf-16") as userfile:
+                    text = text.replace(xml + "\n", '')
+            with open(data.getConfig().menu + "/hidden.xml", "w", encoding="utf-16") as userfile:
                 userfile.write(text)
                 userfile.flush()
                 os.fsync(userfile.fileno())
@@ -250,20 +258,26 @@ class Mod:
         added = 0
         skipped = 0
         existing: List[Key] = []
-        filename = data.config.settings + "/input.settings"
+        filename = data.getConfig().settings + "/input.settings"
         if path.exists(filename):
             with open(filename, 'r', encoding=detectEncoding(filename)) as userfile:
                 text = userfile.read()
                 existing = fetchInputSettings(text)
         conflicts: List[Tuple[Key, List[Key]]] = []
-        if (self.inputsettings):
+        if self.inputsettings:
             for key in iter(self.inputsettings):
                 if any(x for x in existing if x == key):
                     continue
-                conflicting = [x for x in existing if not x.empty and x.context == key.context and x.action["Action"] == key.action["Action"] and (
-                    (x.type == key.type and x.key != key.key) or
-                    (x.key == key.key and x.action != key.action)
-                )]
+                conflicting = [
+                    x
+                    for x in existing
+                    if not x.empty
+                    and x.action is not None
+                    and key.action is not None
+                    and x.context == key.context
+                    and x.action["Action"] == key.action["Action"]
+                    and ((x.type == key.type and x.key != key.key) or (x.key == key.key and x.action != key.action))
+                ]
                 if len(conflicting) == 0:
                     added += 1
                     existing.append(key)
@@ -271,13 +285,12 @@ class Mod:
                     conflicts.append((key, conflicting))
         if conflicts:
             saved = None
-            for (key, conflicting) in conflicts:
+            for key, conflicting in conflicts:
                 print("conflicting key", key, conflicting)
                 for e in conflicting:
                     justModifiers = e.key == key.key and e.action != key.action
                     if saved is None:
-                        msg = MessageRebindKeys(
-                            e, key, e.context, justModifiers)
+                        msg = MessageRebindKeys(e, key, e.context, justModifiers)
                     else:
                         msg = saved
                     if msg == QMessageBox.StandardButton.Yes:
@@ -322,19 +335,22 @@ class Mod:
         if self.usersettings:
             added = self.installUserSettingsToFile("user.settings")
 
-            if data.config.gameversion in ("ng", "re"):
-                dx12AdditionCount = self.installUserSettingsToFile(
-                    "dx12user.settings")
+            if data.getConfig().gameversion in ("ng", "re"):
+                dx12AdditionCount = self.installUserSettingsToFile("dx12user.settings")
                 if added != dx12AdditionCount:
-                    raise Exception(self.name + ' failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: '
-                                    + str(added) + 'dx12 count: ' + str(dx12AdditionCount))
+                    raise Exception(
+                        self.name
+                        + " failed to install same number of user settings to dx11 and dx12 user.settings files dx11 count: "
+                        + str(added)
+                        + "dx12 count: "
+                        + str(dx12AdditionCount)
+                    )
         return added
 
     def installUserSettingsToFile(self, fileName) -> int:
         added = 0
-        absFilePath = data.config.settings + '/' + fileName
-        config = ConfigParser(strict=False)
-        config.optionxform = str
+        absFilePath = data.getConfig().settings + "/" + fileName
+        config = CaseSensitiveConfigParser(strict=False)
         if path.exists(absFilePath):
             config.read(absFilePath, encoding=detectEncoding(absFilePath))
         for setting in iter(self.usersettings):
@@ -352,15 +368,14 @@ class Mod:
         if self.usersettings:
             self.uninstallUserSettingsFromFile("user.settings")
 
-            if data.config.gameversion in ("ng", "re"):
+            if data.getConfig().gameversion in ("ng", "re"):
                 self.uninstallUserSettingsFromFile("dx12user.settings")
 
     def uninstallUserSettingsFromFile(self, fileName):
-        absFilePath = data.config.settings + '/' + fileName
+        absFilePath = data.getConfig().settings + "/" + fileName
         if not path.exists(absFilePath):
             return
-        config = ConfigParser(strict=False)
-        config.optionxform = str
+        config = CaseSensitiveConfigParser(strict=False)
         config.read(absFilePath, encoding=detectEncoding(absFilePath))
         for setting in iter(self.usersettings):
             if config.has_section(setting.context):
@@ -371,50 +386,59 @@ class Mod:
             os.fsync(userfile.fileno())
 
     def __repr__(self):
-        string = translate("MOD", "NAME: ") + str(self.name) + "\n" + translate("MOD", "ENABLED: ") + str(self.enabled) + \
-            "\n" + translate("MOD", "PRIORITY: ") + self.priority + "\n"
-        if (self.files):
-            string += "\n"+translate("MOD", "DATA:")+"\n"
+        string = (
+            translate("MOD", "NAME: ")
+            + str(self.name)
+            + "\n"
+            + translate("MOD", "ENABLED: ")
+            + str(self.enabled)
+            + "\n"
+            + translate("MOD", "PRIORITY: ")
+            + self.priority
+            + "\n"
+        )
+        if self.files:
+            string += "\n" + translate("MOD", "DATA:") + "\n"
             for file in iter(self.files):
                 string += file + "\n"
-        if (self.dlcs):
-            string += "\n"+translate("MOD", "DLC:")+"\n"
+        if self.dlcs:
+            string += "\n" + translate("MOD", "DLC:") + "\n"
             for dlc in iter(self.dlcs):
                 string += dlc + "\n"
-        if (self.menus):
-            string += "\n"+translate("MOD", "MENUS:")+"\n"
+        if self.menus:
+            string += "\n" + translate("MOD", "MENUS:") + "\n"
             for menu in iter(self.menus):
                 string += menu + "\n"
-        if (self.xmlkeys):
-            string += "\n"+translate("MOD", "XML VARIABLES:")+"\n"
+        if self.xmlkeys:
+            string += "\n" + translate("MOD", "XML VARIABLES:") + "\n"
             for xml in iter(self.xmlkeys):
                 string += xml + "\n"
-        if (self.hidden):
-            string += "\n"+translate("MOD", "HIDDEN XML:")+"\n"
+        if self.hidden:
+            string += "\n" + translate("MOD", "HIDDEN XML:") + "\n"
             for xml in iter(self.hidden):
                 string += xml + "\n"
-        if (self.inputsettings):
-            string += "\n"+translate("MOD", "INPUT KEYS:")+"\n"
+        if self.inputsettings:
+            string += "\n" + translate("MOD", "INPUT KEYS:") + "\n"
             context = ''
             for elem in iter(self.inputsettings):
-                if (elem.context != context):
-                    if (context != ''):
+                if elem.context != context:
+                    if context != "":
                         string += '\n'
                     context = elem.context
                     string += context + '\n'
                 string += str(elem) + "\n"
-        if (self.usersettings):
-            string += "\n"+translate("MOD", "USER SETTINGS:")+"\n"
+        if self.usersettings:
+            string += "\n" + translate("MOD", "USER SETTINGS:") + "\n"
             context = ''
             for elem in iter(self.usersettings):
-                if (elem.context != context):
-                    if (context != ''):
+                if elem.context != context:
+                    if context != "":
                         string += '\n'
                     context = elem.context
                     string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
-        if (self.readmes):
-            string += "\n"+translate("MOD", "READMES:")+"\n"
+        if self.readmes:
+            string += "\n" + translate("MOD", "READMES:") + "\n"
             for readme in iter(self.readmes):
                 string += readme + "\n"
         return string

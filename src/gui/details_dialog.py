@@ -1,13 +1,11 @@
-
 '''Details Dialog'''
-# pylint: disable=invalid-name
 
 from PySide6 import QtCore
 from PySide6.QtGui import QTextDocument
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QTextEdit
+from PySide6.QtWidgets import QHBoxLayout, QTextEdit, QWidget
 
-from src.globals.constants import translate
 from src.domain.mod import Mod
+from src.globals.constants import translate
 
 
 class DetailsDialog(QWidget):
@@ -20,8 +18,8 @@ class DetailsDialog(QWidget):
         self.setObjectName("Details")
         self.resize(700, 800)
         self.setMinimumSize(600, 600)
-        self.layout = QHBoxLayout(self)
-        self.layout.setObjectName("layout")
+        self.contentLayout = QHBoxLayout(self)
+        self.contentLayout.setObjectName("layout")
         self.document = QTextDocument()
         self.document.setPlainText(str(mod))
         self.text = QTextEdit(self)
@@ -30,7 +28,7 @@ class DetailsDialog(QWidget):
         self.text.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.text.setReadOnly(True)
         self.text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-        self.layout.addWidget(self.text)
+        self.contentLayout.addWidget(self.text)
 
         self.setWindowTitle(mod.name + " " + translate("Details", "Details"))
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -38,10 +36,14 @@ class DetailsDialog(QWidget):
     def adjustWidth(self):
         '''Fits size to content'''
         self.resize(
-            self.document.idealWidth() +
-            self.text.contentsMargins().left() + self.text.contentsMargins().right() +
-            self.contentsMargins().left() + self.contentsMargins().right() + 50,
-            self.height())
+            int(self.document.idealWidth())
+            + self.text.contentsMargins().left()
+            + self.text.contentsMargins().right()
+            + self.contentsMargins().left()
+            + self.contentsMargins().right()
+            + 50,
+            self.height(),
+        )
 
     def showEvent(self, event):
         '''Qt show event'''

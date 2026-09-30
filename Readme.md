@@ -57,9 +57,20 @@ On Linux:
 - `wine` must be available to run Script Merger
 - Consider using `pdm run` prefix for all commands
 
+### Development Checks
+
+Install development tools with `pdm install`.
+
+- `pdm run format`: format every project Python file.
+- `pdm run lint`: check imports and core Python errors without changing files.
+- `pdm run ruff check --fix .`: apply safe lint fixes, including import sorting.
+- `pdm run check`: check formatting, lint, Pyright, mypy, and all tests.
+- `pdm run typecheck-pyright`: run the CLI checker underlying Pylance with the project's `standard` settings.
+- `pdm run typecheck`: run mypy as a second type check.
+
 ### Build Release (Windows)
 
 1. Use a fresh environment and install dependencies with development tools: `pdm install`.
-2. Run tests: `pdm run python -m unittest discover -s tests -v`
+2. Run checks: `pdm run check`
 3. Build executable: `pdm run build-win`
 4. Find files in `build/exe.[platform identifier].[python version]`

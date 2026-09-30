@@ -1,5 +1,4 @@
 '''Configuration module'''
-# pylint: disable=invalid-name,missing-docstring
 
 import configparser
 import glob
@@ -9,14 +8,17 @@ import os.path as path
 import sys
 import time
 from copy import deepcopy
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
-from PySide6.QtWidgets import QMainWindow, QMessageBox, QWidget
 from fasteners import ReaderWriterLock
+from PySide6.QtWidgets import QMainWindow, QMessageBox
 
 from src.globals.constants import translate
 from src.gui.alerts import MessageAlertReadingConfigINI
 from src.util import util
+
+if TYPE_CHECKING:
+    from src.gui.main_widget import CustomMainWidget
 
 
 class Configuration:
@@ -46,10 +48,8 @@ class Configuration:
             else:
                 self.__configPath = util.getConfigFolder()
 
-        self.config = configparser.ConfigParser(
-            allow_no_value=True, delimiters='=', strict=False)
-        self.priority = configparser.ConfigParser(
-            allow_no_value=True, delimiters='=', strict=False)
+        self.config = configparser.ConfigParser(allow_no_value=True, delimiters="=", strict=False)
+        self.priority = configparser.ConfigParser(allow_no_value=True, delimiters="=", strict=False)
 
         if not path.exists(self.__configPath):
             os.makedirs(self.__configPath)
@@ -59,14 +59,14 @@ class Configuration:
 
         self.readConfig()
 
+        configured_documents = self.get("PATHS", "documents")
         if documentsPath and not os.path.exists(documentsPath):
-            print(
-                f'documents path override {documentsPath} is invalid, starting with existing configuration')
+            print(f"documents path override {documentsPath} is invalid, starting with existing configuration")
 
         if documentsPath and os.path.exists(documentsPath):
             self.documents = documentsPath
-        elif self.get('PATHS', 'documents') and os.path.exists(self.get('PATHS', 'documents')):
-            self.documents = self.get('PATHS', 'documents')
+        elif configured_documents and os.path.exists(configured_documents):
+            self.documents = configured_documents
         else:
             self.documents = util.getDocumentsFolder()
 
@@ -75,7 +75,8 @@ class Configuration:
                 None,
                 translate("Config", "No documents configured"),
                 translate("Config", "No documents path configured"),
-                QMessageBox.StandardButton.Ok)
+                QMessageBox.StandardButton.Ok,
+            )
             sys.exit(1)
 
         self.__userSettingsPath = self.documents + '/The Witcher 3'
@@ -91,8 +92,7 @@ class Configuration:
             if correctGamePath:
                 self.gameexe = correctGamePath
             else:
-                print(
-                    f'game path override {gamePath} is invalid, starting with existing configuration')
+                print(f"game path override {gamePath} is invalid, starting with existing configuration")
 
         self._DLC = None
         self._MODS = None
@@ -107,15 +107,13 @@ class Configuration:
             self.config.add_section('TOOLBAR')
 
     def readPriority(self):
-        print(
-            f"reading mods.settings from {self.__userSettingsPath + '/mods.settings'}")
+        print(f"reading mods.settings from {self.__userSettingsPath + '/mods.settings'}")
         file = self.__userSettingsPath + '/mods.settings'
         with self.__writing_priority.read_lock():
             self.priority.clear()
             if os.path.isfile(file):
                 try:
-                    self.priority.read(
-                        file, encoding=util.detectEncoding(file))
+                    self.priority.read(file, encoding=util.detectEncoding(file))
                 except Exception as e:
                     MessageAlertReadingConfigINI(file, e)
             else:
@@ -139,8 +137,7 @@ class Configuration:
         if self.config != self.configLastWritten:
             with self.__writing_config.write_lock():
                 with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
-                    print(
-                        f"writing config.ini to {self.__configPath + '/config.ini'}")
+                    print(f"writing config.ini to {self.__configPath + '/config.ini'}")
                     self.config.write(file, space_around_delimiters)
                     file.flush()
                     os.fsync(file.fileno())
@@ -156,12 +153,10 @@ class Configuration:
                 for option in priority.options(section):
                     value = priority.get(section, option)
                     priority.remove_option(section, option)
-                    priority.set(
-                        section, f'{option[:1].upper()}{option[1:].lower()}', value)
+                    priority.set(section, f"{option[:1].upper()}{option[1:].lower()}", value)
             with self.__writing_priority.write_lock():
                 with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8') as file:
-                    print(
-                        f"writing mods.settings to {self.__userSettingsPath + '/mods.settings'}")
+                    print(f"writing mods.settings to {self.__userSettingsPath + '/mods.settings'}")
                     self.__lastPriorityWriteTime = time.monotonic()
                     priority.write(file, space_around_delimiters)
                     file.flush()
@@ -204,8 +199,8 @@ class Configuration:
             self.priority.remove_section(section)
         self.write_priority()
 
-    def getWindowSection(self, section: str, prefix: str = ''):
-        value = self.get('WINDOW', prefix+'section'+str(section))
+    def getWindowSection(self, section: int | str, prefix: str = ""):
+        value = self.get('WINDOW', prefix + 'section' + str(section))
         return int(value) if value else None
 
     def getOptions(self, section: str):
@@ -239,9 +234,11 @@ class Configuration:
             normalized = util.normalizePath(configured)
             renderer = path.dirname(normalized)
             binaries = path.dirname(renderer)
-            if (path.basename(normalized).lower() == 'witcher3.exe'
-                    and path.basename(renderer).lower() in ('x64', 'x64_dx12')
-                    and path.basename(binaries).lower() == 'bin'):
+            if (
+                path.basename(normalized).lower() == "witcher3.exe"
+                and path.basename(renderer).lower() in ('x64', 'x64_dx12')
+                and path.basename(binaries).lower() == "bin"
+            ):
                 replacement = self.getCorrectGamePath(path.dirname(binaries))
                 if replacement:
                     return replacement
@@ -279,13 +276,15 @@ class Configuration:
     def gameversion(self):
         editions = self.launcherconfig.get('editions', [])
         if isinstance(editions, list) and any(
-                isinstance(edition, dict) and edition.get('name') == 'remasteredEdition'
-                for edition in editions):
+            isinstance(edition, dict) and edition.get("name") == "remasteredEdition" for edition in editions
+        ):
             return 're'
         game = self.game
-        if (game
-                and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe'))
-                and path.isfile(path.join(game, 'bin', 'x64', 'witcher3.exe'))):
+        if (
+            game
+            and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe'))
+            and path.isfile(path.join(game, "bin", "x64", "witcher3.exe"))
+        ):
             return 'ng'
         if game and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe')):
             return 're'
@@ -297,8 +296,11 @@ class Configuration:
         if store:
             return store == 'steam'
         root = self.game
-        return bool(root and path.basename(path.dirname(root)).lower() == 'common'
-                    and path.isfile(path.join(root, '..', '..', 'appmanifest_292030.acf')))
+        return bool(
+            root
+            and path.basename(path.dirname(root)).lower() == "common"
+            and path.isfile(path.join(root, "..", "..", "appmanifest_292030.acf"))
+        )
 
     @property
     def graphicsapi(self):
@@ -385,23 +387,20 @@ class Configuration:
     def theme(self, value):
         self.set('SETTINGS', 'theme', value)
 
-    def saveWindowSettings(self, ui: QWidget, window: QMainWindow):
+    def saveWindowSettings(self, ui: "CustomMainWidget", window: QMainWindow):
         # only save the non-maximized size
         if not window.isMaximized() and not window.isFullScreen():
             self.set('WINDOW', 'width', str(window.width()))
             self.set('WINDOW', 'height', str(window.height()))
         self.set('WINDOW', 'maximized', '1' if window.isMaximized() else '0')
         try:
-            self.set('WINDOW', 'state', bytes(
-                window.saveState().toBase64().data()).decode('ascii'))
+            self.set("WINDOW", "state", bytes(window.saveState().toBase64().data()).decode("ascii"))
         except Exception as err:
             print('failed to save window state', err, file=sys.stderr)
-        for i in range(0, ui.treeWidget.header().count()+1):
-            self.set('WINDOW', 'section'+str(i),
-                     str(ui.treeWidget.header().sectionSize(i)))
+        for i in range(0, ui.treeWidget.header().count() + 1):
+            self.set("WINDOW", "section" + str(i), str(ui.treeWidget.header().sectionSize(i)))
         for i in range(0, ui.loadOrder.header().count() + 1):
-            self.set('WINDOW', 'losection'+str(i),
-                     str(ui.loadOrder.header().sectionSize(i)))
+            self.set("WINDOW", "losection" + str(i), str(ui.loadOrder.header().sectionSize(i)))
         hsplit = ui.horizontalSplitter_tree.sizes()
         self.set('WINDOW', 'hsplit0', str(hsplit[0]))
         self.set('WINDOW', 'hsplit1', str(hsplit[1]))
@@ -458,9 +457,11 @@ class Configuration:
 
         if path.isfile(normalized):
             return normalized
-        candidates = (path.join(normalized, 'witcher3.exe'),
-                      path.join(gameDirectory, 'bin', 'x64_dx12', 'witcher3.exe'),
-                      path.join(gameDirectory, 'bin', 'x64', 'witcher3.exe'))
+        candidates = (
+            path.join(normalized, "witcher3.exe"),
+            path.join(gameDirectory, 'bin', 'x64_dx12', 'witcher3.exe'),
+            path.join(gameDirectory, "bin", "x64", "witcher3.exe"),
+        )
         for candidate in candidates:
             if path.isfile(candidate) and Configuration.getGameRoot(candidate):
                 return util.normalizePath(candidate)
@@ -480,8 +481,11 @@ class Configuration:
                     return path.abspath(internalPath)
                 else:
                     return None
-            potentials = [path.join(parent, d) for d in glob.glob(
-                '*', root_dir=parent) if path.isdir(path.join(parent, d)) and d.lower() == path.basename(internalPath).lower()]
+            potentials = [
+                path.join(parent, d)
+                for d in glob.glob("*", root_dir=parent)
+                if path.isdir(path.join(parent, d)) and d.lower() == path.basename(internalPath).lower()
+            ]
             existing = next(iter(potentials), None)
             if not existing:
                 if create:
@@ -491,5 +495,5 @@ class Configuration:
                     return None
             return path.abspath(existing)
         except OSError as e:
-            print(f'Error checking path {internalPath}: {e}')
+            print(f"Error checking path {internalPath}: {e}")
             return None

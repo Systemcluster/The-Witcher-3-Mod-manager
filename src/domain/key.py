@@ -1,5 +1,4 @@
 '''Mod Key module'''
-# pylint: disable=invalid-name,superfluous-parens,consider-using-enumerate
 
 
 class Action:
@@ -24,7 +23,8 @@ class Action:
 
     def __eq__(self, other):
         return len(self.parts) == len(other.parts) and all(
-            [self.parts[i] == other.parts[i] for i in range(len(self.parts))])
+            [self.parts[i] == other.parts[i] for i in range(len(self.parts))]
+        )
 
     def __gt__(self, other):
         return self["Action"] > other["Action"]
@@ -81,49 +81,51 @@ class Key:
 
     context: str
     key: str
-    action: Action
-    type: str
+    action: Action | None
+    type: str | None
     empty: bool
 
     def __init__(self, context: str, key: str = ''):
         self.context = context
-        if (key.startswith("Version") or key == ''):
+        if key.startswith("Version") or key == "":
             self.key = key
             self.action = None
             self.type = None
-            self.empty = (key == '')
+            self.empty = key == ""
         else:
             self.empty = False
             self.key, action = key.split('=(')
 
             self.action = Action(action)
 
-            if ("Pad" in self.key):
+            if "Pad" in self.key:
                 self.type = 'controller'
-            elif ('PS4' in self.key):
+            elif "PS4" in self.key:
                 self.type = 'PS4'
             else:
                 self.type = 'keyboard'
 
     def __repr__(self):
-        if (self.key.startswith("Version")):
+        if self.key.startswith("Version"):
             return self.key
         else:
             return self.key + "=(" + repr(self.action) + ")"
 
     def __eq__(self, other):
         if not self.empty:
-            return self.context == other.context \
-                and self.key == other.key \
-                and self.type == other.type \
+            return (
+                self.context == other.context
+                and self.key == other.key
+                and self.type == other.type
                 and self.action == other.action
+            )
         else:
             return False
 
     def __gt__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                if not self.empty:
+                if not self.empty and self.action is not None and other.action is not None:
                     return self.action > other.action
             return self.key > other.key
         return self.context > other.context
@@ -131,7 +133,7 @@ class Key:
     def __lt__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                if not self.empty:
+                if not self.empty and self.action is not None and other.action is not None:
                     return self.action < other.action
             return self.key < other.key
         return self.context < other.context
@@ -139,7 +141,7 @@ class Key:
     def __ge__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                if not self.empty:
+                if not self.empty and self.action is not None and other.action is not None:
                     return self.action >= other.action
             return self.key >= other.key
         return self.context >= other.context
@@ -147,7 +149,7 @@ class Key:
     def __le__(self, other):
         if self.context == other.context:
             if self.key == other.key:
-                if not self.empty:
+                if not self.empty and self.action is not None and other.action is not None:
                     return self.action <= other.action
             return self.key <= other.key
         return self.context <= other.context

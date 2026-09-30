@@ -31,8 +31,8 @@ jobs:
         run: |
           pdm install
 
-      - name: Test
-        run: pdm run python -m unittest discover -s tests -v
+      - name: Check formatting, lint, types, and tests
+        run: pdm run check
 
       - name: Build release
         run: |
