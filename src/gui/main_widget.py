@@ -1,6 +1,7 @@
 '''Main Widget'''
 # pylint: disable=invalid-name,superfluous-parens,wildcard-import,bare-except,broad-except,wildcard-import,unused-wildcard-import,missing-docstring,too-many-lines
 
+import shlex
 from os import path
 from sys import platform
 
@@ -921,18 +922,31 @@ class CustomMainWidget(QWidget):
             self.setProgress(0)
             self.output(formatUserError(err))
 
+    @staticmethod
+    def launchThroughSteam():
+        return platform not in ("win32", "cygwin") or (
+            data.config.gameversion == "re" and data.config.steam)
+
+    @staticmethod
+    def gameLaunchLabel():
+        if not data.config.gamelaunchcommand and CustomMainWidget.launchThroughSteam():
+            return "Steam"
+        return data.config.graphicsapi
+
     def runTheGame(self):
         '''Runs the game'''
         try:
-            if data.config.gamelaunchcommand:
-                subprocess.Popen(data.config.gamelaunchcommand)
+            command = data.config.gamelaunchcommand
+            if command:
+                subprocess.Popen(command if platform in ("win32", "cygwin") else shlex.split(command))
+            elif CustomMainWidget.launchThroughSteam():
+                openUrl("steam://rungameid/292030")
             else:
                 gamepath = data.config.gameexe
+                if not gamepath:
+                    return
                 directory, _ = path.split(gamepath)
-                if platform == "win32" or platform == "cygwin":
-                    subprocess.Popen([gamepath], cwd=directory)
-                else:
-                    openUrl("steam://rungameid/292030")
+                subprocess.Popen([gamepath], cwd=directory)
         except Exception as err:
             self.output(formatUserError(err))
 
@@ -943,6 +957,8 @@ class CustomMainWidget(QWidget):
             if not scriptmergerpath:
                 self.changeScriptMergerPath()
                 scriptmergerpath = data.config.scriptmerger
+            if not scriptmergerpath:
+                return
             directory, _ = path.split(scriptmergerpath)
             if platform == "win32" or platform == "cygwin":
                 subprocess.Popen([scriptmergerpath], cwd=directory)
@@ -1454,9 +1470,7 @@ class CustomMainWidget(QWidget):
         self.textEdit.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
         self.scriptMergerButton.setText(translate("MainWindow", "Run Script Merger"))
-        launchLabel = data.config.graphicsapi
-        if platform != "win32" and platform != "cygwin" and not data.config.gamelaunchcommand:
-            launchLabel = "Steam"
+        launchLabel = self.gameLaunchLabel()
         self.runGameButton.setText(translate("MainWindow", "Run the Game") + " (" + launchLabel + ")")
         self.toolBar.setWindowTitle(translate("MainWindow", "toolBar"))
 
