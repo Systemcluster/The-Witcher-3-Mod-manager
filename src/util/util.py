@@ -114,11 +114,10 @@ def reconfigureGamePath() -> bool:
     from src.globals.constants import translate
     from src.gui.alerts import MessageNotConfigured
     MessageNotConfigured()
-    start = data.config.gameexe or data.config.game or "witcher3.exe"
     dialog = QFileDialog(
         None,
         translate("MainWindow", "Select witcher3.exe"),
-        start,
+        data.config.gameexe or "witcher3.exe",
         "witcher3.exe (witcher3.exe);;Executables (*.exe)")
     if data.config.get('SETTINGS', 'usenativedialog', '1') != '1':
         dialog.setOptions(QFileDialog.Option.DontUseNativeDialog)

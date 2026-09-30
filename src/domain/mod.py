@@ -163,32 +163,28 @@ class Mod:
                     self.priority = data.config.getPriority(filedata)
 
     def installMenus(self):
-        if (data.config.gameversion in ("ng", "re") and self.menus):
-            dx11_filelist = data.config.menu + "/dx11filelist.txt"
-            if path.exists(dx11_filelist):
-                with open(dx11_filelist, 'r', encoding=detectEncoding(dx11_filelist)) as userfile:
-                    text = userfile.read()
-                for menu in iter(self.menus):
-                    menu_line = menu + ";"
-                    if (menu_line not in text):
-                        text = text + '\n' + menu_line
-                with open(dx11_filelist, 'w', encoding="utf-16") as userfile:
-                    text = text.replace('\n\n', '\n')
-                    userfile.write(text)
-                    userfile.flush()
-                    os.fsync(userfile.fileno())
+        self.updateMenuFileLists(install=True)
 
-            dx12_filelist = data.config.menu + "/dx12filelist.txt"
-            if path.exists(dx12_filelist):
-                with open(dx12_filelist, 'r', encoding=detectEncoding(dx12_filelist)) as userfile:
-                    text = userfile.read()
-                for menu in iter(self.menus):
-                    menu_line = menu + ";"
-                    if (menu_line not in text):
-                        text = text + '\n' + menu_line
-                with open(dx12_filelist, 'w', encoding="utf-16") as userfile:
-                    text = text.replace('\n\n', '\n')
-                    userfile.write(text)
+    def updateMenuFileLists(self, install: bool):
+        if not self.menus or not data.config.menu:
+            return
+        for filename in ('dx11filelist.txt', 'dx12filelist.txt'):
+            filelist = path.join(data.config.menu, filename)
+            if not path.isfile(filelist):
+                continue
+            with open(filelist, 'r', encoding=detectEncoding(filelist)) as userfile:
+                original = userfile.read().splitlines()
+            lines = list(original)
+            for menu in self.menus:
+                entry = menu + ';'
+                if install:
+                    if entry.casefold() not in {line.strip().casefold() for line in lines}:
+                        lines.append(entry)
+                else:
+                    lines = [line for line in lines if line.strip().casefold() != entry.casefold()]
+            if lines != original:
+                with open(filelist, 'w', encoding='utf-16') as userfile:
+                    userfile.write('\n'.join(lines) + '\n')
                     userfile.flush()
                     os.fsync(userfile.fileno())
 
@@ -221,31 +217,7 @@ class Mod:
                 os.fsync(userfile.fileno())
 
     def uninstallMenus(self):
-        if (data.config.gameversion in ("ng", "re") and self.menus):
-            if path.exists(data.config.menu + "/dx11filelist.txt"):
-                with open(data.config.menu + "/dx11filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx11filelist.txt")) as userfile:
-                    text = userfile.read()
-                for menu in iter(self.menus):
-                    menu_line = menu + ";"
-                    if (menu_line in text):
-                        text = text.replace('\n'+menu_line, '')
-                with open(data.config.menu + "/dx11filelist.txt", 'w', encoding="utf-16") as userfile:
-                    text = text.replace('\n\n', '\n')
-                    userfile.write(text)
-                    userfile.flush()
-                    os.fsync(userfile.fileno())
-            if path.exists(data.config.menu + "/dx12filelist.txt"):
-                with open(data.config.menu + "/dx12filelist.txt", 'r', encoding=detectEncoding(data.config.menu + "/dx12filelist.txt")) as userfile:
-                    text = userfile.read()
-                for menu in iter(self.menus):
-                    menu_line = menu + ";"
-                    if (menu_line in text):
-                        text = text.replace('\n'+menu_line, '')
-                with open(data.config.menu + "/dx12filelist.txt", 'w', encoding="utf-16") as userfile:
-                    text = text.replace('\n\n', '\n')
-                    userfile.write(text)
-                    userfile.flush()
-                    os.fsync(userfile.fileno())
+        self.updateMenuFileLists(install=False)
 
     def uninstallXmlKeys(self):
         if (self.xmlkeys) and path.exists(data.config.menu + "/input.xml"):

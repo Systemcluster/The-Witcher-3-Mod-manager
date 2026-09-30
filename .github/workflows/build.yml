@@ -31,6 +31,9 @@ jobs:
         run: |
           pdm install
 
+      - name: Test
+        run: pdm run python -m unittest discover -s tests -v
+
       - name: Build release
         run: |
           pdm run build-win

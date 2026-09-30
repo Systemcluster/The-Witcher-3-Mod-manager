@@ -3,6 +3,7 @@
 
 import configparser
 import glob
+import json
 import os
 import os.path as path
 import sys
@@ -233,7 +234,18 @@ class Configuration:
 
     @property
     def gameexe(self):
-        return self.get('PATHS', 'gameexe')
+        configured = self.get('PATHS', 'gameexe')
+        if configured and not path.isfile(configured):
+            normalized = util.normalizePath(configured)
+            renderer = path.dirname(normalized)
+            binaries = path.dirname(renderer)
+            if (path.basename(normalized).lower() == 'witcher3.exe'
+                    and path.basename(renderer).lower() in ('x64', 'x64_dx12')
+                    and path.basename(binaries).lower() == 'bin'):
+                replacement = self.getCorrectGamePath(path.dirname(binaries))
+                if replacement:
+                    return replacement
+        return configured
 
     @gameexe.setter
     def gameexe(self, value: str):
@@ -246,33 +258,52 @@ class Configuration:
 
     @property
     def game(self):
-        gameDirectory = self.get('PATHS', 'gameexe')
+        gameDirectory = self.gameexe
         if not gameDirectory:
             return ''
         return self.getGameRoot(gameDirectory)
 
     @property
+    def launcherconfig(self):
+        if self.game:
+            try:
+                with open(path.join(self.game, 'launcher-configuration.json'), encoding='utf-8-sig') as file:
+                    config = json.load(file)
+                if isinstance(config, dict) and config.get('gameId') == 'witcher3':
+                    return config
+            except (OSError, ValueError):
+                pass
+        return {}
+
+    @property
     def gameversion(self):
-        # Remastered uses the bin/x64_dx12 layout. Classic still uses bin/x64.
-        if not self.game:
-            return "og"
-        hasDx12 = path.isdir(self.game + "/bin/x64_dx12")
-        hasDx11 = path.isdir(self.game + "/bin/x64")
-        if hasDx12 and not hasDx11:
-            return "re"
-        if hasDx12:
-            return "ng"
-        gameexe = self.gameexe
-        if gameexe:
-            relativeExe = path.relpath(gameexe, self.game).replace('\\', '/').lower()
-            if relativeExe not in ('bin/x64/witcher3.exe', 'bin/x64_dx12/witcher3.exe'):
-                return "re"
-        return "og"
+        editions = self.launcherconfig.get('editions', [])
+        if isinstance(editions, list) and any(
+                isinstance(edition, dict) and edition.get('name') == 'remasteredEdition'
+                for edition in editions):
+            return 're'
+        game = self.game
+        if (game
+                and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe'))
+                and path.isfile(path.join(game, 'bin', 'x64', 'witcher3.exe'))):
+            return 'ng'
+        if game and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe')):
+            return 're'
+        return 'og'
+
+    @property
+    def steam(self):
+        store = self.launcherconfig.get('platform')
+        if store:
+            return store == 'steam'
+        root = self.game
+        return bool(root and path.basename(path.dirname(root)).lower() == 'common'
+                    and path.isfile(path.join(root, '..', '..', 'appmanifest_292030.acf')))
 
     @property
     def graphicsapi(self):
-        gameexe = self.gameexe
-        if self.gameversion == "re" or (gameexe and "x64_dx12" in gameexe.replace('\\', '/')):
+        gameexe = util.normalizePath(self.gameexe or '')
+        if path.basename(path.dirname(gameexe)).lower() == 'x64_dx12':
             return "dx12"
         return "dx11"
 
@@ -393,35 +424,31 @@ class Configuration:
 
     @staticmethod
     def getGameRoot(gamePath: str) -> str:
-        '''Returns the installation root for an exe or a directory inside it.
-
-        Classic and next-gen keep witcher3.exe three levels below the root
-        (bin/x64 or bin/x64_dx12). Remastered also uses the standard
-        bin/x64_dx12 layout, so walk parents until the content directory that
-        marks the install root is found.
-        '''
+        '''Returns the root for a game directory or bin/x64[_dx12] executable.'''
         if not gamePath:
             return ''
         current = util.normalizePath(gamePath)
-        if path.isfile(current) or path.splitext(current)[1].lower() == '.exe':
+        if path.isfile(current):
+            if path.basename(current).lower() != 'witcher3.exe':
+                return ''
             current = path.dirname(current)
-        for _ in range(6):
-            if path.isdir(current + '/content'):
-                return util.normalizePath(current)
-            parent = path.dirname(current)
-            if not parent or parent == current:
-                break
-            current = parent
+            if path.basename(current).lower() not in ('x64', 'x64_dx12'):
+                return ''
+        if not path.isdir(current):
+            return ''
+        if path.basename(current).lower() in ('x64', 'x64_dx12'):
+            current = path.dirname(current)
+            if path.basename(current).lower() != 'bin':
+                return ''
+        if path.basename(current).lower() == 'bin':
+            current = path.dirname(current)
+        if path.isdir(path.join(current, 'content')):
+            return current
         return ''
 
     @staticmethod
     def getCorrectGamePath(gameExePath: Union[str, None]) -> str:
-        '''Checks and corrects game path.
-
-        Accepts witcher3.exe from classic/next-gen bin/x64 or bin/x64_dx12,
-        and from the remastered layout under bin/x64_dx12.
-        A game directory may also be given; the installed exe is then selected.
-        '''
+        '''Validates a selected executable or finds one in a game directory.'''
         if not gameExePath:
             return ''
         normalized = util.normalizePath(gameExePath)
@@ -429,21 +456,14 @@ class Configuration:
         if not gameDirectory:
             return ''
 
-        _, ext = path.splitext(normalized)
-        if ext.lower() == '.exe':
-            selected = path.basename(normalized).lower()
-            if selected == 'witcher3.exe' and path.isfile(normalized):
-                return normalized
-            return ''
-        for relativeDirectory in ('bin/x64_dx12', 'bin/x64', 'bin', ''):
-            directory = path.join(gameDirectory, relativeDirectory)
-            try:
-                for filename in os.listdir(directory):
-                    candidate = path.join(directory, filename)
-                    if filename.lower() == 'witcher3.exe' and path.isfile(candidate):
-                        return util.normalizePath(candidate)
-            except OSError:
-                continue
+        if path.isfile(normalized):
+            return normalized
+        candidates = (path.join(normalized, 'witcher3.exe'),
+                      path.join(gameDirectory, 'bin', 'x64_dx12', 'witcher3.exe'),
+                      path.join(gameDirectory, 'bin', 'x64', 'witcher3.exe'))
+        for candidate in candidates:
+            if path.isfile(candidate) and Configuration.getGameRoot(candidate):
+                return util.normalizePath(candidate)
         return ''
 
     @staticmethod
