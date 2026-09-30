@@ -211,7 +211,7 @@ def MessageNotConfigured():
         translate("MainWindow", "The Witcher 3 Mod Manager - Configuration"))
     message.setText(
         translate("MainWindow", "Welcome! Please select your <code>witcher3.exe</code> in the next dialog.<br><br>"
-                  "This file can be found in the game's installation directory under <code>bin/x64/witcher3.exe</code> or the standard remastered path <code>bin/x64_dx12/witcher3.exe</code>.<br><br>"))
+                  "This file can be found in the game's installation directory under <code>bin/x64/witcher3.exe</code> (DX11) or <code>bin/x64_dx12/witcher3.exe</code> (DX12).<br><br>"))
     message.setStandardButtons(QMessageBox.StandardButton.Ok)
     message.setTextFormat(Qt.TextFormat.RichText)
     return message.exec()
@@ -226,7 +226,10 @@ def MessageNotConfiguredScriptMerger():
     message.setText(
         translate("MainWindow", "Please select your <code>WitcherScriptMerger.exe</code> in the next dialog.<br><br>" +
                   "Script Merger is not included and has to be downloaded separately.<br>" +
-                  "It can be found at <a href=\"https://www.nexusmods.com/witcher3/mods/484\">https://www.nexusmods.com/witcher3/mods/484</a><br><br>"))
+                  "<a href=\"https://www.nexusmods.com/witcher3/mods/484\">Original Script Merger</a><br>" +
+                  "<a href=\"https://www.nexusmods.com/witcher3/mods/8405\">Script Merger - Fresh and Automated Edition</a><br><br>" +
+                  "Check compatibility with your game version before downloading. " +
+                  "Script Merger keeps its own game path; select the same installation there as in Mod Manager."))
     message.setStandardButtons(QMessageBox.StandardButton.Ok)
     message.setTextFormat(Qt.TextFormat.RichText)
     return message.exec()
