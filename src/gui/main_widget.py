@@ -894,13 +894,14 @@ class CustomMainWidget(QWidget):
                 clicked = QMessageBox.question(
                     self,
                     translate("MainWindow", "Confirm"),
-                    translate("MainWindow", "Are you sure you want to reinstall ")
+                    translate("MainWindow", "Restore default settings for ")
                     + str(len(selected))
                     + translate("MainWindow", " selected mods?")
                     + "\n\n"
                     + translate(
                         "MainWindow",
-                        "This will override the mods settings with " + "their defaults.",
+                        "This resets mod settings to their defaults and enables disabled mods.\n"
+                        "Mod files and missing menu XML files are not restored.",
                     ),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     QMessageBox.StandardButton.Yes,
@@ -1503,7 +1504,10 @@ class CustomMainWidget(QWidget):
         self.actionEnable_Disable_Mods.setShortcut("Ctrl+Q")
         self.actionRefresh_Mod_List.setText(translate("MainWindow", "Refresh Mod List"))
         self.actionRefresh_Mod_List.setShortcut("F5")
-        self.actionReinstall_Mods.setText(translate("MainWindow", "Reinstall"))
+        self.actionReinstall_Mods.setText(translate("MainWindow", "Restore Settings"))
+        self.actionReinstall_Mods.setToolTip(
+            translate("MainWindow", "Restore stored mod settings and key bindings to their defaults")
+        )
         self.actionRefresh_Load_Order.setText(translate("MainWindow", "Refresh Load Order"))
         self.actionRefresh_Load_Order.setShortcut("F6")
         self.actionSelect_All_Mods.setText(translate("MainWindow", "Select All Mods"))

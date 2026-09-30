@@ -1,8 +1,31 @@
 '''Witcher 3 Mod Manager main module'''
 
 import sys
+import tempfile
+import traceback
 from argparse import ArgumentParser
 from os import environ
+
+
+def logStartupFailure(details: str) -> str | None:
+    log_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", prefix="TW3MM-startup-", suffix=".log", delete=False
+        ) as log:
+            log.write(details)
+            log_path = log.name
+    except OSError as error:
+        details += f"\nCould not write startup log: {error}\n"
+    if log_path:
+        details += f"\nStartup log: {log_path}\n"
+    if sys.stderr is not None:
+        try:
+            sys.stderr.write(details)
+        except (OSError, ValueError):
+            pass
+    return log_path
+
 
 if __name__ == "__main__":
     try:
@@ -24,8 +47,6 @@ if __name__ == "__main__":
 
         # log and show uncaught exceptions
         def _logUncaughtException(exc_type, exc_value, exc_traceback):
-            import traceback
-
             tb_text = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
             traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
             msg = QMessageBox(None)
@@ -128,12 +149,10 @@ if __name__ == "__main__":
         sys.exit(ret)
 
     except Exception as e:
-        import traceback
-
-        from src.util.util import formatUserError
-
         tb_text = traceback.format_exc()
-        print(formatUserError(e), file=sys.stderr)
+        startup_log = logStartupFailure(tb_text)
+        if startup_log:
+            tb_text += f"\nStartup log: {startup_log}"
         try:
             from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -145,6 +164,6 @@ if __name__ == "__main__":
             msg.setDetailedText(tb_text)
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
-        except Exception as x:
-            print("Failed to show error message: " + formatUserError(x), file=sys.stderr)
+        except Exception:
+            pass
         sys.exit(1)

@@ -6,7 +6,7 @@ import xml.etree.ElementTree as XML
 from base64 import b64decode, b64encode
 from collections.abc import KeysView, ValuesView
 from io import StringIO
-from os import path
+from shutil import copyfileobj
 
 from fasteners import InterProcessLock
 
@@ -34,54 +34,80 @@ class Model:
         self.reload()
 
     def reload(self) -> None:
-        self.modList = {}
-        if path.exists(self.xmlfile):
+        self._canWrite = False
+        self._inventorySource: str | None = None
+        errors = []
+        for filename in (self.xmlfile, self.xmlfile + ".old", self.xmlfile + ".new"):
             try:
-                encoding = detectEncoding(self.xmlfile)
-                with open(self.xmlfile, 'r', encoding=encoding) as file:
-                    text = re.sub(
-                        r"\A(\s*<\?xml[^?\n]*encoding=['\"])utf_8(['\"])(?=[^?\n]*\?>)",
-                        r"\1utf-8\2",
-                        file.read(),
-                        count=1,
-                    )
-                tree = XML.parse(StringIO(text))
-                root = tree.getroot()
-                for xmlmod in root.findall('mod'):
-                    mod = self.populateModFromXml(Mod(), xmlmod)
-                    self.modList[mod.name] = mod
-            except (OSError, UnicodeError) as e:
-                MessageAlertReadingConfigurationFailed(self.xmlfile, e)
-            except XML.ParseError as e:
-                MessageAlertReadingConfigurationFailed(self.xmlfile, e)
-                raise e
+                mods = self._readInventory(filename)
+            except FileNotFoundError:
+                continue
+            except (OSError, ValueError, LookupError, XML.ParseError) as error:
+                errors.append(f"{filename}: {error}")
+                continue
+            self.modList = mods
+            self._inventorySource = filename
+            self._canWrite = True
+            if filename != self.xmlfile:
+                print(f"Recovered mod inventory from {filename}")
+            return
+        if errors:
+            failure = XML.ParseError("No valid mod inventory found:\n" + "\n".join(errors))
+            MessageAlertReadingConfigurationFailed(self.xmlfile, failure)
+            raise failure
+        self.modList = {}
+        self._canWrite = True
+
+    @staticmethod
+    def _readInventory(filename: str) -> dict[str, Mod]:
+        encoding = detectEncoding(filename)
+        with open(filename, "r", encoding=encoding) as file:
+            text = re.sub(
+                r"\A(\s*<\?xml[^?\n]*encoding=['\"])utf_8(['\"])(?=[^?\n]*\?>)",
+                r"\1utf-8\2",
+                file.read(),
+                count=1,
+            )
+        root = XML.parse(StringIO(text)).getroot()
+        if root.tag != "installed":
+            raise XML.ParseError("Mod inventory must have an installed root element")
+        mods: dict[str, Mod] = {}
+        for xmlmod in root.findall("mod"):
+            if not xmlmod.get("name"):
+                raise XML.ParseError("Mod inventory entry is missing its name")
+            mod = Model.populateModFromXml(Mod(), xmlmod)
+            if not mod.name or mod.name in mods:
+                raise XML.ParseError("Mod inventory contains an empty or duplicate mod name")
+            mods[mod.name] = mod
+        return mods
 
     def write(self) -> None:
-        installed = XML.Element("installed")
-        root = XML.ElementTree(installed)
-        for mod in self.all():
-            root = self.writeModToXml(mod, root)
-        indent(installed)
-        print(f"writing mod list to {self.xmlfile}")
         newfile = self.xmlfile + ".new"
         oldfile = self.xmlfile + ".old"
         try:
-            # write to a copy first so a failed write cannot destroy the previous list
-            encoding = detectEncoding(self.xmlfile)
-            with open(newfile, 'wb') as file:
-                root.write(file, encoding=encoding.upper(), xml_declaration=True)
+            if not self._canWrite:
+                raise RuntimeError("Cannot save mod inventory after a failed reload")
+            installed = XML.Element("installed")
+            root = XML.ElementTree(installed)
+            for mod in self.all():
+                root = self.writeModToXml(mod, root)
+            indent(installed)
+            if self._inventorySource is not None:
+                self._readInventory(self._inventorySource)
+                if self._inventorySource != oldfile:
+                    with open(self._inventorySource, "rb") as source, open(oldfile + ".new", "wb") as backup:
+                        copyfileobj(source, backup)
+                        backup.flush()
+                        os.fsync(backup.fileno())
+                    os.replace(oldfile + ".new", oldfile)
+            print(f"writing mod list to {self.xmlfile}")
+            with open(newfile, "wb") as file:
+                root.write(file, encoding="utf-8", xml_declaration=True)
                 file.flush()
                 os.fsync(file.fileno())
-            if os.path.isfile(self.xmlfile):
-                os.replace(self.xmlfile, oldfile)
-            try:
-                os.replace(newfile, self.xmlfile)
-            except OSError:
-                if os.path.isfile(oldfile) and not os.path.isfile(self.xmlfile):
-                    os.rename(oldfile, self.xmlfile)
-                if os.path.isfile(newfile):
-                    os.remove(newfile)
-                raise
+            self._readInventory(newfile)
+            os.replace(newfile, self.xmlfile)
+            self._inventorySource = self.xmlfile
         except Exception as e:
             MessageAlertWritingFailed(self.xmlfile, e)
 
@@ -121,11 +147,11 @@ class Model:
 
     @property
     def xmlfile(self) -> str:
-        return data.getConfig().configuration + "/installed.xml"
+        return os.path.join(data.getConfig().configuration, "installed.xml")
 
     @property
     def lockfile(self) -> str:
-        return data.getConfig().configuration + "/installed.lock"
+        return os.path.join(data.getConfig().configuration, "installed.lock")
 
     @staticmethod
     def populateModFromXml(mod: Mod, root: XML.Element) -> Mod:

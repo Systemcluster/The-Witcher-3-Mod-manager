@@ -22,6 +22,30 @@ The user configuration is reused automatically. For a portable installation with
 On the first run, if no configuration can be found, configuration files will be created under `AppData\Local\The Witcher 3 Mod Manager`.
 Existing configuration files will be read from the directory of the executable first and in `Documents\The Witcher 3 Mod Manager` second for compatibility with prior versions. They can be freely relocated between the searched locations as preferred.
 
+### Script Merger on Linux and macOS
+
+Choose the Script Merger executable in the manager first. To use a particular Wine prefix, close the manager and add `mergerlaunchcommand` to the existing `[PATHS]` section of `config.ini`, for example:
+
+```ini
+[PATHS]
+scriptmerger=/home/user/Tools/Script Merger/WitcherScriptMerger.exe
+mergerlaunchcommand=WINEPREFIX="/home/user/Games/Witcher 3/prefix" wine "/home/user/Tools/Script Merger/WitcherScriptMerger.exe"
+```
+
+For Steam with `protontricks-launch` installed, an alternative is:
+
+```ini
+mergerlaunchcommand=protontricks-launch --appid 292030 "/home/user/Tools/Script Merger/WitcherScriptMerger.exe"
+```
+
+Replace the paths and, for a non-Steam shortcut, the app ID with the actual values. CrossOver users need a command targeting the correct bottle. The executable path must remain configured, and its directory is the command's working directory. Unlike `gamelaunchcommand`, this override is interpreted by a shell on Linux/macOS: use only trusted commands and quote paths containing spaces. Without an override, the manager runs `wine` with the selected executable. Windows runs the executable directly.
+
+### Startup Diagnostics
+
+Early startup failures, including missing Qt DLL imports, write a `TW3MM-startup-*.log` file in the system temporary directory when it is writable, even when the GUI cannot open. On Windows or inside a Wine bottle, check that environment's `%TEMP%`; on Linux/macOS, check the Python runtime's temporary directory, usually selected through `TMPDIR` or `/tmp`. The log path is also printed to the console when one is available. Review personal paths before sharing the log.
+
+A log does not fix a missing runtime dependency. Running the Windows executable under Wine/Proton/CrossOver still needs release-artifact compatibility testing; do not install arbitrary DLL downloads. Running the manager from Python natively is an alternative.
+
 ### Game Configuration
 
 Select `witcher3.exe` under `bin/x64` (DX11) or `bin/x64_dx12` (DX12). The command-line `--game` option also accepts the installation root.
