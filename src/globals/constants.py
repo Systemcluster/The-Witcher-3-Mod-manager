@@ -4,7 +4,7 @@ from PySide6.QtCore import QCoreApplication
 
 translate = QCoreApplication.translate
 
-VERSION = "0.10.3"
+VERSION = "0.10.4"
 TITLE = translate("GLOBALS", "The Witcher 3 Mod Manager")
 AUTHORS = [
     "Stefan Kostic (stefan3372)",
