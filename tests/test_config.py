@@ -7,6 +7,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.configuration.config import Configuration
+from src.core.model import Model
+from src.domain.mod import Mod
+from src.globals import data
 from src.util.util import normalizePath, reconfigureGamePath
 
 
@@ -320,6 +323,68 @@ class ConfigurationUpgradeTests(unittest.TestCase):
 
     def test_next_gen_dx12_upgrades_to_remastered_without_config_changes(self):
         self.assert_remastered_upgrade('ng', 'dx12')
+
+    def test_next_gen_mod_inventory_survives_remastered_upgrade(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(Configuration, 'write_config'):
+            root = Path(temporary)
+            game = root / "The Witcher 3"
+            documents = root / "Documents"
+            manager = root / "Manager"
+            documents.mkdir()
+            manager.mkdir()
+            (game / "content").mkdir(parents=True)
+            dx11 = game / "bin/x64/witcher3.exe"
+            dx12 = game / "bin/x64_dx12/witcher3.exe"
+            dx11.parent.mkdir(parents=True)
+            dx12.parent.mkdir(parents=True)
+            dx11.touch()
+            dx12.touch()
+            (game / "launcher-configuration.json").write_text(
+                json.dumps({"gameId": "witcher3", "platform": "steam", "editions": []}), encoding="utf-8"
+            )
+
+            saved = configparser.ConfigParser()
+            saved["PATHS"] = {
+                "gameexe": dx11.as_posix(),
+                "documents": str(documents),
+                "scriptmerger": "",
+            }
+            saved["SETTINGS"] = {"AllowPopups": "1", "language": "English.qm"}
+            saved["TOOLBAR"] = {}
+            config_file = manager / "config.ini"
+            with config_file.open("w", encoding="utf-8") as file:
+                saved.write(file)
+
+            next_gen = Configuration(configPath=str(manager))
+            with patch.object(data, "config", next_gen):
+                model = Model(ignorelock=True)
+                model.add("Existing Mod", Mod(_name="Existing Mod", files=["modExisting"]))
+            inventory = (manager / "installed.xml").read_bytes()
+
+            dx11.unlink()
+            (game / "launcher-configuration.json").write_text(
+                json.dumps(
+                    {
+                        "gameId": "witcher3",
+                        "platform": "steam",
+                        "editions": [{"name": "remasteredEdition"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            remastered = Configuration(configPath=str(manager))
+            with patch.object(data, "config", remastered):
+                restored = Model(ignorelock=True)
+                self.assertEqual(list(restored.list()), ["Existing Mod"])
+                self.assertEqual(restored.get("Existing Mod").files, ["modExisting"])
+
+            self.assertEqual(remastered.gameversion, "re")
+            self.assertEqual(remastered.gameexe, dx12.as_posix())
+            self.assertEqual(remastered.mods, str(game / "Mods"))
+            self.assertEqual(remastered.dlc, str(game / "DLC"))
+            self.assertEqual(remastered.get("PATHS", "gameexe"), dx11.as_posix())
+            self.assertEqual((manager / "installed.xml").read_bytes(), inventory)
 
     def test_missing_renderer_does_not_switch_to_another_installation(self):
         with tempfile.TemporaryDirectory() as temporary:
