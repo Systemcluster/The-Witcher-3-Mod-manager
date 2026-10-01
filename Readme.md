@@ -16,15 +16,15 @@ See the [Nexus Mods page](https://www.nexusmods.com/witcher3/mods/2678) for rele
 
 ### Release Versions (Windows)
 
-Download the release archive from Nexus Mods or from the [maintained GitHub releases](https://github.com/Systemcluster/The-Witcher-3-Mod-manager/releases).
-The user configuration is reused automatically. For a portable installation with `config.ini` beside the executable, copy that configuration, `installed.xml`, and the `extracted` directory into the new manager directory.
+Download the latest release from Nexus Mods or from the [GitHub releases](https://github.com/Systemcluster/The-Witcher-3-Mod-manager/releases).
 
-On the first run, if no configuration can be found, configuration files will be created under `AppData\Local\The Witcher 3 Mod Manager`.
-Existing configuration files will be read from the directory of the executable first and in `Documents\The Witcher 3 Mod Manager` second for compatibility with prior versions. They can be freely relocated between the searched locations as preferred.
+Existing configuration is picked up automatically when updating. Portable installations keep `config.ini` next to the executable; to update one, copy `config.ini`, `installed.xml` and the `extracted` directory into the new directory.
+
+If no configuration exists on the first run, it is created in `AppData\Local\The Witcher 3 Mod Manager`. Existing configuration is searched for in the directory of the executable first and in `Documents\The Witcher 3 Mod Manager` second for compatibility with older versions, and can be moved freely between these locations.
 
 ### Script Merger on Linux and macOS
 
-Choose the Script Merger executable in the manager first. To use a particular Wine prefix, close the manager and add `mergerlaunchcommand` to the existing `[PATHS]` section of `config.ini`, for example:
+Script Merger is run with `wine` using the executable selected in the manager. To run it in a specific Wine prefix, set `mergerlaunchcommand` in the `[PATHS]` section of `config.ini` while the manager is closed:
 
 ```ini
 [PATHS]
@@ -32,69 +32,78 @@ scriptmerger=/home/user/Tools/Script Merger/WitcherScriptMerger.exe
 mergerlaunchcommand=WINEPREFIX="/home/user/Games/Witcher 3/prefix" wine "/home/user/Tools/Script Merger/WitcherScriptMerger.exe"
 ```
 
-For Steam with `protontricks-launch` installed, an alternative is:
+With Steam and `protontricks-launch`, the Proton prefix of the game can be used instead:
 
 ```ini
 mergerlaunchcommand=protontricks-launch --appid 292030 "/home/user/Tools/Script Merger/WitcherScriptMerger.exe"
 ```
 
-Replace the paths and, for a non-Steam shortcut, the app ID with the actual values. CrossOver users need a command targeting the correct bottle. The executable path must remain configured, and its directory is the command's working directory. Unlike `gamelaunchcommand`, this override is interpreted by a shell on Linux/macOS: use only trusted commands and quote paths containing spaces. Without an override, the manager runs `wine` with the selected executable. Windows runs the executable directly.
+Replace the paths with your own, and the app ID if the game was added as a non-Steam shortcut. For CrossOver, the command has to target the bottle the game is installed in.
+
+The Script Merger executable still has to be selected in the manager, and its directory is used as the working directory of the command. Unlike `gamelaunchcommand`, the command is run through a shell, so paths containing spaces have to be quoted and only trusted commands should be used. On Windows, Script Merger is always run directly.
 
 ### Startup Diagnostics
 
-Early startup failures, including missing Qt DLL imports, write a `TW3MM-startup-*.log` file in the system temporary directory when it is writable, even when the GUI cannot open. On Windows or inside a Wine bottle, check that environment's `%TEMP%`; on Linux/macOS, check the Python runtime's temporary directory, usually selected through `TMPDIR` or `/tmp`. The log path is also printed to the console when one is available. Review personal paths before sharing the log.
+When startup fails, a `TW3MM-startup-*.log` file is written to the system temporary directory, even if the GUI can't open. The path of the log is also printed to the console when there is one.
 
-A log does not fix a missing runtime dependency. Running the Windows executable under Wine/Proton/CrossOver still needs release-artifact compatibility testing; do not install arbitrary DLL downloads. Running the manager from Python natively is an alternative.
+- On Windows and inside Wine, the log is in `%TEMP%` of that environment.
+- On Linux and macOS, the log is in the temporary directory of the Python runtime, usually `TMPDIR` or `/tmp`.
 
 ### Game Configuration
 
-Select `witcher3.exe` under `bin/x64` (DX11) or `bin/x64_dx12` (DX12). The command-line `--game` option also accepts the installation root.
+Select `witcher3.exe` in `bin/x64` for DX11 or in `bin/x64_dx12` for DX12. The `--game` command-line option also accepts the installation directory itself.
 
-If an update removes the configured executable, the manager uses an available renderer version from the same game directory without rewriting `config.ini`. Detection follows the current files and launcher metadata, including after a rollback; it does not search other installations.
+If a game update removes the configured executable, the manager uses whichever renderer version is available in the same game directory, without changing `config.ini`. Detection always follows the current files and launcher metadata, so it keeps working after a rollback. Other installations are not searched.
 
-Remastered's supplied launcher metadata identifies `remasteredEdition` and the store. Edition detection uses that metadata, with an executable-layout fallback for older installations. The selected executable determines which user-settings file the manager opens. Existing menu file lists are updated when present; missing lists are not created.
+Remastered ships launcher metadata identifying `remasteredEdition` and the store, which is used to detect the edition. Older installations without it are detected from the executable layout. The selected executable determines which user settings file is used. Existing menu file lists are updated, missing ones are not created.
 
-Steam installations launch through Steam, including on Windows, to avoid the reported crash when starting the Remastered executable directly. The renderer and mod options used for that launch are controlled by Steam/REDlauncher. Non-Steam Windows installations launch the selected executable directly.
+Steam installations are always launched through Steam, also on Windows, since starting the Remastered executable directly is reported to crash. Renderer and mod options for these launches are controlled by Steam and REDlauncher. Other Windows installations launch the selected executable directly.
 
-For another launch environment, set `gamelaunchcommand` in the `[PATHS]` section of `config.ini`. It overrides automatic launching. On Linux/macOS, quote paths and arguments containing spaces; commands are parsed into arguments, not interpreted by a shell. CrossOver users must configure a command that launches Steam in the correct bottle if the system's `steam://` handler does not do so. Use `--userdocuments` to select that environment's Documents directory containing `The Witcher 3`; do not assume the host's Documents directory is the game's.
+For other launch environments, `gamelaunchcommand` in the `[PATHS]` section of `config.ini` replaces the automatic launch. The command is split into arguments and not run through a shell, so on Linux and macOS, paths and arguments containing spaces have to be quoted. With CrossOver, if the system `steam://` handler doesn't open Steam in the right bottle, the command has to do it instead. `--userdocuments` selects the Documents directory containing `The Witcher 3` in that environment, which is usually not the one of the host.
 
 ### Remastered Troubleshooting
 
-- **Startup or executable selection:** a missing `gameexe` setting opens the selection dialog. Select the existing DX12 executable, without making dummy executables or directories.
-- **Game crashes from the manager:** use the Steam launch route. Do not delete or rename `steam_api64.dll`; it is part of the game installation.
-- **Mods install but do not load:** check that mods are enabled in REDlauncher and that neither Steam launch options nor a custom command includes `-disablemods`. Check that `--userdocuments` points at the game's actual settings directory when using Proton/CrossOver. A successful installation does not make an older mod compatible with Remastered.
-- **Merging fails:** Script Merger is a separate application. The [Fresh and Automated Edition page](https://www.nexusmods.com/witcher3/mods/8405) reported Remastered bundle-format support as still being tested on September 29, 2026. Check its current compatibility notes; the manager cannot repair incompatible scripts or bundle readers.
-- **Script Merger recreates an old game folder:** change the game directory inside Script Merger too. Its own configuration can retain `GameDirectory`, `ModsDirectory`, and `VanillaScriptsDirectory` overrides. Changing the manager's game path does not rewrite those external settings. Back up the merger's configuration before resetting overrides or rebuilding merges.
-- **Finding/resetting manager settings:** close the manager and back up its configuration directory first. Check for a portable `config.ini` beside the executable, then the locations described above. To reset paths, rename only `config.ini`; retain `installed.xml` and `extracted` to preserve the manager's mod inventory. Game load order remains in `The Witcher 3/mods.settings` under the configured Documents directory.
+- **Selecting the executable**\
+  If `gameexe` isn't set, the selection dialog opens on startup. Select the existing DX12 executable.
+- **Game crashes when launched from the manager**\
+  Launch through Steam. `steam_api64.dll` is part of the game and shouldn't be deleted or renamed.
+- **Mods are installed but don't load**\
+  Check that mods are enabled in REDlauncher and that neither the Steam launch options nor a custom command contain `-disablemods`. With Proton or CrossOver, check that `--userdocuments` points to the settings directory the game actually uses. Older mods might not work with Remastered even if they install fine.
+- **Merging fails**\
+  Script Merger is a separate application, and the manager can't fix incompatible scripts or bundle readers. As of September 29, 2026, the [Fresh and Automated Edition](https://www.nexusmods.com/witcher3/mods/8405) lists Remastered bundle support as still being tested; see its page for the current state.
+- **Script Merger recreates an old game directory**\
+  Script Merger keeps its own `GameDirectory`, `ModsDirectory` and `VanillaScriptsDirectory` settings, which don't change with the game path in the manager. Change the game directory in Script Merger as well, and back up its configuration before resetting overrides or rebuilding merges.
+- **Finding or resetting manager settings**\
+  Close the manager and back up its configuration directory first, usually in `User\AppData\Local\The Witcher 3 Mod Manager` on Windows or in one of the other locations described above. To reset paths, rename only `config.ini` and keep `installed.xml` to keep the list of installed mods. The load order of the game is stored separately in `The Witcher 3/mods.settings` in the Documents directory.
 
 ### Python (Windows, Linux, and macOS)
 
-The project uses [PDM](https://pdm-project.org/en/latest/) for dependency management. Requires Python 3.10 or newer (3.10+), up to Python 3.12.
+Dependencies are managed with [PDM](https://pdm-project.org/en/latest/). Python 3.10 to 3.12 is supported.
 
-1. Install PDM with [recommended installation method](https://pdm-project.org/en/latest/#recommended-installation-method)
+1. Install PDM using the [recommended installation method](https://pdm-project.org/en/latest/#recommended-installation-method)
 2. Clone the repository
-3. Install dependencies: `pdm install --prod`
-4. Run the application: `pdm run start`
+3. Install dependencies with `pdm install --prod`
+4. Start the manager with `pdm run start`
 
-On Linux:
-- Configuration files are created in `~/.config/TheWitcher3ModManager`
-- `wine` must be available to run Script Merger
-- Consider using `pdm run` prefix for all commands
+On Linux and macOS:
+- Configuration is stored in `~/.config/TheWitcher3ModManager`
+- `wine` is required to run Script Merger
+- Commands should be run with `pdm run` to use the project environment
 
 ### Development Checks
 
-Install development tools with `pdm install`.
+Development tools are installed with `pdm install`.
 
-- `pdm run format`: format every project Python file.
-- `pdm run lint`: check imports and core Python errors without changing files.
-- `pdm run ruff check --fix .`: apply safe lint fixes, including import sorting.
-- `pdm run check`: check formatting, lint, Pyright, mypy, and all tests.
-- `pdm run typecheck-pyright`: run the CLI checker underlying Pylance with the project's `standard` settings.
-- `pdm run typecheck`: run mypy as a second type check.
+- `pdm run format` formats all Python files.
+- `pdm run lint` checks imports and common errors without changing files.
+- `pdm run ruff check --fix .` applies safe lint fixes, including import sorting.
+- `pdm run check` runs the formatting and lint checks, Pyright, mypy and all tests.
+- `pdm run typecheck-pyright` runs Pyright, the type checker behind Pylance, with the `standard` settings of the project.
+- `pdm run typecheck` runs mypy as a second type checker.
 
 ### Build Release (Windows)
 
-1. Use a fresh environment and install dependencies with development tools: `pdm install`.
-2. Run checks: `pdm run check`
-3. Build executable: `pdm run build-win`
-4. Find files in `build/exe.[platform identifier].[python version]`
+1. Install dependencies and development tools in a fresh environment with `pdm install`
+2. Run the checks with `pdm run check`
+3. Build the executable with `pdm run build-win`
+4. The build is placed in `build/exe.[platform].[python version]`
