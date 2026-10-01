@@ -1,8 +1,9 @@
 '''Core functionality'''
 
 from dataclasses import dataclass
-from os import listdir, path, remove
+from os import listdir, path
 from shutil import copyfile
+from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import Any, Callable
 
@@ -29,9 +30,18 @@ class Installer:
     def installMod(self, modPath: str) -> Tuple[bool, int, int]:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
 
-        realModPath = os.path.realpath(modPath)
-        realGamePath = os.path.realpath(data.getConfig().game)
-        if realModPath and realGamePath and realModPath.startswith(realGamePath):
+        gamePath = data.getConfig().game
+        realModPath = path.realpath(modPath)
+        realGamePath = path.realpath(gamePath) if gamePath else ''
+        try:
+            comparableModPath = path.normcase(realModPath)
+            comparableGamePath = path.normcase(realGamePath)
+            modFromGamePath = bool(
+                comparableGamePath and path.commonpath((comparableModPath, comparableGamePath)) == comparableGamePath
+            )
+        except ValueError:
+            modFromGamePath = False
+        if modFromGamePath:
             MessageAlertModFromGamePath(realModPath, realGamePath)
             return False, 0, 0
 
@@ -42,8 +52,9 @@ class Installer:
         self.progress(0.1)
         mod = None
         result = True
+        extraction = TemporaryDirectory(prefix="tw3mm-")
         try:
-            mod, directories, xmls = fetchMod(modPath)
+            mod, directories, xmls = fetchMod(modPath, extraction.name)
 
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
@@ -88,7 +99,7 @@ class Installer:
                         installCount += 1
                 elif containContentFolder(directory):
                     try:
-                        ddir = directory[len(data.getConfig().extracted) + 1 :]
+                        ddir = path.relpath(directory, extraction.name)
                     except:
                         ddir = ''
                     self.output(
@@ -198,13 +209,10 @@ class Installer:
             result = True
         except Exception as err:
             self.output(formatUserError(err))
-            if mod:
-                self.uninstallMod(mod)
             result = False
             installCount = 0
         finally:
-            if path.exists(data.getConfig().extracted):
-                removeDirectory(data.getConfig().extracted)
+            extraction.cleanup()
         return result, installCount, incompleteCount
 
     def uninstallMod(self, mod: Mod) -> bool:
@@ -333,7 +341,7 @@ class Installer:
                 target = path.join(data.getConfig().menu, installed)
                 if not path.exists(target):
                     continue
-                if menu in (
+                if menu.casefold() in (
                     "audio.xml",
                     "display.xml",
                     "dx11filelist.txt",
@@ -355,4 +363,4 @@ class Installer:
                         + translate("MainWindow", " will not be removed.")
                     )
                     break
-                remove(target)
+                removeInstalledFile(target)

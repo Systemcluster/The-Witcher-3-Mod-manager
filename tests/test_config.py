@@ -1,11 +1,13 @@
 import configparser
 import json
+import ntpath
 import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import src.configuration.config as config_module
 from src.configuration.config import Configuration
 from src.core.model import Model
 from src.domain.mod import Mod
@@ -36,6 +38,18 @@ class ConfigurationPathTests(unittest.TestCase):
                         pass
                     self.assertEqual(Configuration.getCorrectGamePath(exe), normalizePath(exe))
                     self.assertEqual(Configuration.getGameRoot(exe), normalizePath(root))
+
+    def test_game_root_accepts_windows_normalized_paths(self):
+        with tempfile.TemporaryDirectory() as root:
+            os.makedirs(os.path.join(root, 'content'))
+            exe = os.path.join(root, 'bin', 'x64_dx12', 'witcher3.exe')
+            os.makedirs(os.path.dirname(exe))
+            Path(exe).touch()
+            with (
+                patch.object(config_module.path, "normcase", ntpath.normcase),
+                patch.object(config_module.path, "commonpath", ntpath.commonpath),
+            ):
+                self.assertEqual(Configuration.getGameRoot(exe), normalizePath(root))
 
     def test_game_version_falls_back_to_installed_renderers(self):
         for directories, expected in ((("x64",), "og"), (("x64", "x64_dx12"), "ng"), (("x64_dx12",), "re")):
@@ -196,6 +210,53 @@ class ConfigurationPathTests(unittest.TestCase):
                 with self.subTest(selected=selected):
                     self.assertEqual(Configuration.getCorrectGamePath(selected), '')
 
+    def test_rejects_game_paths_resolving_outside_installation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "The Witcher 3"
+            outside = Path(temporary) / "Outside"
+            outside.mkdir()
+
+            for escaped_part in ("content", "executable"):
+                with self.subTest(escaped_part=escaped_part):
+                    game = root / escaped_part
+                    game.mkdir(parents=True)
+                    content = game / "content"
+                    exe = game / "bin/x64_dx12/witcher3.exe"
+                    exe.parent.mkdir(parents=True)
+                    if escaped_part == "content":
+                        content.symlink_to(outside, target_is_directory=True)
+                        exe.touch()
+                    else:
+                        content.mkdir()
+                        external_exe = outside / "witcher3.exe"
+                        external_exe.touch()
+                        exe.symlink_to(external_exe)
+
+                    self.assertEqual(Configuration.getGameRoot(str(exe)), "")
+                    self.assertEqual(Configuration.getCorrectGamePath(str(game)), "")
+
+    def test_game_root_uses_platform_case_rules_for_resolved_paths(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "content").mkdir()
+            exe = root / "bin/x64_dx12/witcher3.exe"
+            exe.parent.mkdir(parents=True)
+            exe.touch()
+
+            realpath = os.path.realpath
+            resolved_root = realpath(root)
+            with (
+                patch(
+                    "src.configuration.config.path.realpath",
+                    side_effect=lambda value: (
+                        resolved_root if realpath(value) == resolved_root else realpath(value).upper()
+                    ),
+                ),
+                patch("src.configuration.config.path.normcase", side_effect=lambda value: value.lower()),
+                patch("src.configuration.config.path.commonpath", side_effect=ntpath.commonpath),
+            ):
+                self.assertEqual(Configuration.getGameRoot(str(exe)), normalizePath(str(root)))
+
     def test_get_correct_game_path_accepts_remastered_dx12_layout(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = os.path.join(tmp, "The Witcher 3")
@@ -218,6 +279,20 @@ class ConfigurationPathTests(unittest.TestCase):
                 handle.write("x")
 
             self.assertEqual(Configuration.getCorrectGamePath(root), normalizePath(exe))
+
+    def test_internal_path_case_match_stays_under_its_parent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            game = Path(temporary) / "The Witcher 3"
+            existing = game / "mods"
+            existing.mkdir(parents=True)
+            requested = game / "Mods"
+            isdir = os.path.isdir
+
+            with patch(
+                "src.configuration.config.path.isdir",
+                side_effect=lambda value: False if os.fspath(value) == str(requested) else isdir(value),
+            ):
+                self.assertEqual(Configuration.verifyInternalPath(str(requested)), str(existing))
 
 
 class ConfigurationUpgradeTests(unittest.TestCase):

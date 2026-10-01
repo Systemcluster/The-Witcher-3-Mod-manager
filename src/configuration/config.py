@@ -368,10 +368,6 @@ class Configuration:
         return self.__configPath
 
     @property
-    def extracted(self):
-        return self.__configPath + '/extracted'
-
-    @property
     def gamelaunchcommand(self):
         return self.get("PATHS", "gamelaunchcommand")
 
@@ -427,6 +423,7 @@ class Configuration:
         if not gamePath:
             return ''
         current = util.normalizePath(gamePath)
+        selected = current
         if path.isfile(current):
             if path.basename(current).lower() != 'witcher3.exe':
                 return ''
@@ -441,8 +438,18 @@ class Configuration:
                 return ''
         if path.basename(current).lower() == 'bin':
             current = path.dirname(current)
-        if path.isdir(path.join(current, 'content')):
-            return current
+        resolvedRoot = path.normcase(util.normalizePath(path.realpath(current)))
+        resolvedSelected = path.normcase(util.normalizePath(path.realpath(selected)))
+        content = path.join(current, 'content')
+        resolvedContent = path.normcase(util.normalizePath(path.realpath(content)))
+        try:
+            if path.isdir(content) and all(
+                util.normalizePath(path.commonpath((resolvedRoot, candidate))) == util.normalizePath(resolvedRoot)
+                for candidate in (resolvedSelected, resolvedContent)
+            ):
+                return current
+        except ValueError:
+            pass
         return ''
 
     @staticmethod
@@ -493,7 +500,7 @@ class Configuration:
                     return path.abspath(internalPath)
                 else:
                     return None
-            return path.abspath(existing)
+            return path.abspath(path.join(parent, existing))
         except OSError as e:
             print(f"Error checking path {internalPath}: {e}")
             return None

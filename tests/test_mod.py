@@ -1,11 +1,13 @@
 import configparser
 import os
+import stat
 import tempfile
 import unittest
 import xml.etree.ElementTree as XML
+import zipfile
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 from PySide6.QtWidgets import QMessageBox
 
@@ -14,6 +16,257 @@ from src.core.model import Model
 from src.domain.key import Key
 from src.domain.mod import Mod
 from src.domain.usersetting import Usersetting
+from src.util.util import copyFolder, removeDirectory, removeInstalledFile
+
+
+class InstalledFileSafetyTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.game = self.root / "The Witcher 3"
+        self.outside = self.root / "Documents"
+        for directory in ("content", "Mods", "DLC", "bin"):
+            (self.game / directory).mkdir(parents=True)
+        self.outside.mkdir()
+        self.config = SimpleNamespace(
+            game=str(self.game),
+            mods=str(self.game / "Mods"),
+            dlc=str(self.game / "DLC"),
+            menu=str(self.game / "bin"),
+            settings=str(self.root),
+        )
+        config_patch = patch("src.globals.data.config", self.config)
+        config_patch.start()
+        self.addCleanup(config_patch.stop)
+
+    def populated(self, directory: Path) -> Path:
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "asset").write_text("keep")
+        return directory
+
+    def link(self, link: Path, target: Path) -> None:
+        try:
+            link.symlink_to(target, target_is_directory=target.is_dir())
+        except OSError as error:
+            self.skipTest(f"Symbolic links unavailable: {error}")
+
+    def test_removes_targets_inside_game_boundaries(self):
+        for directory in (self.game / "Mods" / "modExample", self.game / "DLC" / "dlcExample"):
+            removeDirectory(str(self.populated(directory)))
+            self.assertFalse(directory.exists())
+        menu = self.game / "bin" / "example.xml"
+        menu.write_text("data")
+        removeInstalledFile(str(menu))
+        self.assertFalse(menu.exists())
+        self.assertEqual(sorted(entry.name for entry in self.game.iterdir()), ["DLC", "Mods", "bin", "content"])
+
+    def test_refuses_directories_outside_mods_and_dlc(self):
+        for directory in (
+            self.game,
+            self.game / "Mods",
+            self.game / "DLC",
+            self.game / "content",
+            self.game / "Mods-old" / "modExample",
+            self.root / "The Witcher 3 Backup" / "Mods" / "modExample",
+            self.outside,
+        ):
+            self.populated(directory)
+            with self.subTest(directory=directory), self.assertRaises(ValueError):
+                removeDirectory(str(directory))
+            self.assertEqual((directory / "asset").read_text(), "keep")
+        for directory in ("Mods/modExample", str(self.game / "Mods" / ".." / "content")):
+            with self.subTest(directory=directory), self.assertRaises(ValueError):
+                removeDirectory(directory)
+        self.assertEqual((self.game / "content" / "asset").read_text(), "keep")
+
+    def test_refuses_files_outside_game(self):
+        for filename in (self.outside / "user.settings", self.root / "The Witcher 3 Backup" / "example.xml"):
+            filename.parent.mkdir(exist_ok=True)
+            filename.write_text("keep")
+            with self.subTest(filename=filename), self.assertRaises(ValueError):
+                removeInstalledFile(str(filename))
+            self.assertEqual(filename.read_text(), "keep")
+
+    def test_refuses_without_configured_game(self):
+        directory = self.populated(self.game / "Mods" / "modExample")
+        self.config.game = ""
+        with self.assertRaises(ValueError):
+            removeDirectory(str(directory))
+        self.assertEqual((directory / "asset").read_text(), "keep")
+
+    def test_never_deletes_through_links(self):
+        external = self.populated(self.outside / "modExample")
+        (self.outside / "example.xml").write_text("keep")
+        self.link(self.game / "Mods" / "modLinked", external)
+        self.link(self.game / "DLC" / "linked", self.outside)
+        (self.game / "bin").rmdir()
+        self.link(self.game / "bin", self.outside)
+        for remove, target in (
+            (removeDirectory, self.game / "Mods" / "modLinked"),
+            (removeDirectory, self.game / "DLC" / "linked" / "modExample"),
+            (removeInstalledFile, self.game / "bin" / "example.xml"),
+        ):
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                remove(str(target))
+        linked_game = self.root / "Linked Game"
+        self.link(linked_game, self.game)
+        self.config.game = str(linked_game)
+        real = self.populated(self.game / "Mods" / "modReal")
+        with self.assertRaises(ValueError):
+            removeDirectory(str(linked_game / "Mods" / real.name))
+        self.assertEqual((real / "asset").read_text(), "keep")
+        self.assertEqual((external / "asset").read_text(), "keep")
+        self.assertEqual((self.outside / "example.xml").read_text(), "keep")
+
+    def test_refuses_windows_junctions(self):
+        directory = self.populated(self.game / "Mods" / "modExample")
+        lstat = os.lstat
+
+        def junction(path, *args, **kwargs):
+            metadata = lstat(path, *args, **kwargs)
+            if os.fspath(path) == str(directory):
+                return SimpleNamespace(st_mode=metadata.st_mode, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
+            return metadata
+
+        with patch("src.util.util.os.lstat", side_effect=junction), self.assertRaises(ValueError):
+            removeDirectory(str(directory))
+        self.assertEqual((directory / "asset").read_text(), "keep")
+
+    def test_nested_links_are_removed_without_following(self):
+        directory = self.populated(self.game / "Mods" / "modExample")
+        (self.outside / "save").write_text("keep")
+        self.link(directory / "linked", self.outside)
+        removeDirectory(str(directory))
+        self.assertFalse(directory.exists())
+        self.assertEqual((self.outside / "save").read_text(), "keep")
+
+    def test_hardlinked_mod_files_are_only_unlinked(self):
+        source = self.outside / "asset.bundle"
+        source.write_text("keep")
+        directory = self.game / "Mods" / "modExample"
+        directory.mkdir()
+        try:
+            os.link(source, directory / "asset.bundle")
+        except OSError as error:
+            self.skipTest(f"Hard links unavailable: {error}")
+        removeDirectory(str(directory))
+        self.assertFalse(directory.exists())
+        self.assertEqual(source.read_text(), "keep")
+
+    def test_replacement_keeps_original_until_copy_is_in_place(self):
+        source = self.root / "source"
+        source.mkdir()
+        (source / "asset").write_text("new")
+        target = self.populated(self.game / "Mods" / "modExample")
+        replace = os.replace
+
+        def failPromotion(origin, destination):
+            if Path(origin).name == "new":
+                raise PermissionError("denied")
+            return replace(origin, destination)
+
+        for failure in (
+            patch("src.util.util.copytree", side_effect=OSError("disk full")),
+            patch("src.util.util.os.replace", side_effect=failPromotion),
+        ):
+            with self.subTest(failure=failure), failure, self.assertRaises(OSError):
+                copyFolder(str(source), str(target))
+            self.assertEqual((target / "asset").read_text(), "keep")
+            self.assertEqual([entry.name for entry in target.parent.iterdir()], ["modExample"])
+        copyFolder(str(source), str(target))
+        self.assertEqual((target / "asset").read_text(), "new")
+        self.assertEqual([entry.name for entry in target.parent.iterdir()], ["modExample"])
+        with self.assertRaises(ValueError):
+            copyFolder(str(source), str(self.game / "content"))
+
+    def test_failed_restore_keeps_original_files(self):
+        source = self.root / "source"
+        source.mkdir()
+        target = self.populated(self.game / "Mods" / "modExample")
+        replace = os.replace
+
+        def failAfterBackup(origin, destination):
+            if Path(origin).name in ("new", "old"):
+                raise PermissionError("denied")
+            return replace(origin, destination)
+
+        with (
+            patch("src.util.util.os.replace", side_effect=failAfterBackup),
+            self.assertRaisesRegex(RuntimeError, "original files are kept"),
+        ):
+            copyFolder(str(source), str(target))
+        self.assertEqual([backup.read_text() for backup in target.parent.glob(".tw3mm-*/old/asset")], ["keep"])
+
+    def test_uninstall_refuses_entries_outside_game_boundaries(self):
+        save = self.outside / "user.settings"
+        save.write_text("keep")
+        for mod in (
+            Mod(_name="Parent", files=[".."]),
+            Mod(_name="Absolute", dlcs=[str(self.outside)]),
+            Mod(_name="Menu", menus=[str(save)]),
+        ):
+            model = Mock()
+            with self.subTest(mod=mod.name):
+                self.assertFalse(Installer(model).uninstallMod(mod))
+                model.remove.assert_not_called()
+        self.assertEqual(save.read_text(), "keep")
+        self.assertEqual(sorted(entry.name for entry in self.game.iterdir()), ["DLC", "Mods", "bin", "content"])
+
+    def test_failed_install_keeps_existing_mod_files(self):
+        existing = self.populated(self.game / "Mods" / "modExample")
+        mod = Mod(_name="Example", files=["modExample"])
+        with (
+            patch("src.core.installer.fetchMod", return_value=(mod, [], [])),
+            patch.object(mod, "checkPriority", side_effect=OSError("failed")),
+        ):
+            self.assertEqual(Installer(Mock()).installMod(str(self.root / "source")), (False, 0, 0))
+        self.assertEqual((existing / "asset").read_text(), "keep")
+
+    def test_install_source_containment_is_component_and_case_aware(self):
+        inside = str(self.game / "Mods" / "modExample").upper()
+        sibling = str(self.root / "The Witcher 3 Backup" / "modExample")
+        with (
+            patch("src.core.installer.path.normcase", side_effect=str.lower),
+            patch("src.core.installer.MessageAlertModFromGamePath") as alert,
+            patch("src.core.installer.fetchMod", side_effect=OSError("stop")) as fetch,
+        ):
+            self.assertEqual(Installer(Mock()).installMod(inside), (False, 0, 0))
+            alert.assert_called_once()
+            fetch.assert_not_called()
+
+            alert.reset_mock()
+            self.assertEqual(Installer(Mock()).installMod(sibling), (False, 0, 0))
+            alert.assert_not_called()
+            fetch.assert_called_once_with(sibling, ANY)
+
+            fetch.reset_mock()
+            self.config.game = ""
+            source = str(Path.cwd() / "modExample")
+            self.assertEqual(Installer(Mock()).installMod(source), (False, 0, 0))
+            alert.assert_not_called()
+            fetch.assert_called_once_with(source, ANY)
+
+    def test_archive_extraction_is_private_and_removed(self):
+        archive = self.root / "modExample.zip"
+        with zipfile.ZipFile(archive, "w") as package:
+            package.writestr("modExample/content/asset.bundle", "new")
+        extracted = []
+
+        def unpack(source, destination):
+            extracted.append(destination)
+            with zipfile.ZipFile(source) as package:
+                package.extractall(destination)
+
+        model = Mock()
+        model.all.return_value = []
+        with (
+            patch("src.core.fetcher.sys", SimpleNamespace(platform="linux")),
+            patch("src.core.fetcher.shutil.unpack_archive", unpack),
+        ):
+            self.assertEqual(Installer(model).installMod(str(archive)), (True, 1, 0))
+        self.assertEqual((self.game / "Mods" / "modExample" / "content" / "asset.bundle").read_text(), "new")
+        self.assertFalse(Path(extracted[0]).exists())
 
 
 class ModConfigurationTests(unittest.TestCase):

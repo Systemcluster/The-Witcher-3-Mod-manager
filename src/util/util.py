@@ -2,6 +2,7 @@
 
 import os
 import re
+import stat
 import subprocess
 import sys
 import traceback
@@ -11,6 +12,7 @@ from configparser import ConfigParser
 from platform import python_version
 from shutil import copytree, rmtree
 from sys import platform
+from tempfile import mkdtemp
 from threading import Timer
 from typing import Any
 
@@ -266,36 +268,79 @@ def openFolder(path: str):
         webbrowser.open(path, new=1)
 
 
-def copyFolder(src, dst):
-    '''Copy folder from src to dst'''
-    dst = os.path.normpath(dst)
+def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
+    '''Returns target if it is strictly inside the game directory, or its Mods or DLC directory, and not reached via links'''
+    from src.globals import data
+
+    game = data.getConfig().game
+    if not game or not os.path.isabs(game) or not os.path.isabs(target) or ".." in re.split(r"[\\/]", target):
+        raise ValueError(f"Refusing to modify '{target}' outside of the game directory")
+    game = os.path.normpath(game)
+    try:
+        parts = os.path.relpath(target, game).split(os.sep)
+    except ValueError:
+        parts = [os.pardir]
+    if parts[0] in (os.curdir, os.pardir) or (
+        modDirectory and (len(parts) < 2 or parts[0].casefold() not in ("mods", "dlc"))
+    ):
+        raise ValueError(f"Refusing to modify '{target}' outside of the game directory")
+    paths = [game]
+    for part in parts:
+        paths.append(os.path.join(paths[-1], part))
+    for current in paths:
+        if not os.path.lexists(current):
+            break
+        metadata = os.lstat(current)
+        if (
+            stat.S_ISLNK(metadata.st_mode)
+            or getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        ):
+            raise ValueError(f"Refusing to modify '{target}' through the link '{current}'")
+    return paths[-1]
+
+
+def copyFolder(src: str, dst: str) -> None:
+    '''Replaces dst with a copy of src, keeping the original until the copy is in place'''
+    dst = checkInstalledPath(dst, modDirectory=True)
     src = os.path.normpath(src)
-    print(f"copying from {src} to {dst} (exists: {os.path.isdir(os.path.normpath(dst))})")
-    removeDirectory(dst)
-    waitForDirectoryRemoval(dst)
-    copytree(src, dst)
+    print(f"copying from {src} to {dst} (exists: {os.path.isdir(dst)})")
+    staging = mkdtemp(prefix=".tw3mm-", dir=os.path.dirname(dst))
+    copied = os.path.join(staging, "new")
+    original = os.path.join(staging, "old")
+    try:
+        copytree(src, copied)
+        if os.path.lexists(dst):
+            os.replace(dst, original)
+        try:
+            os.replace(copied, dst)
+        except BaseException:
+            if os.path.lexists(original):
+                os.replace(original, dst)
+            raise
+    except BaseException as error:
+        if os.path.lexists(original):
+            raise RuntimeError(f"Replacing '{dst}' failed, the original files are kept in '{original}'") from error
+        removeDirectory(staging)
+        raise
+    removeDirectory(staging)
 
 
 def removeDirectory(directory: str) -> None:
-    def getWriteAccess(func: Callable, directory: str, exc_info: Any) -> None:
-        import stat
+    '''Recursively removes a directory strictly inside the game's Mods or DLC directory'''
+    directory = checkInstalledPath(directory, modDirectory=True)
 
-        os.chmod(directory, stat.S_IWRITE)
-        func(directory)
+    def getWriteAccess(func: Callable, path: str, exc_info: Any) -> None:
+        if not os.path.islink(path):
+            os.chmod(path, stat.S_IWRITE)
+        func(path)
 
     if os.path.isdir(directory):
         rmtree(directory, onerror=getWriteAccess)
 
 
-def waitForDirectoryRemoval(directory: str, timeout: float = 30.0) -> None:
-    '''Wait until a directory is removed, up to {timeout} seconds.'''
-    import time
-
-    deadline = time.monotonic() + timeout
-    while os.path.isdir(directory):
-        if time.monotonic() > deadline:
-            raise TimeoutError(f"Timed out waiting for '{directory}' to be removed")
-        time.sleep(0.05)
+def removeInstalledFile(filename: str) -> None:
+    '''Removes a file strictly inside the game directory'''
+    os.remove(checkInstalledPath(filename, modDirectory=False))
 
 
 def restartProgram():

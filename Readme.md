@@ -18,9 +18,15 @@ See the [Nexus Mods page](https://www.nexusmods.com/witcher3/mods/2678) for rele
 
 Download the latest release from Nexus Mods or from the [GitHub releases](https://github.com/Systemcluster/The-Witcher-3-Mod-manager/releases).
 
-Existing configuration is picked up automatically when updating. Portable installations keep `config.ini` next to the executable; to update one, copy `config.ini`, `installed.xml` and the `extracted` directory into the new directory.
+Existing configuration is picked up automatically when updating. Portable installations keep `config.ini` next to the executable; to update one, copy `config.ini` and `installed.xml` into the new directory.
 
 If no configuration exists on the first run, it is created in `AppData\Local\The Witcher 3 Mod Manager`. Existing configuration is searched for in the directory of the executable first and in `Documents\The Witcher 3 Mod Manager` second for compatibility with older versions, and can be moved freely between these locations.
+
+### File Safety
+
+Mod and DLC folders are only removed or replaced inside the `Mods` and `DLC` directories of the configured game, and other installed files only inside the game directory. Symbolic links and Windows junctions in the game directory are not supported and are never followed for deletion.
+
+A replaced mod folder is kept until its new copy is in place. If it can't be restored after a failure, the error names the `.tw3mm-*` directory holding the original files. A failed installation doesn't remove files it already copied.
 
 ### Script Merger on Linux and macOS
 

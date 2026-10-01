@@ -4,20 +4,17 @@ import re
 import shutil
 import subprocess
 import sys
-from os import listdir, mkdir, path, walk
+from os import listdir, path, walk
 from os.path import isfile, join
 from typing import List, Tuple
 
 from src.domain.key import Key
 from src.domain.mod import Mod
 from src.domain.usersetting import Usersetting
-from src.globals import data
 from src.util.util import (
     detectEncoding,
     getProgramRootFolder,
     normalizePath,
-    removeDirectory,
-    waitForDirectoryRemoval,
 )
 
 XMLPATTERN = re.compile(r"<Var.+\/>", re.UNICODE)
@@ -26,9 +23,9 @@ USERPATTERN = re.compile(r"(\[.*\]\s*(.*=(?!.*(\(|\))).*\s*)+)+", re.UNICODE)
 INPUT_XML_PATTERN = r'id="PCInput".+<!--\s*\[BASE_CharacterMovement\]\s*-->'
 
 
-def fetchMod(modPath: str) -> Tuple[Mod, List[str], List[str]]:
+def fetchMod(modPath: str, extractionDirectory: str) -> Tuple[Mod, List[str], List[str]]:
     if isArchive(modPath):
-        modPath = extractArchive(modPath)
+        modPath = extractArchive(modPath, extractionDirectory)
     if isValidModFolder(modPath):
         return fetchModFromDirectory(modPath)
     raise IOError("Not detected as a valid mod (manual installation may be required)")
@@ -274,13 +271,9 @@ def isArchive(modPath: str) -> bool:
     return bool(re.match(r".+\.(zip|rar|7z)$", path.basename(modPath)))
 
 
-def extractArchive(modPath: str) -> str:
-    extractedDir = normalizePath(data.getConfig().extracted)
+def extractArchive(modPath: str, extractedDir: str) -> str:
+    extractedDir = normalizePath(extractedDir)
     modPath = normalizePath(modPath)
-    if path.exists(extractedDir):
-        removeDirectory(extractedDir)
-        waitForDirectoryRemoval(extractedDir)
-    mkdir(extractedDir)
     if sys.platform == "win32" or sys.platform == "cygwin":
         si = subprocess.STARTUPINFO()
         CREATE_NO_WINDOW = 0x08000000
