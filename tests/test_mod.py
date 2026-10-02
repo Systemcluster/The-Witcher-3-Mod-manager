@@ -16,7 +16,7 @@ from src.core.model import Model
 from src.domain.key import Key
 from src.domain.mod import Mod
 from src.domain.usersetting import Usersetting
-from src.util.util import copyFolder, removeDirectory, removeInstalledFile
+from src.util.util import checkInstalledPath, copyFolder, removeDirectory, removeInstalledFile
 
 
 class InstalledFileSafetyTests(unittest.TestCase):
@@ -35,7 +35,9 @@ class InstalledFileSafetyTests(unittest.TestCase):
             dlc=str(self.game / "DLC"),
             menu=str(self.game / "bin"),
             settings=str(self.root),
+            configuration=str(self.root / "Manager"),
         )
+        Path(self.config.configuration).mkdir()
         config_patch = patch("src.globals.data.config", self.config)
         config_patch.start()
         self.addCleanup(config_patch.stop)
@@ -47,7 +49,8 @@ class InstalledFileSafetyTests(unittest.TestCase):
 
     def link(self, link: Path, target: Path) -> None:
         try:
-            link.symlink_to(target, target_is_directory=target.is_dir())
+            resolved_target = target if target.is_absolute() else link.parent / target
+            link.symlink_to(target, target_is_directory=resolved_target.is_dir())
         except OSError as error:
             self.skipTest(f"Symbolic links unavailable: {error}")
 
@@ -95,7 +98,7 @@ class InstalledFileSafetyTests(unittest.TestCase):
             removeDirectory(str(directory))
         self.assertEqual((directory / "asset").read_text(), "keep")
 
-    def test_never_deletes_through_links(self):
+    def test_never_deletes_through_external_links(self):
         external = self.populated(self.outside / "modExample")
         (self.outside / "example.xml").write_text("keep")
         self.link(self.game / "Mods" / "modLinked", external)
@@ -109,17 +112,61 @@ class InstalledFileSafetyTests(unittest.TestCase):
         ):
             with self.subTest(target=target), self.assertRaises(ValueError):
                 remove(str(target))
+        self.assertEqual((external / "asset").read_text(), "keep")
+        self.assertEqual((self.outside / "example.xml").read_text(), "keep")
+
+    def test_allows_linked_game_root(self):
         linked_game = self.root / "Linked Game"
         self.link(linked_game, self.game)
         self.config.game = str(linked_game)
         real = self.populated(self.game / "Mods" / "modReal")
-        with self.assertRaises(ValueError):
-            removeDirectory(str(linked_game / "Mods" / real.name))
-        self.assertEqual((real / "asset").read_text(), "keep")
-        self.assertEqual((external / "asset").read_text(), "keep")
-        self.assertEqual((self.outside / "example.xml").read_text(), "keep")
+        removeDirectory(str(linked_game / "Mods" / real.name))
+        self.assertFalse(real.exists())
+        self.assertTrue(linked_game.is_symlink())
 
-    def test_refuses_windows_junctions(self):
+    def test_allows_internal_links_without_rewriting_returned_path(self):
+        internal = self.populated(self.game / "content" / "modReal")
+        linked = self.game / "Mods" / "modLinked"
+        self.link(linked, internal)
+        for target in (linked, linked / "new" / "asset"):
+            with self.subTest(target=target):
+                self.assertEqual(checkInstalledPath(str(target), modDirectory=True), str(target))
+        removeInstalledFile(str(linked / "asset"))
+        self.assertFalse((internal / "asset").exists())
+        self.assertTrue(linked.is_symlink())
+
+    def test_allows_internal_link_chains_and_dangling_targets(self):
+        internal = self.populated(self.game / "content" / "modReal")
+        linked = self.game / "Mods" / "modLinked"
+        self.link(linked, Path("../content/modReal"))
+        chained = self.game / "Mods" / "modChained"
+        self.link(chained, linked)
+        self.assertEqual(checkInstalledPath(str(chained), modDirectory=True), str(chained))
+        missing = self.game / "bin" / "missing.xml"
+        self.link(missing, internal / "missing.xml")
+        self.assertEqual(checkInstalledPath(str(missing), modDirectory=False), str(missing))
+
+    def test_refuses_external_link_chains_and_dangling_targets(self):
+        linked = self.game / "content" / "linked"
+        self.link(linked, self.outside)
+        chained = self.game / "Mods" / "modChained"
+        self.link(chained, linked)
+        missing = self.game / "bin" / "missing.xml"
+        self.link(missing, self.outside / "missing.xml")
+        for target in (chained, chained / "new" / "asset", missing):
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                checkInstalledPath(str(target), modDirectory=False)
+
+    def test_refuses_link_cycles_and_targets_resolving_to_game_root(self):
+        cycle = self.game / "Mods" / "modCycle"
+        self.link(cycle, cycle)
+        root_link = self.game / "Mods" / "modRoot"
+        self.link(root_link, self.game)
+        for target in (cycle, root_link):
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                checkInstalledPath(str(target), modDirectory=True)
+
+    def test_windows_junctions_use_resolved_destination(self):
         directory = self.populated(self.game / "Mods" / "modExample")
         lstat = os.lstat
 
@@ -129,8 +176,24 @@ class InstalledFileSafetyTests(unittest.TestCase):
                 return SimpleNamespace(st_mode=metadata.st_mode, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
             return metadata
 
-        with patch("src.util.util.os.lstat", side_effect=junction), self.assertRaises(ValueError):
-            removeDirectory(str(directory))
+        realpath = os.path.realpath
+        for destination in (str(directory), str(self.outside)):
+
+            def resolve(path, *, strict=False):
+                if os.fspath(path) == str(directory):
+                    return realpath(destination)
+                return realpath(path, strict=strict)
+
+            with (
+                self.subTest(destination=destination),
+                patch("src.util.util.os.lstat", side_effect=junction),
+                patch("src.util.util.os.path.realpath", side_effect=resolve),
+            ):
+                if destination == str(directory):
+                    self.assertEqual(checkInstalledPath(str(directory), modDirectory=True), str(directory))
+                else:
+                    with self.assertRaises(ValueError):
+                        checkInstalledPath(str(directory), modDirectory=True)
         self.assertEqual((directory / "asset").read_text(), "keep")
 
     def test_nested_links_are_removed_without_following(self):
@@ -213,6 +276,66 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertEqual(save.read_text(), "keep")
         self.assertEqual(sorted(entry.name for entry in self.game.iterdir()), ["DLC", "Mods", "bin", "content"])
 
+    def test_toggle_refuses_links_and_parent_traversal(self):
+        outside_file = self.outside / "asset"
+        outside_file.write_text("keep")
+        self.link(self.game / "DLC" / "linked", self.outside)
+        with self.assertRaises(ValueError):
+            Mod(dlcs=["linked"]).disable()
+        self.assertEqual(outside_file.read_text(), "keep")
+        self.assertFalse((self.outside / "asset.disabled").exists())
+
+        escaped_menu = self.game / "victim.xml"
+        escaped_menu.write_text("keep")
+        with self.assertRaises(ValueError):
+            Mod(menus=["../victim.xml"]).disable()
+        self.assertEqual(escaped_menu.read_text(), "keep")
+        self.assertFalse((self.game / "victim.xml.disabled").exists())
+
+    def test_shared_xml_write_refuses_linked_target(self):
+        external_input = self.outside / "input.xml"
+        external_input.write_text('<!-- [BASE_CharacterMovement] -->')
+        self.link(self.game / "bin" / "input.xml", external_input)
+        with self.assertRaises(ValueError):
+            Mod(xmlkeys=['<Var id="Example" />']).installXmlKeys()
+        self.assertEqual(external_input.read_text(), '<!-- [BASE_CharacterMovement] -->')
+
+    def test_linked_documents_settings_update_targets_without_replacing_links(self):
+        self.config.gameversion = 're'
+        input_target = self.outside / 'shared-input.settings'
+        input_target.write_text('[Input]\nIK_A=(Action=Jump)\n')
+        self.link(self.root / 'input.settings', input_target)
+        mod = Mod(
+            inputsettings=[Key('[Input]', 'IK_B=(Action=Run)')],
+            usersettings=[Usersetting('Example', 'Enabled=true')],
+        )
+        targets = []
+        for filename in ('user.settings', 'dx12user.settings'):
+            target = self.outside / filename
+            target.write_text('[Example]\nOther=keep\n')
+            self.link(self.root / filename, target)
+            targets.append(target)
+        self.assertEqual(mod.installInputKeys(), (1, 0))
+        self.assertEqual(mod.installUserSettings(), 1)
+        self.assertTrue((self.root / 'input.settings').is_symlink())
+        self.assertIn('IK_B=(Action=Run)', input_target.read_text())
+        for target in targets:
+            self.assertTrue((self.root / target.name).is_symlink())
+            self.assertIn('Enabled=true', target.read_text())
+        mod.uninstallUserSettings()
+        for target in targets:
+            self.assertTrue((self.root / target.name).is_symlink())
+            self.assertNotIn('Enabled=', target.read_text())
+            self.assertIn('Other=keep', target.read_text())
+        original = input_target.read_bytes()
+        mod.inputsettings = [Key('[Input]', 'IK_C=(Action=Dodge)')]
+        with patch('src.util.util.os.replace', side_effect=PermissionError('denied')):
+            with self.assertRaises(PermissionError):
+                mod.installInputKeys()
+        self.assertTrue((self.root / 'input.settings').is_symlink())
+        self.assertEqual(input_target.read_bytes(), original)
+        self.assertEqual(list(self.outside.glob('.tw3mm-*')), [])
+
     def test_failed_install_keeps_existing_mod_files(self):
         existing = self.populated(self.game / "Mods" / "modExample")
         mod = Mod(_name="Example", files=["modExample"])
@@ -222,6 +345,81 @@ class InstalledFileSafetyTests(unittest.TestCase):
         ):
             self.assertEqual(Installer(Mock()).installMod(str(self.root / "source")), (False, 0, 0))
         self.assertEqual((existing / "asset").read_text(), "keep")
+
+    def test_declined_overwrite_preserves_legacy_inventory_behavior(self):
+        existing = self.populated(self.game / "Mods" / "modExample")
+        source = self.populated(self.root / "source" / "modExample")
+        mod = Mod(_name="Example", files=["modExample"])
+        model = Mock()
+        model.all.return_value = []
+        with (
+            patch("src.core.installer.fetchMod", return_value=(mod, [str(source)], [])),
+            patch("src.core.installer.MessageOverwrite", return_value=QMessageBox.StandardButton.No),
+        ):
+            self.assertEqual(Installer(model).installMod(str(source.parent)), (True, 0, 0))
+        self.assertEqual((existing / "asset").read_text(), "keep")
+        model.add.assert_called_once_with(mod.name, mod)
+        self.assertEqual(mod.files, ["modExample"])
+
+    def test_legacy_inventory_toggles_protected_menus_but_does_not_delete_them(self):
+        protected = (
+            "audio.xml",
+            "display.xml",
+            "dx11filelist.txt",
+            "dx12filelist.txt",
+            "gameplay.xml",
+            "gamma.xml",
+            "graphics.xml",
+            "graphicsdx11.xml",
+            "hidden.xml",
+            "hud.xml",
+            "input.xml",
+            "localization.xml",
+            "postprocess.xml",
+            "rendering.xml",
+        )
+        for filename in protected:
+            for name in (filename, filename.upper()):
+                with self.subTest(menu=name):
+                    target = Path(self.config.menu) / name
+                    target.write_bytes(b"protected game contents")
+                    element = XML.fromstring(
+                        f'<mod name="Legacy" enabled="True" priority="-"><menu>{name}</menu></mod>'
+                    )
+                    mod = Model.populateModFromXml(Mod(), element)
+                    model = Model(ignorelock=True)
+                    model.add(mod.name, mod)
+                    mod.disable()
+                    self.assertFalse(target.exists())
+                    self.assertEqual(Path(str(target) + ".disabled").read_bytes(), b"protected game contents")
+                    mod.enable()
+                    self.assertEqual(target.read_bytes(), b"protected game contents")
+                    self.assertTrue(Installer(model).uninstallMod(mod))
+                    self.assertEqual(target.read_bytes(), b"protected game contents")
+                    target.unlink()
+
+    def test_xml_only_package_keeps_legacy_failure_after_menu_copy(self):
+        source = self.root / "True Next-Gen Graphic Enhancements"
+        package_menu = source / "bin/config/r4game/user_config_matrix/pc"
+        package_menu.mkdir(parents=True)
+        (package_menu / "graphics.xml").write_text("modded graphics")
+        (package_menu / "graphicsdx11.xml").write_text("modded dx11")
+        (source / "bin/config/platform/pc").mkdir(parents=True)
+        (source / "bin/config/platform/pc/rendering.ini").write_text("ignored rendering override")
+
+        installed_menu = Path(self.config.menu)
+        (installed_menu / "graphics.xml").write_text("original graphics")
+        (installed_menu / "graphicsdx11.xml").write_text("original dx11")
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+
+        self.assertEqual(installer.installMod(str(source)), (False, 0, 0))
+        self.assertEqual(list(model.all()), [])
+        self.assertEqual(list(Model(ignorelock=True).all()), [])
+        self.assertEqual((installed_menu / "graphics.xml").read_text(), "modded graphics")
+        self.assertEqual((installed_menu / "graphicsdx11.xml").read_text(), "modded dx11")
+        self.assertFalse((self.game / "bin/config/platform/pc/rendering.ini").exists())
+        self.assertFalse((Path(self.config.configuration) / "menu-backups").exists())
 
     def test_install_source_containment_is_component_and_case_aware(self):
         inside = str(self.game / "Mods" / "modExample").upper()
@@ -246,6 +444,164 @@ class InstalledFileSafetyTests(unittest.TestCase):
             self.assertEqual(Installer(Mock()).installMod(source), (False, 0, 0))
             alert.assert_not_called()
             fetch.assert_called_once_with(source, ANY)
+
+    def test_partial_update_records_fetched_folders_including_declined_copies(self):
+        source = self.root / "Example"
+        for name in ("modFirst", "modSecond", "dlcFirst", "dlcSecond"):
+            content = source / name / "content"
+            content.mkdir(parents=True)
+            (content / "asset").write_text("original")
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertEqual(installer.installMod(str(source)), (True, 4, 0))
+        unowned = self.populated(self.game / "Mods" / "modUnowned")
+        (source / "modUnowned" / "content").mkdir(parents=True)
+        for asset in source.glob("*/content/asset"):
+            asset.write_text("updated")
+
+        def overwrite(name, category):
+            return QMessageBox.StandardButton.Yes if name.endswith("First") else QMessageBox.StandardButton.No
+
+        with patch("src.core.installer.MessageOverwrite", side_effect=overwrite):
+            self.assertEqual(installer.installMod(str(source)), (True, 2, 0))
+        reloaded = Model(ignorelock=True)
+        mod = reloaded.get("Example")
+        self.assertCountEqual(mod.files, ["modFirst", "modSecond", "modUnowned"])
+        self.assertCountEqual(mod.dlcs, ["dlcFirst", "dlcSecond"])
+        self.assertEqual((self.game / "Mods/modSecond/content/asset").read_text(), "original")
+        self.assertTrue(Installer(reloaded).uninstallMod(mod))
+        self.assertFalse((self.game / "Mods/modSecond").exists())
+        self.assertFalse((self.game / "DLC/dlcSecond").exists())
+        self.assertFalse(unowned.exists())
+
+    def test_repeated_menu_import_updates_existing_record_until_ui_saves(self):
+        source = self.root / 'Example'
+        self.populated(source / 'modExample/content')
+        package_menu = source / 'bin/config/r4game/user_config_matrix/pc'
+        package_menu.mkdir(parents=True)
+        (package_menu / 'custom.xml').write_text('first')
+        menu = Path(self.config.menu)
+        (menu / 'custom.xml').write_text('preexisting unregistered menu')
+        (menu / 'dx11filelist.txt').write_text('base.xml;\n', encoding='utf-16')
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertEqual(installer.installMod(str(source)), (True, 1, 0))
+        self.assertIn('custom.xml;', (menu / 'dx11filelist.txt').read_text(encoding='utf-16'))
+        (package_menu / 'custom.xml').write_text('second')
+        (package_menu / 'extra.xml').write_text('extra')
+        installed = model.get('Example')
+        with patch('src.core.installer.MessageOverwrite', return_value=QMessageBox.StandardButton.Yes):
+            self.assertEqual(installer.installMod(str(source)), (True, 1, 0))
+        self.assertIs(model.get('Example'), installed)
+        self.assertEqual(Model(ignorelock=True).get('Example').menus, ['custom.xml'])
+        model.write()
+        reloaded = Model(ignorelock=True)
+        mod = reloaded.get('Example')
+        self.assertCountEqual(mod.menus, ['custom.xml', 'extra.xml'])
+        self.assertEqual((menu / 'custom.xml').read_text(), 'second')
+        self.assertTrue(Installer(reloaded).uninstallMod(mod))
+        self.assertFalse((menu / 'custom.xml').exists())
+        self.assertFalse((menu / 'extra.xml').exists())
+        self.assertEqual((menu / 'dx11filelist.txt').read_text(encoding='utf-16'), 'base.xml;\n')
+
+    def test_overlapping_protected_replacements_never_restore_stale_contents(self):
+        target = Path(self.config.menu) / 'graphics.xml'
+        target.write_text('original')
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        for name in ('First', 'Second'):
+            self.populated(self.root / name / ('mod' + name) / 'content')
+            source = self.root / name / 'bin/config/r4game/user_config_matrix/pc'
+            source.mkdir(parents=True)
+            (source / 'graphics.xml').write_text(name)
+            self.assertEqual(installer.installMod(str(self.root / name)), (True, 1, 0))
+        self.assertTrue(installer.uninstallMod(model.get('First')))
+        self.assertEqual(target.read_text(), 'Second')
+        self.assertTrue(installer.uninstallMod(model.get('Second')))
+        self.assertEqual(target.read_text(), 'Second')
+
+    def test_case_variant_menu_copies_do_not_create_backup_state(self):
+        menu = Path(self.config.menu)
+        (menu / 'graphics.xml').write_text('original')
+        source = self.root / 'source'
+        source.mkdir()
+        first = source / 'graphics.xml'
+        first.write_text('first')
+        second = self.root / 'Graphics.xml'
+        second.write_text('second')
+        self.populated(source / 'modExample/content')
+        mod = Mod(_name='Example', files=['modExample'], menus=['graphics.xml', 'Graphics.xml'])
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        with patch(
+            'src.core.installer.fetchMod',
+            return_value=(mod, [str(source / 'modExample')], [str(first), str(second)]),
+        ):
+            self.assertEqual(installer.installMod(str(source)), (True, 1, 0))
+        before = {name: (menu / name).read_bytes() for name in mod.menus}
+        mod.disable()
+        mod.enable()
+        self.assertTrue(installer.uninstallMod(mod))
+        self.assertEqual({name: (menu / name).read_bytes() for name in mod.menus}, before)
+        self.assertFalse((Path(self.config.configuration) / 'menu-backups').exists())
+
+    def test_interim_backup_metadata_is_passive_and_recovery_files_are_kept(self):
+        identifier = '0123456789abcdef0123456789abcdef'
+        backup = Path(self.config.configuration) / 'menu-backups' / identifier / 'original/graphics.xml'
+        backup.parent.mkdir(parents=True)
+        backup.write_text('old recovery contents')
+        target = Path(self.config.menu) / 'graphics.xml'
+        target.write_text('current contents')
+        element = XML.fromstring(
+            f'<mod name="Example" enabled="True" backup="{identifier}"><menu>graphics.xml</menu></mod>'
+        )
+        mod = Model.populateModFromXml(Mod(), element)
+        self.assertEqual(mod.menus, ['graphics.xml'])
+        model = Model(ignorelock=True)
+        model.add(mod.name, mod)
+        reloaded = Model(ignorelock=True)
+        restored = reloaded.get(mod.name)
+        self.assertEqual(restored.menus, ['graphics.xml'])
+        restored.disable()
+        restored.enable()
+        self.assertTrue(Installer(reloaded).uninstallMod(restored))
+        self.assertEqual(target.read_text(), 'current contents')
+        self.assertEqual(backup.read_text(), 'old recovery contents')
+
+    def test_uninstall_can_retry_after_asset_deletion_failure(self):
+        target = Path(self.config.menu) / 'graphics.xml'
+        target.write_text('keep')
+        self.populated(self.game / 'Mods/modExample')
+        mod = Mod(_name='Example', menus=['graphics.xml'], files=['modExample'])
+        model = Model(ignorelock=True)
+        model.add(mod.name, mod)
+        installer = Installer(model)
+        with patch.object(installer, 'removeModData', side_effect=PermissionError('denied')):
+            self.assertFalse(installer.uninstallMod(mod))
+        self.assertTrue(installer.uninstallMod(mod))
+        self.assertEqual(target.read_text(), 'keep')
+        self.assertEqual(list(model.list()), [])
+
+    def test_shared_custom_menu_uses_existing_toggle_and_removal_rules(self):
+        target = Path(self.config.menu) / "custom.xml"
+        target.write_text("shared")
+        filelist = Path(self.config.menu) / "dx11filelist.txt"
+        filelist.write_text("custom.xml;\n", encoding="utf-16")
+        first = Mod(_name="First", menus=["custom.xml"])
+        second = Mod(_name="Second", menus=["custom.xml"])
+        model = Model(ignorelock=True)
+        model.add(first.name, first)
+        model.add(second.name, second)
+        first.disable()
+        self.assertFalse(target.exists())
+        self.assertEqual(Path(str(target) + ".disabled").read_text(), "shared")
+        self.assertEqual(filelist.read_text(encoding="utf-16"), "\n")
+        self.assertTrue(Installer(model).uninstallMod(first))
+        self.assertFalse(target.exists())
+        self.assertEqual(filelist.read_text(encoding="utf-16"), "\n")
+        self.assertTrue(Installer(model).uninstallMod(second))
+        self.assertFalse(target.exists())
+        self.assertEqual(filelist.read_text(encoding="utf-16"), "\n")
 
     def test_archive_extraction_is_private_and_removed(self):
         archive = self.root / "modExample.zip"
@@ -277,13 +633,18 @@ class ModConfigurationTests(unittest.TestCase):
         self.assertIn("Version=1", (self.root / "input.settings").read_text())
 
     def test_mod_xml_round_trip_preserves_domain_objects(self):
-        mod = Mod(inputsettings=[Key("Input", "IK_A=(Action=Jump)")], usersettings=[Usersetting("Mod", "Enabled=true")])
+        mod = Mod(
+            inputsettings=[Key("Input", "IK_A=(Action=Jump)")],
+            usersettings=[Usersetting("Mod", "Enabled=true")],
+            menus=["graphics.xml"],
+        )
         root = Model.writeModToXml(mod, XML.ElementTree(XML.Element("installed")))
         element = root.find("mod")
         assert element is not None
         restored = Model.populateModFromXml(Mod(), element)
         self.assertEqual(restored.inputsettings, mod.inputsettings)
         self.assertIsInstance(restored.usersettings[0], Usersetting)
+        self.assertEqual(restored.menus, mod.menus)
 
     def test_restore_uses_stored_metadata_without_replacing_mod_assets(self):
         self.config.mods = str(self.root / "Mods")
@@ -357,10 +718,105 @@ class ModConfigurationTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
-        self.config = SimpleNamespace(menu=str(self.root), settings=str(self.root), gameversion='re')
+        self.config = SimpleNamespace(
+            game=str(self.root), menu=str(self.root), settings=str(self.root), gameversion='re'
+        )
         config_patch = patch('src.domain.mod.data.config', self.config)
         config_patch.start()
         self.addCleanup(config_patch.stop)
+
+    def test_install_without_input_keys_leaves_file_unchanged(self):
+        input_settings = self.root / "input.settings"
+        original = b"; custom comment\n[Input]\nIK_A=(Action=Jump)\nCustom=preserve\n"
+        input_settings.write_bytes(original)
+        self.assertEqual(Mod().installInputKeys(), (0, 0))
+        self.assertEqual(input_settings.read_bytes(), original)
+
+    def test_install_input_keys_preserves_unrecognized_content(self):
+        input_settings = self.root / "input.settings"
+        input_settings.write_text(
+            "; custom comment\n[Input]\nIK_A=(Action=Jump)\nCustom=preserve\n\n[Unrelated]\nOther=value\n"
+        )
+        mod = Mod(inputsettings=[Key("[Input]", "IK_B=(Action=Run)")])
+        self.assertEqual(mod.installInputKeys(), (1, 0))
+        text = input_settings.read_text()
+        self.assertIn("; custom comment", text)
+        self.assertIn("Custom=preserve", text)
+        self.assertIn("[Unrelated]\nOther=value", text)
+        self.assertIn("IK_A=(Action=Jump)", text)
+        self.assertIn("IK_B=(Action=Run)", text)
+
+    def test_failed_input_settings_promotion_preserves_original(self):
+        input_settings = self.root / "input.settings"
+        original = b"[Input]\nIK_A=(Action=Jump)\n"
+        input_settings.write_bytes(original)
+        mod = Mod(inputsettings=[Key("[Input]", "IK_B=(Action=Run)")])
+        with patch("src.util.util.os.replace", side_effect=PermissionError("denied")):
+            with self.assertRaises(PermissionError):
+                mod.installInputKeys()
+        self.assertEqual(input_settings.read_bytes(), original)
+        self.assertEqual(sorted(entry.name for entry in self.root.iterdir()), ["input.settings"])
+
+    def test_rebind_removes_original_despite_action_whitespace(self):
+        settings = self.root / "input.settings"
+        settings.write_text('[Input]\nIK_A=(Action=Jump,  State=Duration)\n')
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_B=(Action=Jump,State=Duration)')])
+        with patch('src.domain.mod.MessageRebindKeys', return_value=QMessageBox.StandardButton.Yes) as prompt:
+            self.assertEqual(mod.installInputKeys(), (1, 0))
+            prompt.assert_called_once()
+        self.assertEqual(settings.read_text(), '[Input]\nIK_B=(Action=Jump,State=Duration)\n')
+
+    def test_rebind_between_package_additions_keeps_only_final_binding(self):
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_A=(Action=Jump)'), Key('[Input]', 'IK_B=(Action=Jump)')])
+        with patch('src.domain.mod.MessageRebindKeys', return_value=QMessageBox.StandardButton.Yes):
+            self.assertEqual(mod.installInputKeys(), (2, 0))
+        self.assertEqual((self.root / 'input.settings').read_text(), '[Input]\nIK_B=(Action=Jump)\n')
+
+    def test_input_conflicts_are_collected_before_rebinding(self):
+        settings = self.root / 'input.settings'
+        settings.write_text('[Input]\nIK_A=(Action=Jump)\n')
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_B=(Action=Jump)'), Key('[Input]', 'IK_A=(Action=Jump)')])
+        with patch('src.domain.mod.MessageRebindKeys', return_value=QMessageBox.StandardButton.Yes) as prompt:
+            self.assertEqual(mod.installInputKeys(), (1, 0))
+            prompt.assert_called_once()
+            self.assertEqual(prompt.call_args.args[:2], (mod.inputsettings[1], mod.inputsettings[0]))
+        self.assertEqual(settings.read_text(), '[Input]\nIK_B=(Action=Jump)\n')
+
+    def test_input_conflict_answers_apply_to_all_remaining_conflicts(self):
+        settings = self.root / 'input.settings'
+        original = '[Input]\nIK_A=(Action=Jump)\nIK_C=(Action=Run)\n'
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_B=(Action=Jump)'), Key('[Input]', 'IK_D=(Action=Run)')])
+        for answer, result, expected in (
+            (QMessageBox.StandardButton.YesToAll, (2, 0), '[Input]\nIK_B=(Action=Jump)\nIK_D=(Action=Run)\n'),
+            (QMessageBox.StandardButton.NoToAll, (0, 2), original),
+        ):
+            with self.subTest(answer=answer):
+                settings.write_text(original)
+                with patch('src.domain.mod.MessageRebindKeys', return_value=answer) as prompt:
+                    self.assertEqual(mod.installInputKeys(), result)
+                    prompt.assert_called_once()
+                self.assertEqual(settings.read_text(), expected)
+
+    def test_empty_input_contexts_are_not_serialized_as_bindings(self):
+        settings = self.root / 'input.settings'
+        original = b'[Existing]\n; keep\n'
+        settings.write_bytes(original)
+        mod = Mod(inputsettings=[Key('[Existing]'), Key('[New]')])
+        self.assertEqual(mod.installInputKeys(), (2, 0))
+        self.assertEqual(settings.read_bytes(), original + b'\n[New]\n')
+        self.assertEqual(mod.installInputKeys(), (2, 0))
+        self.assertNotIn(b'=(None)', settings.read_bytes())
+
+    def test_input_keys_after_unknown_lines_are_recognized_and_keep_crlf(self):
+        settings = self.root / 'input.settings'
+        original = b'[Input]\r\n; comment\r\nCustom=keep\r\nIK_A=(Action=Jump)\r\n'
+        settings.write_bytes(original)
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_A=(Action=Jump)'), Key('[Input]', 'IK_B=(Action=Run)')])
+        self.assertEqual(mod.installInputKeys(), (1, 0))
+        expected = original + b'IK_B=(Action=Run)\r\n'
+        self.assertEqual(settings.read_bytes(), expected)
+        self.assertEqual(mod.installInputKeys(), (0, 0))
+        self.assertEqual(settings.read_bytes(), expected)
 
     def test_missing_menu_lists_are_not_created(self):
         mod = Mod(menus=['test.xml'])
@@ -420,7 +876,8 @@ class InventoryPersistenceTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
-        config_patch = patch("src.core.model.data.config", SimpleNamespace(configuration=str(self.root)))
+        self.config = SimpleNamespace(configuration=str(self.root))
+        config_patch = patch("src.core.model.data.config", self.config)
         config_patch.start()
         self.addCleanup(config_patch.stop)
         for name in ("MessageAlertReadingConfigurationFailed", "MessageAlertWritingFailed"):
@@ -477,7 +934,10 @@ class InventoryPersistenceTests(unittest.TestCase):
                 (self.root / "installed.xml").write_text(invalid)
                 with self.assertRaises(XML.ParseError):
                     model.reload()
-                model.write()
+                with patch("src.core.model.MessageAlertWritingFailed") as alert:
+                    model.write()
+                alert.assert_called_once()
+                self.assertIsInstance(alert.call_args.args[1], RuntimeError)
                 self.assertEqual((self.root / "installed.xml").read_text(), invalid)
                 self.assertFalse((self.root / "installed.xml.new").exists())
 
@@ -498,8 +958,13 @@ class InventoryPersistenceTests(unittest.TestCase):
                 raise PermissionError("replacement denied")
             return real_replace(source, destination)
 
-        with patch("src.core.model.os.replace", side_effect=fail_promotion):
+        with (
+            patch("src.core.model.os.replace", side_effect=fail_promotion),
+            patch("src.core.model.MessageAlertWritingFailed") as alert,
+        ):
             model.write()
+        alert.assert_called_once()
+        self.assertIsInstance(alert.call_args.args[1], PermissionError)
         self.assertEqual(list(Model(ignorelock=True).list()), ["Original"])
         self.assertEqual(XML.parse(self.root / "installed.xml.old").findall("mod")[0].get("name"), "Original")
 
@@ -516,8 +981,13 @@ class InventoryPersistenceTests(unittest.TestCase):
         for failures in ([OSError("backup flush failed")], [None, OSError("inventory flush failed")]):
             with self.subTest(failures=failures):
                 original = (self.root / "installed.xml").read_bytes()
-                with patch("src.core.model.os.fsync", side_effect=failures):
+                with (
+                    patch("src.core.model.os.fsync", side_effect=failures),
+                    patch("src.core.model.MessageAlertWritingFailed") as alert,
+                ):
                     model.write()
+                alert.assert_called_once()
+                self.assertIsInstance(alert.call_args.args[1], OSError)
                 self.assertEqual((self.root / "installed.xml").read_bytes(), original)
                 self.assertTrue(XML.parse(self.root / "installed.xml.old").findall("mod"))
                 self.assertEqual(list(Model(ignorelock=True).list()), ["Original"])
@@ -527,7 +997,10 @@ class InventoryPersistenceTests(unittest.TestCase):
         model = Model(ignorelock=True)
         original = (self.root / "installed.xml").read_bytes()
         model.modList["Invalid"] = Mod(_name="Invalid\x00")
-        model.write()
+        with patch("src.core.model.MessageAlertWritingFailed") as alert:
+            model.write()
+        alert.assert_called_once()
+        self.assertIsInstance(alert.call_args.args[1], (ValueError, XML.ParseError))
         self.assertEqual((self.root / "installed.xml").read_bytes(), original)
         self.assertEqual(list(Model(ignorelock=True).list()), ["Original"])
 

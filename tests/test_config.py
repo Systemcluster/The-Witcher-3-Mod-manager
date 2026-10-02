@@ -16,6 +16,33 @@ from src.util.util import normalizePath, reconfigureGamePath
 
 
 class ConfigurationPathTests(unittest.TestCase):
+    def test_config_and_priority_writes_preserve_file_links(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            documents = root / 'Documents'
+            documents.mkdir()
+            with patch.object(Configuration, 'write_config'):
+                config = Configuration(str(documents), configPath=str(root / 'Manager'))
+            targets = []
+            for folder, filename in ((config.configuration, 'config.ini'), (config.settings, 'mods.settings')):
+                target = root / filename
+                target.write_text('')
+                link = Path(folder) / filename
+                try:
+                    link.symlink_to(target)
+                except OSError as error:
+                    self.skipTest(f'Symbolic links unavailable: {error}')
+                targets.append((link, target))
+            config.config['TEST'] = {'value': 'updated'}
+            config.priority['modExample'] = {'priority': '7'}
+            config.write_config().join()
+            config.write_priority().join()
+            for link, target in targets:
+                self.assertTrue(link.is_symlink())
+                self.assertTrue(target.read_text())
+            self.assertIn('value=updated', targets[0][1].read_text())
+            self.assertIn('Priority=7', targets[1][1].read_text())
+
     def test_unconfigured_game_properties(self):
         config = Configuration.__new__(Configuration)
         config.config = configparser.ConfigParser()

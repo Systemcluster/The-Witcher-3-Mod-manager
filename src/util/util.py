@@ -9,10 +9,11 @@ import traceback
 import webbrowser
 from collections.abc import Callable
 from configparser import ConfigParser
+from contextlib import contextmanager
 from platform import python_version
 from shutil import copytree, rmtree
 from sys import platform
-from tempfile import mkdtemp
+from tempfile import mkdtemp, mkstemp
 from threading import Timer
 from typing import Any
 
@@ -269,7 +270,7 @@ def openFolder(path: str):
 
 
 def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
-    '''Returns target if it is strictly inside the game directory, or its Mods or DLC directory, and not reached via links'''
+    '''Returns an in-game path, allowing links only within the resolved game directory.'''
     from src.globals import data
 
     game = data.getConfig().game
@@ -287,6 +288,7 @@ def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
     paths = [game]
     for part in parts:
         paths.append(os.path.join(paths[-1], part))
+    resolved_game = os.path.normcase(os.path.realpath(game))
     for current in paths:
         if not os.path.lexists(current):
             break
@@ -295,8 +297,59 @@ def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
             stat.S_ISLNK(metadata.st_mode)
             or getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
         ):
-            raise ValueError(f"Refusing to modify '{target}' through the link '{current}'")
+            try:
+                try:
+                    resolved = os.path.realpath(current, strict=True)
+                except FileNotFoundError:
+                    resolved = os.path.realpath(current)
+                resolved = os.path.normcase(resolved)
+                if os.path.commonpath((resolved_game, resolved)) != resolved_game or (
+                    current == paths[-1] and resolved == resolved_game
+                ):
+                    raise ValueError("Link target is not inside the game directory")
+            except (OSError, ValueError) as error:
+                raise ValueError(f"Refusing to modify '{target}' through the link '{current}': {error}") from error
     return paths[-1]
+
+
+@contextmanager
+def atomicWrite(
+    filename: str,
+    mode: str = 'w',
+    encoding: str | None = None,
+    *,
+    newline: str | None = None,
+    follow_symlinks: bool = False,
+):
+    '''Writes a sibling temporary file and atomically replaces filename after a durable flush'''
+    if follow_symlinks:
+        filename = os.path.realpath(filename)
+    if os.path.islink(filename):
+        raise ValueError(f"Refusing to replace the link '{filename}'")
+    descriptor, temporary = mkstemp(prefix=".tw3mm-", dir=os.path.dirname(os.path.abspath(filename)))
+    try:
+        if 'b' in mode:
+            file = os.fdopen(descriptor, mode)
+        else:
+            file = os.fdopen(descriptor, mode, encoding=encoding, newline=newline)
+        with file:
+            yield file
+            file.flush()
+            os.fsync(file.fileno())
+        if os.path.exists(filename):
+            os.chmod(temporary, stat.S_IMODE(os.stat(filename, follow_symlinks=False).st_mode))
+        os.replace(temporary, filename)
+    except BaseException:
+        if os.path.lexists(temporary):
+            os.remove(temporary)
+        raise
+
+
+def renameInstalledPath(source: str, destination: str, *, modDirectory: bool) -> None:
+    '''Renames an installed path after validating both source and destination'''
+    source = checkInstalledPath(source, modDirectory=modDirectory)
+    destination = checkInstalledPath(destination, modDirectory=modDirectory)
+    os.rename(source, destination)
 
 
 def copyFolder(src: str, dst: str) -> None:

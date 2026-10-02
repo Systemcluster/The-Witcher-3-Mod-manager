@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass, field
-from os import path, rename, walk
+from os import path, walk
 from time import gmtime, strftime
 from typing import List, Optional, Tuple, Union
 
@@ -109,7 +109,11 @@ class Mod:
                 print("failed to install menus", e)
             for menu in iter(self.menus):
                 if path.exists(data.getConfig().menu + "/" + menu + ".disabled"):
-                    rename(data.getConfig().menu + "/" + menu + ".disabled", data.getConfig().menu + "/" + menu)
+                    renameInstalledPath(
+                        data.getConfig().menu + "/" + menu + ".disabled",
+                        data.getConfig().menu + "/" + menu,
+                        modDirectory=False,
+                    )
             for dlc in iter(self.dlcs):
                 dlc_directory = data.getConfig().dlc
                 if dlc_directory is None:
@@ -119,13 +123,17 @@ class Mod:
                         for file in fls:
                             if path.exists(subdir + "/" + file):
                                 if file.endswith(".disabled") and not file.startswith("."):
-                                    rename(subdir + "/" + file, subdir + "/" + file[:-9])
+                                    renameInstalledPath(
+                                        subdir + "/" + file, subdir + "/" + file[:-9], modDirectory=True
+                                    )
             for filedata in iter(self.files):
                 mods_directory = data.getConfig().mods
                 if mods_directory is None:
                     raise ValueError("No game directory configured for mod files")
                 if path.exists(mods_directory + "/~" + filedata):
-                    rename(mods_directory + "/~" + filedata, mods_directory + "/" + filedata)
+                    renameInstalledPath(
+                        mods_directory + "/~" + filedata, mods_directory + "/" + filedata, modDirectory=True
+                    )
             self.enabled = True
         return incomplete
 
@@ -135,7 +143,11 @@ class Mod:
             self.uninstallMenus()
             for menu in iter(self.menus):
                 if path.exists(data.getConfig().menu + "/" + menu) and not menu.endswith(".disabled"):
-                    rename(data.getConfig().menu + "/" + menu, data.getConfig().menu + "/" + menu + ".disabled")
+                    renameInstalledPath(
+                        data.getConfig().menu + "/" + menu,
+                        data.getConfig().menu + "/" + menu + ".disabled",
+                        modDirectory=False,
+                    )
             for dlc in iter(self.dlcs):
                 dlc_directory = data.getConfig().dlc
                 if dlc_directory is None:
@@ -144,14 +156,20 @@ class Mod:
                     for subdir, _, fls in walk(dlc_directory + "/" + dlc):
                         for file in fls:
                             if not file.endswith(".disabled") and not file.startswith("."):
-                                rename(path.join(subdir, file), path.join(subdir, file) + ".disabled")
+                                renameInstalledPath(
+                                    path.join(subdir, file), path.join(subdir, file) + ".disabled", modDirectory=True
+                                )
             for filedata in iter(self.files):
                 mods_directory = data.getConfig().mods
                 if mods_directory is None:
                     raise ValueError("No game directory configured for mod files")
                 if path.exists(mods_directory + "/" + filedata):
                     if not filedata.startswith("~"):
-                        rename(mods_directory + "/" + filedata, mods_directory + "/~" + filedata)
+                        renameInstalledPath(
+                            mods_directory + "/" + filedata,
+                            mods_directory + "/~" + filedata,
+                            modDirectory=True,
+                        )
             self.enabled = False
 
     def checkPriority(self):
@@ -170,6 +188,7 @@ class Mod:
             filelist = path.join(data.getConfig().menu, filename)
             if not path.isfile(filelist):
                 continue
+            filelist = checkInstalledPath(filelist, modDirectory=False)
             with open(filelist, 'r', encoding=detectEncoding(filelist)) as userfile:
                 original = userfile.read().splitlines()
             lines = list(original)
@@ -181,75 +200,65 @@ class Mod:
                 else:
                     lines = [line for line in lines if line.strip().casefold() != entry.casefold()]
             if lines != original:
-                with open(filelist, 'w', encoding='utf-16') as userfile:
+                with atomicWrite(filelist, 'w', encoding='utf-16') as userfile:
                     userfile.write('\n'.join(lines) + '\n')
-                    userfile.flush()
-                    os.fsync(userfile.fileno())
 
     def installXmlKeys(self):
         if self.xmlkeys:
+            input_file = checkInstalledPath(path.join(data.getConfig().menu, "input.xml"), modDirectory=False)
             text = ''
-            with open(
-                data.getConfig().menu + "/input.xml", "r", encoding=detectEncoding(data.getConfig().menu + "/input.xml")
-            ) as userfile:
+            with open(input_file, "r", encoding=detectEncoding(input_file)) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if xml not in text:
                     text = text.replace(
                         "<!-- [BASE_CharacterMovement] -->", xml + "\n<!-- [BASE_CharacterMovement] -->"
                     )
-            with open(data.getConfig().menu + "/input.xml", "w", encoding="utf-16") as userfile:
+            with atomicWrite(input_file, "w", encoding="utf-16") as userfile:
                 userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
         if self.hidden:
+            hidden_file = checkInstalledPath(path.join(data.getConfig().menu, "hidden.xml"), modDirectory=False)
             text = ''
             with open(
-                data.getConfig().menu + "/hidden.xml",
+                hidden_file,
                 "r",
-                encoding=detectEncoding(data.getConfig().menu + "/hidden.xml"),
+                encoding=detectEncoding(hidden_file),
             ) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if xml not in text:
                     text = text.replace("</VisibleVars>", xml + "\n</VisibleVars>")
-            with open(data.getConfig().menu + "/hidden.xml", "w", encoding="utf-16") as userfile:
+            with atomicWrite(hidden_file, "w", encoding="utf-16") as userfile:
                 userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
 
     def uninstallMenus(self):
         self.updateMenuFileLists(install=False)
 
     def uninstallXmlKeys(self):
         if (self.xmlkeys) and path.exists(data.getConfig().menu + "/input.xml"):
+            input_file = checkInstalledPath(path.join(data.getConfig().menu, "input.xml"), modDirectory=False)
             text = ''
-            with open(
-                data.getConfig().menu + "/input.xml", "r", encoding=detectEncoding(data.getConfig().menu + "/input.xml")
-            ) as userfile:
+            with open(input_file, "r", encoding=detectEncoding(input_file)) as userfile:
                 text = userfile.read()
             for xml in iter(self.xmlkeys):
                 if xml in text:
                     text = text.replace(xml + "\n", '')
-            with open(data.getConfig().menu + "/input.xml", "w", encoding="utf-16") as userfile:
+            with atomicWrite(input_file, "w", encoding="utf-16") as userfile:
                 userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
         if (self.hidden) and path.exists(data.getConfig().menu + "/hidden.xml"):
+            hidden_file = checkInstalledPath(path.join(data.getConfig().menu, "hidden.xml"), modDirectory=False)
             text = ''
             with open(
-                data.getConfig().menu + "/hidden.xml",
+                hidden_file,
                 "r",
-                encoding=detectEncoding(data.getConfig().menu + "/hidden.xml"),
+                encoding=detectEncoding(hidden_file),
             ) as userfile:
                 text = userfile.read()
             for xml in iter(self.hidden):
                 if xml in text:
                     text = text.replace(xml + "\n", '')
-            with open(data.getConfig().menu + "/hidden.xml", "w", encoding="utf-16") as userfile:
+            with atomicWrite(hidden_file, "w", encoding="utf-16") as userfile:
                 userfile.write(text)
-                userfile.flush()
-                os.fsync(userfile.fileno())
 
     def installInputKeys(self) -> Tuple[int, int]:
         from src.core.fetcher import fetchInputSettings
@@ -358,10 +367,8 @@ class Mod:
                 config.add_section(setting.context)
             config.set(setting.context, setting.option, setting.value)
             added += 1
-        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+        with atomicWrite(absFilePath, 'w', encoding="utf-8", follow_symlinks=True) as userfile:
             config.write(userfile, space_around_delimiters=False)
-            userfile.flush()
-            os.fsync(userfile.fileno())
         return added
 
     def uninstallUserSettings(self):
@@ -380,10 +387,8 @@ class Mod:
         for setting in iter(self.usersettings):
             if config.has_section(setting.context):
                 config.remove_option(setting.context, setting.option)
-        with open(absFilePath, 'w', encoding="utf-8") as userfile:
+        with atomicWrite(absFilePath, 'w', encoding="utf-8", follow_symlinks=True) as userfile:
             config.write(userfile, space_around_delimiters=False)
-            userfile.flush()
-            os.fsync(userfile.fileno())
 
     def __repr__(self):
         string = (

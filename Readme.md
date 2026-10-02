@@ -26,7 +26,7 @@ If no configuration exists on the first run, it is created in `AppData\Local\The
 
 Mod and DLC folders are only removed or replaced inside the `Mods` and `DLC` directories of the configured game, and other installed files only inside the game directory. Symbolic links and Windows junctions in the game directory are not supported and are never followed for deletion.
 
-A replaced mod folder is kept until its new copy is in place. If it can't be restored after a failure, the error names the `.tw3mm-*` directory holding the original files. A failed installation doesn't remove files it already copied.
+A replaced mod folder is kept until its new copy is in place. If it can't be restored after a failure, the error names the `.tw3mm-*` directory holding the original files. Mutable configuration and settings files are also written to sibling temporary files and atomically replaced. Linked configuration and Documents settings files are updated at their targets without replacing the links. A failed installation doesn't remove files it already copied; a complete installation or uninstall is not transactional.
 
 ### Script Merger on Linux and macOS
 
@@ -76,9 +76,9 @@ For other launch environments, `gamelaunchcommand` in the `[PATHS]` section of `
 - **Mods are installed but don't load**\
   Check that mods are enabled in REDlauncher and that neither the Steam launch options nor a custom command contain `-disablemods`. With Proton or CrossOver, check that `--userdocuments` points to the settings directory the game actually uses. Older mods might not work with Remastered even if they install fine.
 - **Merging fails**\
-  Script Merger is a separate application, and the manager can't fix incompatible scripts or bundle readers. As of September 29, 2026, the [Fresh and Automated Edition](https://www.nexusmods.com/witcher3/mods/8405) lists Remastered bundle support as still being tested; see its page for the current state.
+  Script Merger is a separate application, use [Fresh and Automated Edition](https://www.nexusmods.com/witcher3/mods/8405) or [Script Merger - Remastered](https://www.nexusmods.com/witcher3/mods/13076).
 - **Script Merger recreates an old game directory**\
-  Script Merger keeps its own `GameDirectory`, `ModsDirectory` and `VanillaScriptsDirectory` settings, which don't change with the game path in the manager. Change the game directory in Script Merger as well, and back up its configuration before resetting overrides or rebuilding merges.
+  Script Merger keeps its own `GameDirectory`, `ModsDirectory` and `VanillaScriptsDirectory` settings, which don't change with the game path in the manager. Change the game directory in Script Merger as well, and back up its configuration before resetting overrides or rebuilding merges. Use a Remastered-compatible Script Merger.
 - **Finding or resetting manager settings**\
   Close the manager and back up its configuration directory first, usually in `User\AppData\Local\The Witcher 3 Mod Manager` on Windows or in one of the other locations described above. To reset paths, rename only `config.ini` and keep `installed.xml` to keep the list of installed mods. The load order of the game is stored separately in `The Witcher 3/mods.settings` in the Documents directory.
 

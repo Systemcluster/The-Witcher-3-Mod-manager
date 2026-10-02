@@ -136,11 +136,11 @@ class Configuration:
     def write_config(self, space_around_delimiters: bool = False):
         if self.config != self.configLastWritten:
             with self.__writing_config.write_lock():
-                with open(self.__configPath + '/config.ini', 'w', encoding='utf-8') as file:
+                with util.atomicWrite(
+                    self.__configPath + '/config.ini', 'w', encoding='utf-8', follow_symlinks=True
+                ) as file:
                     print(f"writing config.ini to {self.__configPath + '/config.ini'}")
                     self.config.write(file, space_around_delimiters)
-                    file.flush()
-                    os.fsync(file.fileno())
             self.configLastWritten = deepcopy(self.config)
 
     @util.debounce(25)
@@ -155,12 +155,12 @@ class Configuration:
                     priority.remove_option(section, option)
                     priority.set(section, f"{option[:1].upper()}{option[1:].lower()}", value)
             with self.__writing_priority.write_lock():
-                with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8') as file:
+                with util.atomicWrite(
+                    self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8', follow_symlinks=True
+                ) as file:
                     print(f"writing mods.settings to {self.__userSettingsPath + '/mods.settings'}")
                     self.__lastPriorityWriteTime = time.monotonic()
                     priority.write(file, space_around_delimiters)
-                    file.flush()
-                    os.fsync(file.fileno())
             self.priorityLastWritten = deepcopy(self.priority)
 
     def write_priority_elapsed(self) -> float:

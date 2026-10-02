@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from os import listdir, path
-from shutil import copyfile
+from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
 from typing import Any, Callable
@@ -118,9 +118,11 @@ class Installer:
 
             for xml in xmls:
                 _, name = path.split(xml)
-                if not path.isdir(data.getConfig().menu):
-                    os.makedirs(data.getConfig().menu)
-                copyfile(xml, data.getConfig().menu + "/" + name)
+                menu_directory = checkInstalledPath(data.getConfig().menu, modDirectory=False)
+                target = checkInstalledPath(path.join(menu_directory, name), modDirectory=False)
+                os.makedirs(menu_directory, exist_ok=True)
+                with open(xml, 'rb') as source, atomicWrite(target, 'wb') as destination:
+                    copyfileobj(source, destination)
 
             self.progress(0.8)
 
