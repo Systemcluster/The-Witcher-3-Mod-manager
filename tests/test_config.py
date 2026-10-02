@@ -54,6 +54,28 @@ class ConfigurationPathTests(unittest.TestCase):
                 self.assertEqual(config.graphicsapi, 'dx11')
                 self.assertEqual(Configuration.getCorrectGamePath(value), '')
 
+    def test_relative_game_path_is_effectively_absolute_without_changing_preference(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'game/content').mkdir(parents=True)
+            executable = root / 'game/bin/x64/witcher3.exe'
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            previous = os.getcwd()
+            try:
+                os.chdir(root)
+                relative = 'game/bin/x64/witcher3.exe'
+                config = Configuration.__new__(Configuration)
+                config.config = configparser.ConfigParser()
+                config.config['PATHS'] = {'gameexe': relative}
+                expected = normalizePath(os.path.abspath(relative))
+                self.assertEqual(config.gameexe, expected)
+                self.assertEqual(Configuration.getCorrectGamePath(relative), expected)
+                self.assertTrue(os.path.isabs(config.game))
+                self.assertEqual(config.get('PATHS', 'gameexe'), relative)
+            finally:
+                os.chdir(previous)
+
     def test_supported_layouts_preserve_selected_executable(self):
         for directories in (('x64',), ('x64', 'x64_dx12'), ('x64_dx12',)):
             with self.subTest(directories=directories), tempfile.TemporaryDirectory() as root:

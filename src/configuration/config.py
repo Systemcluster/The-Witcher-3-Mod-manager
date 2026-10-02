@@ -230,6 +230,8 @@ class Configuration:
     @property
     def gameexe(self):
         configured = self.get('PATHS', 'gameexe')
+        if configured:
+            configured = util.normalizePath(path.abspath(util.normalizePath(configured)))
         if configured and not path.isfile(configured):
             normalized = util.normalizePath(configured)
             renderer = path.dirname(normalized)
@@ -457,7 +459,7 @@ class Configuration:
         '''Validates a selected executable or finds one in a game directory.'''
         if not gameExePath:
             return ''
-        normalized = util.normalizePath(gameExePath)
+        normalized = util.normalizePath(path.abspath(util.normalizePath(gameExePath)))
         gameDirectory = Configuration.getGameRoot(normalized)
         if not gameDirectory:
             return ''
