@@ -345,22 +345,7 @@ class Installer:
                 target = path.join(data.getConfig().menu, installed)
                 if not path.exists(target):
                     continue
-                if menu.casefold() in (
-                    "audio.xml",
-                    "display.xml",
-                    "dx11filelist.txt",
-                    "dx12filelist.txt",
-                    "gameplay.xml",
-                    "gamma.xml",
-                    "graphics.xml",
-                    "graphicsdx11.xml",
-                    "hidden.xml",
-                    "hud.xml",
-                    "input.xml",
-                    "localization.xml",
-                    "postprocess.xml",
-                    "rendering.xml",
-                ):
+                if Mod.isProtectedMenu(menu):
                     self.output(
                         translate("MainWindow", "Note: Additions to ")
                         + menu

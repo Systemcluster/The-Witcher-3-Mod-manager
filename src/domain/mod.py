@@ -108,6 +108,8 @@ class Mod:
                 incomplete.append(translate("MainWindow", "menu xml files"))
                 print("failed to install menus", e)
             for menu in iter(self.menus):
+                if self.isProtectedMenu(menu) and path.exists(data.getConfig().menu + "/" + menu):
+                    continue
                 if path.exists(data.getConfig().menu + "/" + menu + ".disabled"):
                     renameInstalledPath(
                         data.getConfig().menu + "/" + menu + ".disabled",
@@ -142,6 +144,8 @@ class Mod:
             self.uninstallXmlKeys()
             self.uninstallMenus()
             for menu in iter(self.menus):
+                if self.isProtectedMenu(menu):
+                    continue
                 if path.exists(data.getConfig().menu + "/" + menu) and not menu.endswith(".disabled"):
                     renameInstalledPath(
                         data.getConfig().menu + "/" + menu,
@@ -181,8 +185,28 @@ class Mod:
     def installMenus(self):
         self.updateMenuFileLists(install=True)
 
+    @staticmethod
+    def isProtectedMenu(menu: str) -> bool:
+        return menu.casefold() in (
+            "audio.xml",
+            "display.xml",
+            "dx11filelist.txt",
+            "dx12filelist.txt",
+            "gameplay.xml",
+            "gamma.xml",
+            "graphics.xml",
+            "graphicsdx11.xml",
+            "hidden.xml",
+            "hud.xml",
+            "input.xml",
+            "localization.xml",
+            "postprocess.xml",
+            "rendering.xml",
+        )
+
     def updateMenuFileLists(self, install: bool):
-        if not self.menus or not data.getConfig().menu:
+        menus = [menu for menu in self.menus if not self.isProtectedMenu(menu)]
+        if not menus or not data.getConfig().menu:
             return
         for filename in ('dx11filelist.txt', 'dx12filelist.txt'):
             filelist = path.join(data.getConfig().menu, filename)
@@ -192,7 +216,7 @@ class Mod:
             with open(filelist, 'r', encoding=detectEncoding(filelist)) as userfile:
                 original = userfile.read().splitlines()
             lines = list(original)
-            for menu in self.menus:
+            for menu in menus:
                 entry = menu + ';'
                 if install:
                     if entry.casefold() not in {line.strip().casefold() for line in lines}:

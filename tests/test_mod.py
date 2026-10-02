@@ -361,7 +361,7 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model.add.assert_called_once_with(mod.name, mod)
         self.assertEqual(mod.files, ["modExample"])
 
-    def test_legacy_inventory_toggles_protected_menus_but_does_not_delete_them(self):
+    def test_protected_menus_are_never_disabled_or_deleted(self):
         protected = (
             "audio.xml",
             "display.xml",
@@ -390,13 +390,29 @@ class InstalledFileSafetyTests(unittest.TestCase):
                     model = Model(ignorelock=True)
                     model.add(mod.name, mod)
                     mod.disable()
-                    self.assertFalse(target.exists())
-                    self.assertEqual(Path(str(target) + ".disabled").read_bytes(), b"protected game contents")
+                    self.assertEqual(target.read_bytes(), b"protected game contents")
+                    self.assertFalse(Path(str(target) + ".disabled").exists())
                     mod.enable()
                     self.assertEqual(target.read_bytes(), b"protected game contents")
                     self.assertTrue(Installer(model).uninstallMod(mod))
                     self.assertEqual(target.read_bytes(), b"protected game contents")
                     target.unlink()
+
+    def test_protected_menu_registration_survives_disable_and_uninstall(self):
+        menu = Path(self.config.menu)
+        (menu / 'graphics.xml').write_text('shared')
+        (menu / 'custom.xml').write_text('custom')
+        filelist = menu / 'dx12filelist.txt'
+        filelist.write_text('graphics.xml;\ncustom.xml;\n', encoding='utf-16')
+        mod = Mod(_name='Example', menus=['graphics.xml', 'custom.xml'])
+        mod.disable()
+        self.assertEqual(filelist.read_text(encoding='utf-16'), 'graphics.xml;\n')
+        self.assertEqual((menu / 'graphics.xml').read_text(), 'shared')
+        mod.enable()
+        self.assertIn('custom.xml;', filelist.read_text(encoding='utf-16'))
+        self.assertTrue(Installer(Mock()).uninstallMod(mod))
+        self.assertEqual(filelist.read_text(encoding='utf-16'), 'graphics.xml;\n')
+        self.assertEqual((menu / 'graphics.xml').read_text(), 'shared')
 
     def test_xml_only_package_is_installed_and_recorded(self):
         source = self.root / "True Next-Gen Graphic Enhancements"
