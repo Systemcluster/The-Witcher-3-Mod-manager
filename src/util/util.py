@@ -447,37 +447,6 @@ def detectEncoding(path: str) -> str:
         return "utf-8"
 
 
-def fixUserSettingsDuplicateBrackets():
-    '''Fix invalid section names in user.settings'''
-    from src.globals import data
-
-    settingsPath = data.getConfig().settings + "/user.settings"
-    try:
-        config = CaseSensitiveConfigParser(strict=False)
-        config.read(settingsPath, encoding=detectEncoding(settingsPath))
-        for section in config.sections():
-            newSection = section
-            while newSection[:1] == "[":
-                newSection = newSection[1:]
-            while newSection[-1:] == "]":
-                newSection = newSection[:-1]
-            if newSection != section:
-                items = config.items(section)
-                if not config.has_section(newSection):
-                    config.add_section(newSection)
-                    for item in items:
-                        config.set(newSection, item[0], item[1])
-                config.remove_section(section)
-        # write to a temporary file first to prevent corruption
-        with open(settingsPath + ".new", 'w', encoding="utf-8") as userfile:
-            config.write(userfile, space_around_delimiters=False)
-            userfile.flush()
-            os.fsync(userfile.fileno())
-        os.replace(settingsPath + ".new", settingsPath)
-    except Exception as e:
-        print(f"fixing duplicate brackets failed: {e!s}")
-
-
 def throttle(ms: int):
     """Decorator ensures function that can only be called once every `ms` milliseconds"""
     from datetime import datetime, timedelta

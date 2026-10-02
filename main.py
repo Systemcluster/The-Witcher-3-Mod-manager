@@ -130,8 +130,6 @@ if __name__ == "__main__":
             MessageInitializationFailed(formatUserError(e))
             sys.exit(1)
 
-        fixUserSettingsDuplicateBrackets()
-
         mainWindow = CustomMainWindow()
         mainWidget = CustomMainWidget(mainWindow, modModel)
         mainWidget.checkTheme()
