@@ -438,6 +438,33 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertFalse((self.game / "bin/config/platform/pc/rendering.ini").exists())
         self.assertFalse((Path(self.config.configuration) / "menu-backups").exists())
 
+    def test_disabled_menu_reimport_replaces_disabled_copy_until_enabled(self):
+        source = self.root / 'Menu Package'
+        package_menu = source / 'bin/config/r4game/user_config_matrix/pc'
+        package_menu.mkdir(parents=True)
+        (package_menu / 'custom.xml').write_text('<v1/>')
+        menu = Path(self.config.menu)
+        filelist = menu / 'dx12filelist.txt'
+        filelist.write_text('base.xml;\n', encoding='utf-16')
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertTrue(installer.installMod(str(source))[0])
+        mod = model.get(source.name)
+        mod.disable()
+        (package_menu / 'custom.xml').write_text('<v2/>')
+        self.assertTrue(installer.installMod(str(source))[0])
+        self.assertFalse(mod.enabled)
+        self.assertFalse((menu / 'custom.xml').exists())
+        self.assertEqual((menu / 'custom.xml.disabled').read_text(), '<v2/>')
+        self.assertEqual(filelist.read_text(encoding='utf-16'), 'base.xml;\n')
+        model.write()
+        restored = Model(ignorelock=True).get(source.name)
+        self.assertFalse(restored.enabled)
+        restored.enable()
+        self.assertEqual((menu / 'custom.xml').read_text(), '<v2/>')
+        self.assertFalse((menu / 'custom.xml.disabled').exists())
+        self.assertIn('custom.xml;', filelist.read_text(encoding='utf-16'))
+
     def test_empty_normalized_install_name_is_rejected_before_copying(self):
         model = Model(ignorelock=True)
         for name in ('mod', 'modmod'):

@@ -118,8 +118,18 @@ class Installer:
                     )
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
+            keep_disabled = (
+                not mod.files
+                and not mod.dlcs
+                and any(
+                    not installed.enabled and installed.name == mod.name and installed.files == mod.files
+                    for installed in self.model.all()
+                )
+            )
             for xml in xmls:
                 _, name = path.split(xml)
+                if keep_disabled and not Mod.isProtectedMenu(name):
+                    name += '.disabled'
                 menu_directory = checkInstalledPath(data.getConfig().menu, modDirectory=False)
                 target = checkInstalledPath(path.join(menu_directory, name), modDirectory=False)
                 os.makedirs(menu_directory, exist_ok=True)
@@ -133,7 +143,8 @@ class Installer:
 
             incomplete = False
             try:
-                mod.installMenus()
+                if not keep_disabled:
+                    mod.installMenus()
             except Exception as err:
                 incomplete = True
                 self.output(formatUserError(err))
@@ -143,7 +154,8 @@ class Installer:
                     + translate("MainWindow", " could not be automatically installed.")
                 )
             try:
-                mod.installXmlKeys()
+                if not keep_disabled:
+                    mod.installXmlKeys()
             except Exception as err:
                 incomplete = True
                 self.output(formatUserError(err))
