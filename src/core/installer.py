@@ -126,7 +126,7 @@ class Installer:
 
             self.progress(0.8)
 
-            if not mod.files and not mod.dlcs:
+            if not mod.files and not mod.dlcs and not mod.menus:
                 raise Exception('No data found in ' + "'" + mod.name + "'")
 
             incomplete = False

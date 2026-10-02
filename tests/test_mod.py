@@ -398,7 +398,7 @@ class InstalledFileSafetyTests(unittest.TestCase):
                     self.assertEqual(target.read_bytes(), b"protected game contents")
                     target.unlink()
 
-    def test_xml_only_package_keeps_legacy_failure_after_menu_copy(self):
+    def test_xml_only_package_is_installed_and_recorded(self):
         source = self.root / "True Next-Gen Graphic Enhancements"
         package_menu = source / "bin/config/r4game/user_config_matrix/pc"
         package_menu.mkdir(parents=True)
@@ -413,9 +413,10 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model = Model(ignorelock=True)
         installer = Installer(model)
 
-        self.assertEqual(installer.installMod(str(source)), (False, 0, 0))
-        self.assertEqual(list(model.all()), [])
-        self.assertEqual(list(Model(ignorelock=True).all()), [])
+        self.assertEqual(installer.installMod(str(source)), (True, 0, 0))
+        self.assertEqual(list(model.list()), [source.name])
+        restored = Model(ignorelock=True).get(source.name)
+        self.assertCountEqual(restored.menus, ['graphics.xml', 'graphicsdx11.xml'])
         self.assertEqual((installed_menu / "graphics.xml").read_text(), "modded graphics")
         self.assertEqual((installed_menu / "graphicsdx11.xml").read_text(), "modded dx11")
         self.assertFalse((self.game / "bin/config/platform/pc/rendering.ini").exists())
