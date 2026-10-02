@@ -130,7 +130,7 @@ class Model:
         self.write()
 
     def rename(self, modname: str, newname: str) -> bool:
-        if modname not in self.modList or not newname:
+        if modname not in self.modList or not Mod.formatName(Mod.formatName(newname)):
             return False
         mod = self.modList[modname]
         del self.modList[modname]

@@ -422,6 +422,17 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertFalse((self.game / "bin/config/platform/pc/rendering.ini").exists())
         self.assertFalse((Path(self.config.configuration) / "menu-backups").exists())
 
+    def test_empty_normalized_install_name_is_rejected_before_copying(self):
+        model = Model(ignorelock=True)
+        for name in ('mod', 'modmod'):
+            source = self.root / name
+            self.populated(source / 'content')
+            with self.subTest(name=name), patch.object(model, 'write') as save:
+                self.assertEqual(Installer(model).installMod(str(source)), (False, 0, 0))
+                save.assert_not_called()
+                self.assertFalse((self.game / 'Mods' / name).exists())
+                self.assertEqual(list(model.list()), [])
+
     def test_install_source_containment_is_component_and_case_aware(self):
         inside = str(self.game / "Mods" / "modExample").upper()
         sibling = str(self.root / "The Witcher 3 Backup" / "modExample")
@@ -889,6 +900,16 @@ class InventoryPersistenceTests(unittest.TestCase):
     def write_inventory(self, filename, name):
         tree = Model.writeModToXml(Mod(_name=name), XML.ElementTree(XML.Element("installed")))
         tree.write(self.root / filename, encoding="utf-8", xml_declaration=True)
+
+    def test_empty_normalized_rename_keeps_existing_inventory(self):
+        self.write_inventory('installed.xml', 'Original')
+        model = Model(ignorelock=True)
+        original = (self.root / 'installed.xml').read_bytes()
+        for name in ('', 'mod', 'modmod'):
+            with self.subTest(name=name):
+                self.assertFalse(model.rename('Original', name))
+                self.assertEqual(list(model.list()), ['Original'])
+                self.assertEqual((self.root / 'installed.xml').read_bytes(), original)
 
     def test_live_inventory_survives_interruption_before_replacement(self):
         self.write_inventory("installed.xml", "Original")

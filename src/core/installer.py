@@ -58,6 +58,8 @@ class Installer:
 
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
+            if not Mod.formatName(mod.name):
+                raise ValueError('Mod name must not be empty')
 
             if not data.getConfig().mods:
                 raise Exception(translate("MainWindow", "Mods folder does not exist and could not be created."))
