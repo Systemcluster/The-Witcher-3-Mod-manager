@@ -264,6 +264,8 @@ class Mod:
         from src.core.fetcher import fetchInputSettings
 
         print("installing input settings", str(self.inputsettings))
+        if not self.inputsettings:
+            return 0, 0
         added = 0
         skipped = 0
         existing: List[Key] = []
