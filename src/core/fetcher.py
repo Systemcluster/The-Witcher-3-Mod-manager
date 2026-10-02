@@ -41,6 +41,11 @@ def isValidModFolder(modPath: str) -> bool:
             or isDlcFolder(path.split(current_dir)[1], path.split(current_dir)[0])
         ):
             return True
+        normalized = normalizePath(current_dir).casefold()
+        if normalized.endswith("/bin/config/r4game/user_config_matrix/pc") and any(
+            isMenuXmlFile(file) for file in getAllFilesFromDirectory(current_dir)
+        ):
+            return True
     return False
 
 
