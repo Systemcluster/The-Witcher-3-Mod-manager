@@ -88,6 +88,30 @@ class ConfigurationPathTests(unittest.TestCase):
                     self.assertEqual(Configuration.getCorrectGamePath(exe), normalizePath(exe))
                     self.assertEqual(Configuration.getGameRoot(exe), normalizePath(root))
 
+    def test_case_variant_executable_selection_and_edition_agree(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'content').mkdir()
+            executable = root / 'bin/x64_dx12/Witcher3.exe'
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            config = Configuration.__new__(Configuration)
+            config.config = configparser.ConfigParser()
+            config.config['PATHS'] = {'gameexe': str(executable)}
+            native_isfile = os.path.isfile
+
+            def case_sensitive_isfile(filename):
+                return native_isfile(filename) and os.path.basename(filename) in os.listdir(os.path.dirname(filename))
+
+            with patch.object(config_module.path, 'isfile', side_effect=case_sensitive_isfile):
+                self.assertEqual(Configuration.getCorrectGamePath(str(root)), normalizePath(str(executable)))
+                self.assertEqual(config.gameversion, 're')
+                self.assertEqual(config.graphicsapi, 'dx12')
+                (root / 'bin/x64').mkdir()
+                self.assertEqual(config.gameversion, 're')
+                (root / 'bin/x64/WITCHER3.EXE').touch()
+                self.assertEqual(config.gameversion, 'ng')
+
     def test_game_root_accepts_windows_normalized_paths(self):
         with tempfile.TemporaryDirectory() as root:
             os.makedirs(os.path.join(root, 'content'))

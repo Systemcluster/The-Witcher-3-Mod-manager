@@ -284,11 +284,11 @@ class Configuration:
         game = self.game
         if (
             game
-            and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe'))
-            and path.isfile(path.join(game, "bin", "x64", "witcher3.exe"))
+            and self.findGameExecutable(path.join(game, 'bin', 'x64_dx12'))
+            and self.findGameExecutable(path.join(game, "bin", "x64"))
         ):
             return 'ng'
-        if game and path.isfile(path.join(game, 'bin', 'x64_dx12', 'witcher3.exe')):
+        if game and self.findGameExecutable(path.join(game, 'bin', 'x64_dx12')):
             return 're'
         return 'og'
 
@@ -466,14 +466,30 @@ class Configuration:
 
         if path.isfile(normalized):
             return normalized
-        candidates = (
-            path.join(normalized, "witcher3.exe"),
-            path.join(gameDirectory, 'bin', 'x64_dx12', 'witcher3.exe'),
-            path.join(gameDirectory, "bin", "x64", "witcher3.exe"),
+        directories = (
+            normalized,
+            path.join(gameDirectory, 'bin', 'x64_dx12'),
+            path.join(gameDirectory, "bin", "x64"),
         )
-        for candidate in candidates:
-            if path.isfile(candidate) and Configuration.getGameRoot(candidate):
-                return util.normalizePath(candidate)
+        for directory in directories:
+            candidate = Configuration.findGameExecutable(directory)
+            if candidate:
+                return candidate
+        return ''
+
+    @staticmethod
+    def findGameExecutable(directory: str) -> str:
+        try:
+            for filename in os.listdir(directory):
+                candidate = path.join(directory, filename)
+                if (
+                    filename.lower() == 'witcher3.exe'
+                    and path.isfile(candidate)
+                    and Configuration.getGameRoot(candidate)
+                ):
+                    return util.normalizePath(candidate)
+        except OSError:
+            pass
         return ''
 
     @staticmethod
