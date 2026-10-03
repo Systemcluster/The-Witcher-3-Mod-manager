@@ -46,21 +46,23 @@ def isValidModFolder(modPath: str) -> bool:
             isMenuXmlFile(file) for file in getAllFilesFromDirectory(current_dir)
         ):
             return True
+        if any(isBaseIniFile(current_dir, file) for file in getAllFilesFromDirectory(current_dir)):
+            return True
     return False
 
 
 def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     mod = Mod(path.split(modPath)[1])
     mod_dirs: List[str] = []
-    mod_xmls: List[str] = []
+    config_files: List[str] = []
     mod_readmes: List[str] = []
     for current_dir, _, _ in walk(modPath):
         if fetchDataIfRelevantFolder(current_dir, mod):
             mod_dirs.append(normalizePath(current_dir))
-        mod_xmls += fetchDataFromRelevantFiles(current_dir, mod)
+        config_files += fetchDataFromRelevantFiles(current_dir, mod)
         mod_readmes.extend(fetchReadmes(current_dir))
     mod.readmes = mod_readmes
-    return mod, mod_dirs, mod_xmls
+    return mod, mod_dirs, config_files
 
 
 # tested
@@ -120,11 +122,14 @@ def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
 
 
 def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
-    mod_xmls: List[str] = []
+    config_files: List[str] = []
     for file in getAllFilesFromDirectory(current_dir):
         if isMenuXmlFile(file):
             mod.menus.append(file)
-            mod_xmls.append(normalizePath(current_dir + "/" + file))
+            config_files.append(normalizePath(current_dir + "/" + file))
+        elif isBaseIniFile(current_dir, file):
+            mod.inis.append(file)
+            config_files.append(normalizePath(current_dir + "/" + file))
         elif isTxtOrInputXmlFile(file):
             filepath = current_dir + "/" + file
             with open(filepath, 'rb') as file_:
@@ -145,7 +150,11 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
                 usrs = fetchUserSettings(text)
                 if usrs:
                     mod.usersettings += usrs
-    return mod_xmls
+    return config_files
+
+
+def isBaseIniFile(directory: str, file: str) -> bool:
+    return normalizePath(directory).casefold().endswith("/bin/config/base") and file.casefold().endswith(".ini")
 
 
 def fetchReadmes(current_dir: str) -> List[str]:

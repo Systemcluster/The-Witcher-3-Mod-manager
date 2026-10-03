@@ -26,6 +26,8 @@ If no configuration exists on the first run, it is created in `AppData\Local\The
 
 Shared game menus such as `graphics.xml` remain installed and registered when a mod is disabled or uninstalled. Their original contents are not backed up or restored; restore those separately when removing a shared-menu replacement.
 
+INI files packaged under `bin/config/base` are copied to the same location in the game, including from INI-only packages. Folder names and the `.ini` extension are matched case-insensitively; INIs elsewhere in a package still require manual installation. Files are replaced whole, not merged. These shared base configuration files remain in place when a mod is disabled or uninstalled, and their previous contents are not backed up or restored. Back up affected files before installing a replacement.
+
 Mod and DLC folders are only removed or replaced inside the `Mods` and `DLC` directories of the configured game, and other installed files only inside the game directory. Symbolic links and Windows junctions in the game directory are not supported and are never followed for deletion.
 
 A replaced mod folder is kept until its new copy is in place. If it can't be restored after a failure, the error names the `.tw3mm-*` directory holding the original files. Mutable configuration and settings files are also written to sibling temporary files and atomically replaced. Linked configuration and Documents settings files are updated at their targets without replacing the links. A failed installation doesn't remove files it already copied; a complete installation or uninstall is not transactional.

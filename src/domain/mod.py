@@ -34,6 +34,7 @@ class Mod:
     inputsettings: List[Key] = field(default_factory=list)
     hidden: List[str] = field(default_factory=list)
     readmes: List[str] = field(default_factory=list)
+    inis: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())

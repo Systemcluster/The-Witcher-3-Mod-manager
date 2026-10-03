@@ -54,7 +54,7 @@ class Installer:
         result = True
         extraction = TemporaryDirectory(prefix="tw3mm-")
         try:
-            mod, directories, xmls = fetchMod(modPath, extraction.name)
+            mod, directories, config_files = fetchMod(modPath, extraction.name)
 
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
@@ -126,19 +126,23 @@ class Installer:
                     for installed in self.model.all()
                 )
             )
-            for xml in xmls:
-                _, name = path.split(xml)
-                if keep_disabled and not Mod.isProtectedMenu(name):
+            for config_file in config_files:
+                directory, name = path.split(config_file)
+                base_ini = isBaseIniFile(directory, name)
+                if keep_disabled and not base_ini and not Mod.isProtectedMenu(name):
                     name += '.disabled'
-                menu_directory = checkInstalledPath(data.getConfig().menu, modDirectory=False)
-                target = checkInstalledPath(path.join(menu_directory, name), modDirectory=False)
-                os.makedirs(menu_directory, exist_ok=True)
-                with open(xml, 'rb') as source, atomicWrite(target, 'wb') as destination:
+                destination_directory = checkInstalledPath(
+                    path.join(gamePath, 'bin', 'config', 'base') if base_ini else data.getConfig().menu,
+                    modDirectory=False,
+                )
+                target = checkInstalledPath(path.join(destination_directory, name), modDirectory=False)
+                os.makedirs(destination_directory, exist_ok=True)
+                with open(config_file, 'rb') as source, atomicWrite(target, 'wb') as destination:
                     copyfileobj(source, destination)
 
             self.progress(0.8)
 
-            if not mod.files and not mod.dlcs and not mod.menus:
+            if not mod.files and not mod.dlcs and not mod.menus and not mod.inis:
                 raise Exception('No data found in ' + "'" + mod.name + "'")
 
             incomplete = False
@@ -214,6 +218,7 @@ class Installer:
                     installed.dlcs = mod.dlcs
                     installed.date = mod.date
                     installed.menus = mod.menus
+                    installed.inis = mod.inis
                     installed.inputsettings = mod.inputsettings
                     installed.readmes = mod.readmes
                     exists = True
@@ -248,6 +253,12 @@ class Installer:
             mod.uninstallXmlKeys()
             mod.uninstallUserSettings()
             self.removeModMenus(mod)
+            for ini in mod.inis:
+                self.output(
+                    translate("MainWindow", "Note: Additions to ")
+                    + ini
+                    + translate("MainWindow", " will not be removed.")
+                )
             self.removeModDlcs(mod)
             self.removeModData(mod)
             self.model.remove(mod.name)

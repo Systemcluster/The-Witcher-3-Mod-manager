@@ -171,6 +171,8 @@ class Model:
             mod.dlcs.append(str(elem.text))
         for elem in root.findall('menu'):
             mod.menus.append(str(elem.text))
+        for elem in root.findall('ini'):
+            mod.inis.append(str(elem.text))
         for elem in root.findall('xmlkey'):
             mod.xmlkeys.append(str(elem.text))
         for elem in root.findall('hidden'):
@@ -220,6 +222,8 @@ class Model:
         if mod.menus:
             for menu in mod.menus:
                 XML.SubElement(elem, 'menu').text = menu
+        for ini in mod.inis:
+            XML.SubElement(elem, 'ini').text = ini
         if mod.xmlkeys:
             for xml in mod.xmlkeys:
                 XML.SubElement(elem, 'xmlkey').text = xml
