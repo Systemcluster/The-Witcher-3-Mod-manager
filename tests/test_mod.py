@@ -146,6 +146,29 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.link(missing, internal / "missing.xml")
         self.assertEqual(checkInstalledPath(str(missing), modDirectory=False), str(missing))
 
+    def test_dangling_targets_canonicalize_existing_ancestor(self):
+        realpath = os.path.realpath
+        for directory in (self.game / "content", self.outside):
+            alias = self.root / (directory.name + "-alias")
+            self.link(alias, directory)
+            for index, suffix in enumerate((Path("missing.xml"), Path("missing") / "nested" / "file.xml")):
+                with self.subTest(directory=directory, suffix=suffix):
+                    missing = self.game / "bin" / f"{directory.name}-{index}.xml"
+                    self.link(missing, directory / suffix)
+
+                    def resolve(filename, *, strict=False):
+                        if filename == str(missing) and not strict:
+                            return str(alias / suffix)
+                        return realpath(filename, strict=strict)
+
+                    with patch("src.util.util.os.path.realpath", side_effect=resolve):
+                        if directory == self.outside:
+                            with self.assertRaises(ValueError):
+                                checkInstalledPath(str(missing), modDirectory=False)
+                        else:
+                            self.assertEqual(checkInstalledPath(str(missing), modDirectory=False), str(missing))
+                    missing.unlink()
+
     def test_refuses_external_link_chains_and_dangling_targets(self):
         linked = self.game / "content" / "linked"
         self.link(linked, self.outside)
@@ -800,6 +823,51 @@ class ModConfigurationTests(unittest.TestCase):
         self.assertIn("[Unrelated]\nOther=value", text)
         self.assertIn("IK_A=(Action=Jump)", text)
         self.assertIn("IK_B=(Action=Run)", text)
+
+    def test_input_binding_trailing_comments_do_not_hide_conflicts(self):
+        settings = self.root / 'input.settings'
+        mod = Mod(inputsettings=[Key('[Input]', 'IK_B=(Action=Jump)')])
+        for comment in ('; keep (custom)', '# keep (custom)'):
+            original = f'[Input]\r\nIK_A=(Action=Jump) {comment}\r\n'.encode()
+            for answer in (QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes):
+                with self.subTest(comment=comment, answer=answer):
+                    settings.write_bytes(original)
+                    with patch('src.domain.mod.MessageRebindKeys', return_value=answer) as prompt:
+                        expected_counts = (0, 1) if answer == QMessageBox.StandardButton.No else (1, 0)
+                        self.assertEqual(mod.installInputKeys(), expected_counts)
+                        prompt.assert_called_once()
+                    expected = (
+                        original if answer == QMessageBox.StandardButton.No else b'[Input]\r\nIK_B=(Action=Jump)\r\n'
+                    )
+                    self.assertEqual(settings.read_bytes(), expected)
+
+    def test_input_section_trailing_comments_keep_bindings_in_their_context(self):
+        settings = self.root / 'input.settings'
+        for comment in ('; keep [custom]', '# keep [custom]'):
+            with self.subTest(comment=comment):
+                original = f'[Input]\nIK_A=(Action=Jump)\n[Other] {comment}\nIK_B=(Action=Run)\n'
+                settings.write_text(original)
+                mod = Mod(inputsettings=[Key('[Input]', 'IK_C=(Action=Run)')])
+                with patch('src.domain.mod.MessageRebindKeys') as prompt:
+                    self.assertEqual(mod.installInputKeys(), (1, 0))
+                    prompt.assert_not_called()
+                expected = original.replace('[Other]', 'IK_C=(Action=Run)\n[Other]')
+                self.assertEqual(settings.read_text(), expected)
+                mod = Mod(inputsettings=[Key('[Other]', 'IK_D=(Action=Run)')])
+                with patch('src.domain.mod.MessageRebindKeys', return_value=QMessageBox.StandardButton.Yes) as prompt:
+                    self.assertEqual(mod.installInputKeys(), (1, 0))
+                    prompt.assert_called_once()
+                self.assertEqual(settings.read_text(), expected.replace('IK_B=', 'IK_D='))
+
+    def test_input_trailing_comments_preserved_for_duplicate_keys_and_versions(self):
+        settings = self.root / 'input.settings'
+        original = b'[Input] ; keep\r\nVersion=1 # version\r\nIK_A=(Action=Jump) ; binding\r\n'
+        settings.write_bytes(original)
+        mod = Mod(inputsettings=[Key('[Input]', 'Version=1'), Key('[Input]', 'IK_A=(Action=Jump)')])
+        with patch('src.domain.mod.MessageRebindKeys') as prompt:
+            self.assertEqual(mod.installInputKeys(), (0, 0))
+            prompt.assert_not_called()
+        self.assertEqual(settings.read_bytes(), original)
 
     def test_failed_input_settings_promotion_preserves_original(self):
         input_settings = self.root / "input.settings"

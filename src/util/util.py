@@ -302,6 +302,17 @@ def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
                     resolved = os.path.realpath(current, strict=True)
                 except FileNotFoundError:
                     resolved = os.path.realpath(current)
+                    missing_parts: list[str] = []
+                    while True:
+                        try:
+                            resolved = os.path.join(os.path.realpath(resolved, strict=True), *reversed(missing_parts))
+                            break
+                        except FileNotFoundError:
+                            parent, name = os.path.split(resolved)
+                            if parent == resolved:
+                                raise
+                            missing_parts.append(name)
+                            resolved = parent
                 resolved = os.path.normcase(resolved)
                 if os.path.commonpath((resolved_game, resolved)) != resolved_game or (
                     current == paths[-1] and resolved == resolved_game

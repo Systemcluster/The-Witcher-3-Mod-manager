@@ -286,8 +286,6 @@ class Mod:
                 userfile.write(text)
 
     def installInputKeys(self) -> Tuple[int, int]:
-        from src.core.fetcher import fetchInputSettings
-
         print("installing input settings", str(self.inputsettings))
         if not self.inputsettings:
             return 0, 0
@@ -295,10 +293,22 @@ class Mod:
         skipped = 0
         existing: List[Key] = []
         filename = data.getConfig().settings + "/input.settings"
+        original_text = ''
         if path.exists(filename):
-            with open(filename, 'r', encoding=detectEncoding(filename)) as userfile:
-                text = userfile.read()
-                existing = fetchInputSettings(text)
+            with open(filename, 'r', encoding=detectEncoding(filename), newline='') as userfile:
+                original_text = userfile.read()
+        context = ''
+        for line in original_text.splitlines():
+            stripped = line.strip()
+            section = re.fullmatch(r"(\[.*?\])(?:\s*[;#].*)?", stripped)
+            if section:
+                context = section.group(1)
+                existing.append(Key(context))
+            else:
+                parsed = self.inputSettingKey(context, stripped)
+                if parsed is not None:
+                    existing.append(parsed)
+        original_keys = list(existing)
         conflicts: List[Tuple[Key, List[Key]]] = []
         if self.inputsettings:
             for key in iter(self.inputsettings):
@@ -343,28 +353,62 @@ class Mod:
                     elif msg == QMessageBox.StandardButton.NoToAll:
                         skipped += 1
                         saved = QMessageBox.StandardButton.No
-        existing.sort()
-        text = ''
-        category = None
-        for key in existing:
-            if key.context != category:
-                if category is not None:
-                    text += '\n'
-                category = key.context
-                if not category.startswith('['):
-                    text += '['
-                text += category
-                if not category.endswith(']'):
-                    text += ']'
-                text += '\n'
-            if not key.empty:
-                text += repr(key) + "\n"
-        with open(filename, 'w', encoding="utf-8") as userfile:
+        added_keys = [key for key in existing if key not in original_keys]
+        removed_keys = [key for key in original_keys if key not in existing]
+        if not added_keys and not removed_keys:
+            return added, skipped
+        text = self.mergeInputSettings(original_text, added_keys, removed_keys)
+        with atomicWrite(filename, 'w', encoding="utf-8", newline='', follow_symlinks=True) as userfile:
             userfile.write(text)
-            userfile.flush()
-            os.fsync(userfile.fileno())
 
         return added, skipped
+
+    @staticmethod
+    def inputSettingKey(context: str, line: str) -> Key | None:
+        match = re.fullmatch(r"(IK_.+=\(Action=.+?\)|Version=\d+)(?:\s*[;#].*)?", line)
+        if context and match:
+            return Key(context, match.group(1))
+        return None
+
+    @staticmethod
+    def mergeInputSettings(text: str, added_keys: List[Key], removed_keys: List[Key]) -> str:
+        def contextName(context: str) -> str:
+            return context if context.startswith('[') and context.endswith(']') else '[' + context + ']'
+
+        newline = '\r\n' if '\r\n' in text else '\n'
+        additions: dict[str, List[Key]] = {}
+        for key in added_keys:
+            keys = additions.setdefault(contextName(key.context), [])
+            if not key.empty:
+                keys.append(key)
+        removals = {(contextName(key.context), repr(key)) for key in removed_keys}
+        output: List[str] = []
+        current_context = ''
+
+        def appendAdditions(context: str) -> None:
+            keys = additions.pop(context, [])
+            if keys and output and not output[-1].endswith(('\n', '\r')):
+                output.append(newline)
+            output.extend(repr(key) + newline for key in sorted(keys))
+
+        for line in text.splitlines(keepends=True):
+            stripped = line.strip()
+            section = re.fullmatch(r"(\[.*?\])(?:\s*[;#].*)?", stripped)
+            if section:
+                appendAdditions(current_context)
+                current_context = contextName(section.group(1))
+            parsed = Mod.inputSettingKey(current_context, stripped)
+            if parsed is None or (current_context, repr(parsed)) not in removals:
+                output.append(line)
+        appendAdditions(current_context)
+        for context, keys in additions.items():
+            if output and not output[-1].endswith(('\n', '\r')):
+                output.append(newline)
+            if output and output[-1].strip():
+                output.append(newline)
+            output.append(context + newline)
+            output.extend(repr(key) + newline for key in sorted(keys))
+        return ''.join(output)
 
     def installUserSettings(self) -> int:
         added = 0
