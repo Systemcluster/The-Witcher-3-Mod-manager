@@ -258,8 +258,8 @@ def MessageNotConfiguredScriptMerger():
             "MainWindow",
             "Please select your <code>WitcherScriptMerger.exe</code> in the next dialog.<br><br>"
             + "Script Merger is not included and has to be downloaded separately.<br>"
-            + '<a href="https://www.nexusmods.com/witcher3/mods/484">Original Script Merger</a><br>'
             + '<a href="https://www.nexusmods.com/witcher3/mods/8405">Script Merger - Fresh and Automated Edition</a><br><br>'
+            + '<a href="https://www.nexusmods.com/witcher3/mods/13076">Script Merger - Remastered</a><br>'
             + "Check compatibility with your game version before downloading. "
             + "Script Merger keeps its own game path; select the same installation there as in Mod Manager.",
         )
