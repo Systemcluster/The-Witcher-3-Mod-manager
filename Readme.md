@@ -38,11 +38,31 @@ Mod and DLC folders are only removed or replaced inside the `Mods` and `DLC` dir
 
 A replaced mod folder is kept until its new copy is in place. If it can't be restored after a failure, the error names the `.tw3mm-*` directory holding the original files. Mutable configuration and settings files are also written to sibling temporary files and atomically replaced. Linked configuration and Documents settings files are updated at their targets without replacing the links. A failed installation doesn't remove files it already copied; a complete installation or uninstall is not transactional.
 
-Reimporting a disabled package with the same name and Mod folder list keeps it disabled, including its DLC files and menus. Uninstalling does not first enable disabled files. Mod and DLC directories still referenced by another installed entry are retained rather than deleting that entry's files.
+Mod and DLC directories still referenced by another installed entry are retained rather than deleting that entry's files.
 
 Overwrite **Yes to all** and **No to all** apply to the entire selected installation batch. The output log records copied destinations and skipped folders; unrecognized content in an otherwise valid package marks the installation incomplete.
 
 Folders inside a package's `content` directory are treated as payload, not separate mods or DLCs. They are copied with their containing mod or DLC; sibling packages and configuration files outside `content` are still detected.
+
+### Enabled and Disabled Mods
+
+The checkbox records the manager's requested state in `installed.xml`; it is not a check that every file exists or that the game can load the mod. Reloading the inventory does not enable, disable, or repair files. Invalid or missing saved status is treated as an inventory error, allowing recovery from a valid backup rather than silently assuming a mod is disabled.
+
+| Component | Disabled behavior | Rationale |
+| --- | --- | --- |
+| Mod folders | `Mods/modExample` becomes `Mods/~modExample`. | Keeps files and customizations without leaving the normal mod folder active. |
+| DLC files | Non-dotfiles beneath `DLC/dlcExample` receive a `.disabled` suffix, including in nested directories. The DLC directory itself keeps its name. | Disables the payload while retaining its directory layout; folder browsing uses the unchanged DLC path. |
+| Custom menu XML | Receives a `.disabled` suffix and is removed from existing DX11/DX12 menu file lists. | Prevents the disabled menu from being registered. Enabling restores the name and registration. |
+| Extracted input/hidden XML additions | Removed on disable, reapplied on enable. | Keeps these additions aligned with the mod's state. |
+| Protected game menus and base INIs | Remain installed, unchanged by toggling. | These are shared game files, not safely reversible per-mod assets. A package containing only these files cannot be deactivated with the checkbox. |
+| User settings and input bindings | Remain during toggles. | Preserves customized preferences and bindings. Uninstall removes recorded user-setting options, but leaves input bindings. |
+| Load-order priority | Retained during toggles. Priority-setting actions reject disabled mods; clearing a saved priority remains available. | Disabling should not lose the chosen load order. |
+
+Updating a package with the same manager name preserves its disabled status, including mod/DLC payloads and custom menus. Disabled DLC updates are prepared before replacing the installed folder. Importing still applies shared-file replacements and settings as usual. **Restore default settings** deliberately enables a disabled mod and reapplies stored settings; it does not recover missing mod or menu files. **Uninstall** removes active and disabled copies directly, without enabling the mod first.
+
+Toggles check paths and name collisions before changing files and never intentionally overwrite an existing active/disabled counterpart. If a rename or disable-time configuration update fails, the manager attempts to restore earlier changes and keeps the previous checkbox state. If restoration also fails, the error identifies the paths needing manual recovery. Enable-time XML/registration failures retain the existing incomplete-installation warnings. Missing assets are not recreated, and external changes, process interruption, and overlapping packages are not automatically reconciled. Packages sharing custom menus or XML additions are not reference-counted: toggling or removing one can affect another.
+
+The checkbox does not override separate game controls such as `Enabled=0` in `mods.settings`, REDlauncher settings, or `-disablemods` launch arguments. If an enabled mod does not load, check those controls and missing files as well.
 
 ### Script Merger on Linux and macOS
 
