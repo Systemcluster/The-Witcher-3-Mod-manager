@@ -35,7 +35,7 @@ setup(
             "include_files": FILES,
             "excludes": ["distutils", "patool"],
             "optimize": 2,
-            "zip_include_packages": ["src"],
+            "no_compress": True,
             "include_msvcr": True,
         },
         "bdist_msi": BDIST_MSI_OPTIONS,

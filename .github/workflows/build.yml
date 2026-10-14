@@ -41,8 +41,21 @@ jobs:
         run: |
           pdm run build-win
 
+      - name: Smoke test release
+        run: |
+          $process = Start-Process -FilePath build/exe.win-amd64-3.12/TheWitcher3ModManager.exe -ArgumentList '--version' -PassThru
+          if (-not $process.WaitForExit(30000)) {
+            $process.Kill()
+            throw "Release startup timed out"
+          }
+          if ($process.ExitCode -ne 0) { throw "Release startup failed: $($process.ExitCode)" }
+
       - name: Pack release
-        run: Compress-Archive -Path build/exe.win-amd64-3.12/* -Destination TW3MM.zip
+        run: |
+          $nested = Get-ChildItem build/exe.win-amd64-3.12 -Recurse -File |
+            Where-Object { $_.Extension -in '.zip', '.7z', '.rar' }
+          if ($nested) { throw "Nested archives in release: $($nested.FullName -join ', ')" }
+          Compress-Archive -Path build/exe.win-amd64-3.12/* -Destination TW3MM.zip
 
       - name: Upload release
         uses: Systemcluster/actions@release-github-v0
