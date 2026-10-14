@@ -1174,6 +1174,11 @@ class ModConfigurationTests(unittest.TestCase):
                 config.removePriority.assert_not_called()
                 config.write_priority.assert_not_called()
 
+    def test_restore_reports_incomplete_enable(self):
+        mod = Mod(enabled=False)
+        with patch.object(mod, "enable", return_value=["input.xml"]):
+            self.assertEqual(Installer(Mock()).reinstallMod(mod), (True, True))
+
     def test_input_keys_round_trip_with_version_metadata(self):
         mod = Mod(inputsettings=[Key("[Input]", "Version=1"), Key("[Input]", "IK_A=(Action=Jump)")])
         self.assertEqual(mod.installInputKeys(), (2, 0))

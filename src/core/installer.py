@@ -267,16 +267,17 @@ class Installer:
     def reinstallMod(self, mod: Mod) -> Tuple[bool, bool]:
         try:
             self.output(translate("MainWindow", "Reinstalling") + " " + mod.name)
+            incomplete = False
             if not mod.enabled:
                 failed_additions = mod.enable()
                 if failed_additions:
+                    incomplete = True
                     for i in failed_additions:
                         self.output(
                             translate("MainWindow", "Note: Additions to ")
                             + i
                             + translate("MainWindow", " could not be automatically installed.")
                         )
-            incomplete = False
             mod.uninstallUserSettings()
             try:
                 mod.installUserSettings()
