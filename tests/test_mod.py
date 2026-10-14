@@ -366,9 +366,10 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model.all.return_value = []
         with (
             patch("src.core.installer.fetchMod", return_value=(mod, [], [])),
-            patch.object(mod, "checkPriority", side_effect=OSError("failed")),
+            patch.object(mod, "checkPriority", side_effect=OSError("failed")) as check_priority,
         ):
             self.assertEqual(Installer(model).installMod(str(self.root / "source")), (False, 0, 0))
+            check_priority.assert_called_once()
         self.assertEqual((existing / "asset").read_text(), "keep")
 
     def test_declined_overwrite_preserves_legacy_inventory_behavior(self):
@@ -983,6 +984,125 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertFalse((self.game / "Mods/modMissing").exists())
         self.assertFalse((self.game / "DLC/dlcMissing").exists())
         self.assertFalse((Path(self.config.menu) / "missing.xml").exists())
+
+    def test_disabled_package_updates_stay_disabled_for_all_asset_types(self):
+        for has_mod, has_dlc in ((True, False), (False, True), (True, True)):
+            with self.subTest(has_mod=has_mod, has_dlc=has_dlc):
+                name = f"Package {int(has_mod)}{int(has_dlc)}"
+                source = self.root / name
+                mod_name, dlc_name = "mod" + name, "dlc" + name
+                if has_mod:
+                    self.populated(source / mod_name / "content")
+                if has_dlc:
+                    self.populated(source / dlc_name / "content")
+                package_menu = source / "bin/config/r4game/user_config_matrix/pc"
+                package_menu.mkdir(parents=True)
+                menu_name = name + ".xml"
+                (package_menu / menu_name).write_text("first")
+                filelist = Path(self.config.menu) / "dx12filelist.txt"
+                filelist.write_text("base.xml;\n", encoding="utf-16")
+                model = Model(ignorelock=True)
+                installer = Installer(model)
+                self.assertTrue(installer.installMod(str(source))[0])
+                mod = model.get(name)
+                mod.disable()
+                model.write()
+                for asset in source.glob("*/content/asset"):
+                    asset.write_text("updated")
+                (package_menu / menu_name).write_text("updated")
+                with patch("src.core.installer.MessageOverwrite", return_value=QMessageBox.StandardButton.Yes):
+                    self.assertEqual(installer.installMod(str(source)), (True, int(has_mod) + int(has_dlc), 0))
+                self.assertFalse(mod.enabled)
+                if has_mod:
+                    self.assertFalse((self.game / "Mods" / mod_name).exists())
+                    self.assertEqual((self.game / "Mods" / ("~" + mod_name) / "content/asset").read_text(), "updated")
+                if has_dlc:
+                    self.assertFalse((self.game / "DLC" / dlc_name / "content/asset").exists())
+                    self.assertEqual((self.game / "DLC" / dlc_name / "content/asset.disabled").read_text(), "updated")
+                    self.assertEqual((source / dlc_name / "content/asset").read_text(), "updated")
+                self.assertFalse((Path(self.config.menu) / menu_name).exists())
+                self.assertEqual((Path(self.config.menu) / (menu_name + ".disabled")).read_text(), "updated")
+                self.assertEqual(filelist.read_text(encoding="utf-16"), "base.xml;\n")
+                model.write()
+                restored = Model(ignorelock=True).get(name)
+                self.assertFalse(restored.enabled)
+                self.assertEqual(restored.enable(), [])
+                self.assertEqual((Path(self.config.menu) / menu_name).read_text(), "updated")
+
+    def test_disabled_update_with_changed_folder_list_keeps_status(self):
+        source = self.root / "Example"
+        self.populated(source / "modFirst/content")
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertTrue(installer.installMod(str(source))[0])
+        model.get("Example").disable()
+        self.populated(source / "modSecond/content")
+        with patch("src.core.installer.MessageOverwrite", return_value=QMessageBox.StandardButton.No):
+            self.assertEqual(installer.installMod(str(source)), (True, 1, 0))
+        restored = Model(ignorelock=True).get("Example")
+        self.assertFalse(restored.enabled)
+        for name in ("modFirst", "modSecond"):
+            self.assertFalse((self.game / "Mods" / name).exists())
+            self.assertEqual((self.game / "Mods" / ("~" + name) / "content/asset").read_text(), "keep")
+
+    def test_disabled_base_ini_update_preserves_shared_file_exception(self):
+        source = self.root / "Base Settings"
+        source_ini = source / "bin/config/base/general.ini"
+        source_ini.parent.mkdir(parents=True)
+        source_ini.write_text("first")
+        target = self.game / "bin/config/base/general.ini"
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertEqual(installer.installMod(str(source)), (True, 0, 0))
+        mod = model.get(source.name)
+        mod.disable()
+        self.assertEqual(target.read_text(), "first")
+        source_ini.write_text("updated")
+        self.assertEqual(installer.installMod(str(source)), (True, 0, 0))
+        self.assertFalse(mod.enabled)
+        self.assertEqual(target.read_text(), "updated")
+        self.assertFalse(Path(str(target) + ".disabled").exists())
+        self.assertTrue(installer.uninstallMod(mod))
+        self.assertEqual(target.read_text(), "updated")
+
+    def test_disabled_update_refuses_conflicting_active_counterpart(self):
+        for kind in ("mod", "menu"):
+            with self.subTest(kind=kind):
+                source = self.root / ("Conflict " + kind)
+                if kind == "mod":
+                    self.populated(source / "modConflict/content")
+                    active = self.populated(self.game / "Mods/modConflict") / "asset"
+                    inactive = self.populated(self.game / "Mods/~modConflict") / "asset"
+                    mod = Mod(_name=source.name, enabled=False, files=["modConflict"])
+                else:
+                    source_menu = source / "bin/config/r4game/user_config_matrix/pc"
+                    source_menu.mkdir(parents=True)
+                    (source_menu / "conflict.xml").write_text("new")
+                    active = Path(self.config.menu) / "conflict.xml"
+                    inactive = Path(str(active) + ".disabled")
+                    active.write_text("keep")
+                    inactive.write_text("keep")
+                    mod = Mod(_name=source.name, enabled=False, menus=["conflict.xml"])
+                model = Model(ignorelock=True)
+                model.add(mod.name, mod)
+                output = Mock()
+                self.assertEqual(Installer(model, output=output).installMod(str(source)), (False, 0, 0))
+                self.assertIn("conflicting status", output.call_args.args[0])
+                self.assertFalse(model.get(mod.name).enabled)
+                self.assertEqual(active.read_text(), "keep")
+                self.assertEqual(inactive.read_text(), "keep")
+
+    def test_disabled_dlc_copy_failure_preserves_previous_disabled_copy(self):
+        source = self.populated(self.root / "source/content").parent
+        target = self.game / "DLC/dlcExample"
+        content = self.populated(target / "content")
+        (content / "asset").rename(content / "asset.disabled")
+        with patch("src.util.util.renameInstalledPath", side_effect=PermissionError("denied")):
+            with self.assertRaises(PermissionError):
+                copyFolder(str(source), str(target), disableFiles=True)
+        self.assertFalse((content / "asset").exists())
+        self.assertEqual((content / "asset.disabled").read_text(), "keep")
+        self.assertEqual(list(target.parent.glob(".tw3mm-*")), [])
 
     def test_archive_extraction_is_private_and_removed(self):
         archive = self.root / "modExample.zip"

@@ -69,10 +69,8 @@ class Installer:
 
             installed_mods = listdir(data.getConfig().mods)
             installed_dlcs = listdir(data.getConfig().dlc)
-            keep_disabled = any(
-                not installed.enabled and installed.name == mod.name and installed.files == mod.files
-                for installed in self.model.all()
-            )
+            keep_disabled = any(not installed.enabled and installed.name == mod.name for installed in self.model.all())
+            mod.enabled = not keep_disabled
 
             self.progress(0.2)
             incomplete = False
@@ -84,9 +82,15 @@ class Installer:
                 dlcfolder = isDlcFolder(name, parent)
                 basepath = data.getConfig().mods if modfolder else (data.getConfig().dlc if dlcfolder else None)
                 if basepath is not None:
-                    target_name = "~" + name if modfolder and keep_disabled else name
-                    datapath = basepath + "/" + target_name
-                    if (modfolder and target_name in installed_mods) or (dlcfolder and name in installed_dlcs):
+                    installed_name = "~" + name if modfolder and keep_disabled else name
+                    datapath = path.join(basepath, installed_name)
+                    if modfolder:
+                        other_name = name if keep_disabled else "~" + name
+                        if path.lexists(path.join(basepath, other_name)):
+                            raise FileExistsError(
+                                f"Cannot install '{name}': conflicting status folder '{other_name}' already exists"
+                            )
+                    if (modfolder and installed_name in installed_mods) or (dlcfolder and name in installed_dlcs):
                         if self.ask:
                             self.overwrite = MessageOverwrite(
                                 name, translate("MainWindow", "Mod") if modfolder else translate("MainWindow", "DLC")
@@ -125,12 +129,18 @@ class Installer:
             for config_file in config_files:
                 directory, name = path.split(config_file)
                 base_ini = isBaseIniFile(directory, name)
-                if keep_disabled and not base_ini and not Mod.isProtectedMenu(name):
-                    name += '.disabled'
                 destination_directory = checkInstalledPath(
                     path.join(gamePath, 'bin', 'config', 'base') if base_ini else data.getConfig().menu,
                     modDirectory=False,
                 )
+                if not base_ini and not Mod.isProtectedMenu(name):
+                    other_name = name if keep_disabled else name + '.disabled'
+                    if path.lexists(path.join(destination_directory, other_name)):
+                        raise FileExistsError(
+                            f"Cannot install '{name}': conflicting status file '{other_name}' already exists"
+                        )
+                    if keep_disabled:
+                        name += '.disabled'
                 target = checkInstalledPath(path.join(destination_directory, name), modDirectory=False)
                 os.makedirs(destination_directory, exist_ok=True)
                 with open(config_file, 'rb') as source, atomicWrite(target, 'wb') as destination:

@@ -396,14 +396,8 @@ def copyFolder(src: str, dst: str, *, disableFiles: bool = False) -> None:
     try:
         copytree(src, copied)
         if disableFiles:
-            for directory, _, files in os.walk(copied):
-                for filename in files:
-                    if not filename.startswith(".") and not filename.endswith(".disabled"):
-                        source = os.path.join(directory, filename)
-                        destination = source + ".disabled"
-                        if os.path.lexists(destination):
-                            raise FileExistsError(destination)
-                        os.rename(source, destination)
+            for source, destination in getDlcFileRenames(copied, enabled=False):
+                renameInstalledPath(source, destination, modDirectory=True)
         if os.path.lexists(dst):
             os.replace(dst, original)
         try:
