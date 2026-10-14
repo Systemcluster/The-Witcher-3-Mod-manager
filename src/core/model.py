@@ -141,9 +141,11 @@ class Model:
 
     def explore(self, mod: Mod, target_name: str, is_dlc: bool = False) -> None:
         base_dir = data.getConfig().dlc if is_dlc else data.getConfig().mods
-        prefix = '/~' if not mod.enabled else '/'
+        if base_dir is None:
+            raise ValueError("No game directory configured")
+        prefix = '/~' if not mod.enabled and not is_dlc else '/'
         target_dir = f"{base_dir}{prefix}{target_name}"
-        openFolder(target_dir)
+        openFolder(checkInstalledPath(target_dir, modDirectory=True))
 
     @property
     def xmlfile(self) -> str:

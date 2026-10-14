@@ -1127,6 +1127,17 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertFalse(folder.exists())
         self.assertFalse(menu.exists())
 
+    def test_explore_uses_status_only_for_mod_folders(self):
+        model = Model(ignorelock=True)
+        for enabled in (True, False):
+            for is_dlc in (True, False):
+                with self.subTest(enabled=enabled, is_dlc=is_dlc), patch("src.core.model.openFolder") as open_folder:
+                    base = self.game / ("DLC" if is_dlc else "Mods")
+                    name = "dlcExample" if is_dlc else "modExample"
+                    expected = base / (("~" if not enabled and not is_dlc else "") + name)
+                    model.explore(Mod(enabled=enabled), name, is_dlc=is_dlc)
+                    open_folder.assert_called_once_with(str(expected))
+
     def test_archive_extraction_is_private_and_removed(self):
         archive = self.root / "modExample.zip"
         with zipfile.ZipFile(archive, "w") as package:
