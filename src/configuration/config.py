@@ -294,10 +294,12 @@ class Configuration:
 
     @property
     def steam(self):
-        store = self.launcherconfig.get('platform')
-        if store:
-            return store == 'steam'
         root = self.game
+        if root and glob.glob('goggame-*.info', root_dir=root):
+            return False
+        store = self.launcherconfig.get('platform')
+        if isinstance(store, str) and store.strip():
+            return store.strip().casefold() == 'steam'
         return bool(
             root
             and path.basename(path.dirname(root)).lower() == "common"

@@ -211,6 +211,27 @@ class ConfigurationPathTests(unittest.TestCase):
             )
             self.assertFalse(config.steam)
 
+    def test_gog_installation_markers_override_steam_launcher_metadata(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'content').mkdir()
+            exe = root / 'bin/x64_dx12/witcher3.exe'
+            exe.parent.mkdir(parents=True)
+            exe.touch()
+            config = Configuration.__new__(Configuration)
+            config.config = configparser.ConfigParser()
+            config.config['PATHS'] = {'gameexe': str(exe)}
+            (root / 'launcher-configuration.json').write_text(
+                '{"gameId":"witcher3","platform":"steam","editions":[{"name":"remasteredEdition"}]}'
+            )
+            self.assertTrue(config.steam)
+            marker = root / 'goggame-1495134320.info'
+            marker.write_text('{}')
+            self.assertFalse(config.steam)
+            self.assertEqual(config.gameversion, 're')
+            marker.unlink()
+            self.assertTrue(config.steam)
+
     def test_fresh_configuration_and_game_path_override(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(Configuration, 'write_config'):
             root = Path(temporary)

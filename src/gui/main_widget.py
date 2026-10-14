@@ -935,7 +935,7 @@ class CustomMainWidget(QWidget):
 
     @staticmethod
     def launchThroughSteam():
-        return platform not in ("win32", "cygwin") or (data.getConfig().gameversion == "re" and data.getConfig().steam)
+        return data.getConfig().steam and (platform not in ("win32", "cygwin") or data.getConfig().gameversion == "re")
 
     @staticmethod
     def gameLaunchLabel():
@@ -954,9 +954,14 @@ class CustomMainWidget(QWidget):
             else:
                 gamepath = data.getConfig().gameexe
                 if not gamepath:
-                    return
+                    raise ValueError("No game executable configured")
                 directory, _ = path.split(gamepath)
-                subprocess.Popen([gamepath], cwd=directory)
+                if platform in ("win32", "cygwin"):
+                    subprocess.Popen([gamepath], cwd=directory)
+                elif platform in ("linux", "darwin"):
+                    subprocess.Popen(["wine", gamepath], cwd=directory)
+                else:
+                    MessageUnsupportedOSAction("")
         except Exception as err:
             self.output(formatUserError(err))
 

@@ -104,6 +104,26 @@ class LaunchTests(unittest.TestCase):
                 open_url.assert_not_called()
         self.widget.output.assert_not_called()
 
+    def test_non_steam_unix_installations_launch_with_wine_not_steam(self):
+        for platform in ('linux', 'darwin'):
+            with (
+                self.subTest(platform=platform),
+                patch("src.gui.main_widget.platform", platform),
+                patch("src.gui.main_widget.openUrl") as open_url,
+                patch("src.gui.main_widget.subprocess.Popen") as popen,
+            ):
+                CustomMainWidget.runTheGame(self.widget)
+                popen.assert_called_once_with(['wine', self.config.gameexe], cwd="/games/The Witcher 3/bin/x64_dx12")
+                open_url.assert_not_called()
+                self.assertEqual(CustomMainWidget.gameLaunchLabel(), 'dx12')
+        self.widget.output.assert_not_called()
+
+    def test_missing_game_executable_is_reported(self):
+        self.config.gameexe = None
+        CustomMainWidget.runTheGame(self.widget)
+        self.widget.output.assert_called_once()
+        self.assertIn('No game executable configured', self.widget.output.call_args.args[0])
+
     def test_windows_button_label_reflects_launch_method(self):
         for gameversion, steam, expected in (
             ("og", False, "dx12"),
