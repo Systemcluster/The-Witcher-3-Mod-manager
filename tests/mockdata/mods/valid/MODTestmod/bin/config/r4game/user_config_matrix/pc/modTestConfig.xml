@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<UserConfig>
+    <Group id="TMScalingOptions" displayName="Mods.testmod.tm_scaling_options">
+        <VisibleVars>
+            <Var id="Virtual_TMScaling" displayName="tm_enemies_scaling" displayType="OPTIONS">
+				<OptionsArray>
+					<Option id="0" displayName="tm_es_none">
+						<Entry varId="TMScaling" value="0"/>
+					</Option>
+					<Option id="1" displayName="tm_es_upscale">
+						<Entry varId="TMScaling" value="1"/>
+					</Option>
+					<Option id="2" displayName="gm_es_match">
+						<Entry varId="TMScaling" value="2"/>
+					</Option>
+					<Option id="3" displayName="gm_es_soft">
+						<Entry varId="TMScaling" value="3"/>
+					</Option>
+					<Option id="4" displayName="gm_es_random">
+						<Entry varId="TMScaling" value="4"/>
+					</Option>
+					<Option id="5" displayName="gm_es_random_no_down">
+						<Entry varId="TMScaling" value="5"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+            <Var id="TMRandomScalingMinLevel" displayName="tm_rnd_scaling_min_slider" displayType="SLIDER;-12;12;24"/>
+            <Var id="TMRandomScalingMaxLevel" displayName="tm_rnd_scaling_max_slider" displayType="SLIDER;-12;12;24"/>
+            <Var id="TMNoAnimalUpscaling" displayName="tm_no_animal_upscaling_toggle" displayType="TOGGLE"/>
+            <Var id="TMNoAddLevelsGuards" displayName="tm_no_add_levels_guards" displayType="TOGGLE"/>
+            <Var id="TMHealthMultiplier" displayName="tm_health_multiplier" displayType="SLIDER;-1;5;60"/>
+            <Var id="TMDamageMultiplier" displayName="tm_damage_multiplier" displayType="SLIDER;-1;5;60"/>
+        </VisibleVars>
+    </Group>
+	
+    <Group id="TMExpOptions" displayName="Mods.testmod.gm_exp_options">
+        <VisibleVars>
+            <Var id="TMNoQuestLevels" displayName="gm_no_quest_levels_toggle" displayType="TOGGLE"/>
+            <Var id="TMUseXMLExp" displayName="gm_use_xml_exp_toggle" displayType="TOGGLE" />
+            <Var id="TMQuestExpModifier" displayName="gm_quest_exp_slider" displayType="SLIDER;-1;1;200"/>
+            <Var id="TMMonsterExpModifier" displayName="gm_monster_exp_slider" displayType="SLIDER;-1;1;200"/>
+        </VisibleVars>
+    </Group>
+	
+    <Group id="TMGameplayOptions" displayName="Mods.testmod.gm_gameplay_options">
+        <VisibleVars>
+            <Var id="TMSinkBoat" displayName="tm_sink_boat_toggle" displayType="TOGGLE"/>
+            <Var id="TMSinkBoatOverEnc" displayName="tm_sink_boat_slider" displayType="SLIDER;0;100;100"/>
+            <Var id="TMEncumbranceMultiplier" displayName="tm_encumbrance_slider" displayType="SLIDER;0;100;100"/>
+        </VisibleVars>
+    </Group>
+	
+</UserConfig>

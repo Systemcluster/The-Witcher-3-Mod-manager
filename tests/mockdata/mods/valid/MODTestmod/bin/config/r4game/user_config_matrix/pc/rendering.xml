@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<UserConfig>
+	<Group id="Visuals" displayName="video.gamma" visibilityCondition="!PreserveSystemGamma&fullscreen">
+		<VisibleVars>
+			<Var id="GammaValue" displayName="gamma" displayType="GAMMA;0.1;1.9;90" tags="nonLocalized"/>
+		</VisibleVars>
+	</Group>
+	<Group id="Rendering" displayName="video.general" tags="refreshEngine;graphics;buffered">
+		<PresetsArray>
+			<Preset id="0" displayName="low">
+				<Entry varId="Virtual_TexturesOptionVar"				value="0"/>
+				<Entry varId="Virtual_LevelOfDetailOptionVar"			value="0"/>
+				<Entry varId="Virtual_WaterOptionVar"					value="0"/>
+				<Entry varId="Virtual_TerrainOptionVar"					value="0"/>
+				<Entry varId="Virtual_ShadowsOptionVar"					value="0"/>
+				<Entry varId="Virtual_HairWorksLevel"					value="0"/>
+				<Entry varId="Virtual_HairWorksAALevel"					value="0"/>
+				<Entry varId="Virtual_HairWorksQualityPreset"			value="0"/>
+				<Entry varId="Virtual_GrassOptionVar"					value="0"/>
+				<Entry varId="Virtual_FoliageVisibility"				value="0"/>
+				<Entry varId="Virtual_CommunitySpawnLimit"				value="0"/>
+			</Preset>
+			<Preset id="1" displayName="medium">
+				<Entry varId="Virtual_TexturesOptionVar" 				value="1"/>
+				<Entry varId="Virtual_LevelOfDetailOptionVar" 			value="1"/>
+				<Entry varId="Virtual_WaterOptionVar" 					value="1"/>
+				<Entry varId="Virtual_TerrainOptionVar" 				value="1"/>
+				<Entry varId="Virtual_ShadowsOptionVar" 				value="1"/>
+				<Entry varId="Virtual_HairWorksLevel" 					value="0"/>
+				<Entry varId="Virtual_HairWorksAALevel"					value="0"/>
+				<Entry varId="Virtual_HairWorksQualityPreset"			value="0"/>
+				<Entry varId="Virtual_GrassOptionVar"					value="1"/>
+				<Entry varId="Virtual_FoliageVisibility"				value="1"/>
+				<Entry varId="Virtual_CommunitySpawnLimit"				value="1"/>
+			</Preset>
+			<Preset id="2" displayName="high">
+				<Entry varId="Virtual_TexturesOptionVar" 				value="2"/>
+				<Entry varId="Virtual_LevelOfDetailOptionVar" 			value="2"/>
+				<Entry varId="Virtual_WaterOptionVar" 					value="2"/>
+				<Entry varId="Virtual_TerrainOptionVar" 				value="2"/>
+				<Entry varId="Virtual_ShadowsOptionVar" 				value="2"/>
+				<Entry varId="Virtual_HairWorksLevel" 					value="1"/>
+				<Entry varId="Virtual_HairWorksAALevel"					value="2"/>
+				<Entry varId="Virtual_HairWorksQualityPreset"			value="1"/>
+				<Entry varId="Virtual_GrassOptionVar"					value="2"/>
+				<Entry varId="Virtual_FoliageVisibility"				value="2"/>
+				<Entry varId="Virtual_CommunitySpawnLimit"				value="2"/>
+			</Preset>
+			<Preset id="3" displayName="uber">
+				<Entry varId="Virtual_TexturesOptionVar" 				value="3"/>
+				<Entry varId="Virtual_LevelOfDetailOptionVar" 			value="3"/>
+				<Entry varId="Virtual_WaterOptionVar" 					value="3"/>
+				<Entry varId="Virtual_TerrainOptionVar" 				value="3"/>
+				<Entry varId="Virtual_ShadowsOptionVar" 				value="3"/>
+				<Entry varId="Virtual_HairWorksLevel" 					value="2"/>
+				<Entry varId="Virtual_HairWorksAALevel"					value="2"/>
+				<Entry varId="Virtual_HairWorksQualityPreset"			value="1"/>
+				<Entry varId="Virtual_GrassOptionVar"					value="3"/>
+				<Entry varId="Virtual_FoliageVisibility"				value="3"/>
+				<Entry varId="Virtual_CommunitySpawnLimit"				value="3"/>
+			</Preset>
+		</PresetsArray>
+		<VisibleVars>
+			<Var overrideGroup="Viewport" id="VSync" displayName="vsync" displayType="TOGGLE"/>
+			<Var id="FPSLimit" displayName="framerate_limit" displayType="OPTIONS" tags="refreshViewport">
+				<OptionsArray>
+					<Option id="0" displayName="framerate_limit_unlimited">
+						<Entry overrideGroup="Engine" varId="LimitFPS" value="0"/>
+					</Option>
+					<Option id="1" displayName="framerate_limit_30">
+						<Entry overrideGroup="Engine" varId="LimitFPS" value="30"/>
+					</Option>
+					<Option id="2" displayName="framerate_limit_60">
+						<Entry overrideGroup="Engine" varId="LimitFPS" value="60"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_OutputMonitor" displayName="monitor" displayType="OPTIONS" tags="buffered;RefreshOutputMonitor;refreshViewport;nonLocalized;customNames">
+				<OptionsArray>
+					<ListingFunction name="ListAvailableMonitorCount"/>
+				</OptionsArray>
+			</Var>
+			<Var overrideGroup="Viewport" id="Resolution" displayName="resolution" displayType="OPTIONS" tags="RefreshOutputMonitor;refreshViewport;nonLocalized;customNames">
+				<OptionsArray>
+					<ListingFunction name="ListResolutions"/>
+				</OptionsArray>
+			</Var>
+			<Var  id="Virtual_FullScreenMode" displayName="fullscreenmode" displayType="OPTIONS" tags="RefreshOutputMonitor;refreshViewport">
+				<OptionsArray>
+					<Option id="0" displayName="windowed">
+						<Entry overrideGroup="Viewport" varId="FullScreenMode" value="0"/>
+					</Option>
+					<Option id="1" displayName="borderless">
+						<Entry overrideGroup="Viewport" varId="FullScreenMode" value="1"/>
+					</Option>
+					<Option id="2" displayName="fullscreen">
+						<Entry overrideGroup="Viewport" varId="FullScreenMode" value="2"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="PreserveSystemGamma" displayName="preserve_system_gamma" displayType="TOGGLE"/>
+            <Var id="Virtual_HairWorksLevel" displayName="use_hair_works" displayType="OPTIONS" tags="refreshEngine;customNames">
+				<OptionsArray>
+					<Option id="0" displayName="panel_mainmenu_option_value_off">
+						<Entry varId="HairWorksLevel"	value="0"/>
+					</Option>
+					<Option id="1" displayName="Geralt">
+						<Entry varId="HairWorksLevel"	value="1"/>
+					</Option>
+					<Option id="2" displayName="panel_mainmenu_option_value_on">
+						<Entry varId="HairWorksLevel"	value="2"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_HairWorksAALevel" displayName="hair_works_aa" displayType="OPTIONS" tags="customNames;nonLocalized">
+				<OptionsArray>
+					<Option id="0" displayName="0">
+						<Entry varId="HairWorksAALevel"	value="0"/>
+					</Option>
+					<Option id="1" displayName="2">
+						<Entry varId="HairWorksAALevel"	value="2"/>
+					</Option>
+					<Option id="2" displayName="4">
+						<Entry varId="HairWorksAALevel"	value="4"/>
+					</Option>
+					<Option id="3" displayName="8">
+						<Entry varId="HairWorksAALevel"	value="8"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_HairWorksQualityPreset" displayName="hair_works_preset" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry varId="HairWorksGlobalStrandSmoothness"	value="2"/>
+						<Entry varId="HairWorkstGlobalDensityLimit"		value="0.35"/>
+						<Entry varId="HairWorksGlobalDensityQuality"	value="0.75"/>
+						<Entry varId="HairWorksGlobalDetailLODFactor"	value="0.65"/>
+						<Entry varId="HairWorksGlobalWidthLimit"		value="2.25"/>
+					</Option>
+					<Option id="1" displayName="high">
+						<Entry varId="HairWorksGlobalStrandSmoothness"	value="3"/>
+						<Entry varId="HairWorkstGlobalDensityLimit"		value="2.0"/>
+						<Entry varId="HairWorksGlobalDensityQuality"	value="1.0"/>
+						<Entry varId="HairWorksGlobalDetailLODFactor"	value="1.0"/>
+						<Entry varId="HairWorksGlobalWidthLimit"		value="5.0"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_CommunitySpawnLimit" displayName="community_density_settings" displayType="OPTIONS">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry overrideGroup="Gameplay/EntityPool" varId="SpawnedLimit" value="75"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry overrideGroup="Gameplay/EntityPool" varId="SpawnedLimit" value="100"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry overrideGroup="Gameplay/EntityPool" varId="SpawnedLimit" value="130"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry overrideGroup="Gameplay/EntityPool" varId="SpawnedLimit" value="150"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+            <Var id="Virtual_ShadowsOptionVar" displayName="shadows" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry varId="CascadeShadowFadeTreshold" 	value="2.0"/>
+						<Entry varId="CascadeShadowDistanceScale0" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale1" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale2" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale3" 	value="1.0"/>
+						<Entry varId="CascadeShadowQuality" 		value="0"/>
+						<Entry varId="CascadeShadowmapSize" 		value="1024"/>
+						<Entry varId="MaxCascadeCount" 				value="3"/>
+						<Entry varId="MaxTerrainShadowAtlasCount" 	value="2"/>
+						<Entry varId="MaxCubeShadowSize" 			value="256"/>
+						<Entry varId="MaxSpotShadowSize" 			value="256"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry varId="CascadeShadowFadeTreshold" 	value="1.5"/>
+						<Entry varId="CascadeShadowDistanceScale0" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale1" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale2" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale3" 	value="1.0"/>
+						<Entry varId="CascadeShadowQuality" 		value="0"/>
+						<Entry varId="CascadeShadowmapSize" 		value="1024"/>
+						<Entry varId="MaxCascadeCount" 				value="4"/>
+						<Entry varId="MaxTerrainShadowAtlasCount" 	value="3"/>
+						<Entry varId="MaxCubeShadowSize" 			value="512"/>
+						<Entry varId="MaxSpotShadowSize" 			value="512"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry varId="CascadeShadowFadeTreshold" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale0" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale1" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale2" 	value="1.2"/>
+						<Entry varId="CascadeShadowDistanceScale3" 	value="1.2"/>
+						<Entry varId="CascadeShadowQuality" 		value="1"/>
+						<Entry varId="CascadeShadowmapSize" 		value="2048"/>
+						<Entry varId="MaxCascadeCount" 				value="4"/>
+						<Entry varId="MaxTerrainShadowAtlasCount" 	value="4"/>
+						<Entry varId="MaxCubeShadowSize" 			value="512"/>
+						<Entry varId="MaxSpotShadowSize" 			value="512"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry varId="CascadeShadowFadeTreshold" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale0" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale1" 	value="1.0"/>
+						<Entry varId="CascadeShadowDistanceScale2" 	value="1.5"/>
+						<Entry varId="CascadeShadowDistanceScale3" 	value="1.5"/>
+						<Entry varId="CascadeShadowQuality" 		value="1"/>
+						<Entry varId="CascadeShadowmapSize" 		value="3072"/>
+						<Entry varId="MaxCascadeCount" 				value="4"/>
+						<Entry varId="MaxTerrainShadowAtlasCount" 	value="4"/>
+						<Entry varId="MaxCubeShadowSize" 			value="512"/>
+						<Entry varId="MaxSpotShadowSize" 			value="512"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_TerrainOptionVar" displayName="terrain" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry varId="TerrainErrorMetricMultiplier" 		value="30"/>
+						<Entry varId="TerrainScreenSpaceErrorThreshold" 	value="4.0"/>
+						<Entry varId="TerrainScreenSpaceErrorThresholdFar"	value="8.0"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry varId="TerrainErrorMetricMultiplier" 		value="20"/>
+						<Entry varId="TerrainScreenSpaceErrorThreshold" 	value="3.0"/>
+						<Entry varId="TerrainScreenSpaceErrorThresholdFar"	value="7.0"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry varId="TerrainErrorMetricMultiplier" 		value="10"/>
+						<Entry varId="TerrainScreenSpaceErrorThreshold" 	value="2.0"/>
+						<Entry varId="TerrainScreenSpaceErrorThresholdFar"	value="5.0"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry varId="TerrainErrorMetricMultiplier" 		value="6"/>
+						<Entry varId="TerrainScreenSpaceErrorThreshold" 	value="1.6"/>
+						<Entry varId="TerrainScreenSpaceErrorThresholdFar" 	value="3.5"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_WaterOptionVar" displayName="water_quality" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry varId="GlobalOceanTesselationFactor" 	value="8"/>
+           				<Entry varId="UseDynamicWaterSimulation" 	value="false"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry varId="GlobalOceanTesselationFactor" 	value="16"/>
+           				<Entry varId="UseDynamicWaterSimulation" 	value="false"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry varId="GlobalOceanTesselationFactor" 	value="32"/>
+           				<Entry varId="UseDynamicWaterSimulation" 	value="true"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry varId="GlobalOceanTesselationFactor" 	value="48"/>
+           				<Entry varId="UseDynamicWaterSimulation" 	value="true"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_GrassOptionVar" displayName="grass" displayType="OPTIONS" >
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry varId="GrassDensity" 	value="1400.0"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry varId="GrassDensity" 	value="1600.0"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry varId="GrassDensity" 	value="2000.0"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry varId="GrassDensity" 	value="2400.0"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_TexturesOptionVar" displayName="textures" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry overrideGroup="TextureStreaming" varId="MaxResidentMipMap" 	value="6"/>
+						<Entry varId="MaxTextureSize" 			value="1024"/>
+						<Entry varId="MaxAtlasTextureSize" 		value="2048"/>
+						<Entry varId="TextureDownscale" 		value="2"/>
+						<Entry varId="DetailTextureDownscale" 	value="2"/>
+						<Entry varId="AtlasTextureDownscale" 	value="2"/>
+						<Entry varId="TextureMemoryBudget" 		value="200"/>
+						<Entry varId="TextureMemoryGUIBudget" 	value="80"/>
+						<Entry varId="TextureTimeBudget" 		value="10"/>
+						<Entry varId="TextureInFlightBudget" 	value="128"/>
+						<Entry varId="MaxTextureAnizotropy" 	value="1"/>
+						<Entry varId="TextureMipBias" 			value="0"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry overrideGroup="TextureStreaming" varId="MaxResidentMipMap" 	value="6"/>
+						<Entry varId="MaxTextureSize" 			value="2048"/>
+						<Entry varId="MaxAtlasTextureSize" 		value="2048"/>
+						<Entry varId="TextureDownscale" 		value="1"/>
+						<Entry varId="DetailTextureDownscale" 	value="1"/>
+						<Entry varId="AtlasTextureDownscale" 	value="1"/>
+						<Entry varId="TextureMemoryBudget" 		value="300"/>
+						<Entry varId="TextureMemoryGUIBudget" 	value="80"/>
+						<Entry varId="TextureTimeBudget" 		value="10"/>
+						<Entry varId="TextureInFlightBudget" 	value="128"/>
+						<Entry varId="MaxTextureAnizotropy" 	value="4"/>
+						<Entry varId="TextureMipBias" 			value="0"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry overrideGroup="TextureStreaming" varId="MaxResidentMipMap" 	value="6"/>
+						<Entry varId="MaxTextureSize" 			value="2048"/>
+						<Entry varId="MaxAtlasTextureSize" 		value="2048"/>
+						<Entry varId="TextureDownscale" 		value="0"/>
+						<Entry varId="DetailTextureDownscale" 	value="0"/>
+						<Entry varId="AtlasTextureDownscale" 	value="0"/>
+						<Entry varId="TextureMemoryBudget" 		value="500"/>
+						<Entry varId="TextureMemoryGUIBudget" 	value="80"/>
+						<Entry varId="TextureTimeBudget" 		value="10"/>
+						<Entry varId="TextureInFlightBudget" 	value="128"/>
+						<Entry varId="MaxTextureAnizotropy" 	value="8"/>
+						<Entry varId="TextureMipBias" 			value="-0.4"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry overrideGroup="TextureStreaming" varId="MaxResidentMipMap" 	value="6"/>
+						<Entry varId="MaxTextureSize" 			value="2048"/>
+						<Entry varId="MaxAtlasTextureSize" 		value="2048"/>
+						<Entry varId="TextureDownscale" 		value="0"/>
+						<Entry varId="DetailTextureDownscale" 	value="0"/>
+						<Entry varId="AtlasTextureDownscale" 	value="0"/>
+						<Entry varId="TextureMemoryBudget" 		value="800"/>
+						<Entry varId="TextureMemoryGUIBudget" 	value="80"/>
+						<Entry varId="TextureTimeBudget" 		value="10"/>
+						<Entry varId="TextureInFlightBudget" 	value="128"/>
+						<Entry varId="MaxTextureAnizotropy" 	value="16"/>
+						<Entry varId="TextureMipBias" 			value="-1.0"/>
+					</Option>
+					<Option id="4" displayName="Test Ultra HD">
+						<Entry overrideGroup="TextureStreaming" varId="MaxResidentMipMap" 	value="6"/>
+						<Entry varId="MaxTextureSize" 			value="4096"/>
+						<Entry varId="MaxAtlasTextureSize" 		value="4096"/>
+						<Entry varId="TextureDownscale" 		value="0"/>
+						<Entry varId="DetailTextureDownscale" 	value="0"/>
+						<Entry varId="AtlasTextureDownscale" 	value="0"/>
+						<Entry varId="TextureMemoryBudget" 		value="1000"/>
+						<Entry varId="TextureMemoryGUIBudget" 	value="80"/>
+						<Entry varId="TextureTimeBudget" 		value="10"/>
+						<Entry varId="TextureInFlightBudget" 	value="128"/>
+						<Entry varId="MaxTextureAnizotropy" 	value="16"/>
+						<Entry varId="TextureMipBias" 			value="0.0"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_FoliageVisibility" displayName="foliage_visibility" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry overrideGroup="Foliage" varId="MaxVisibilityDepth" value="4"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageDistanceScale" value="0.8"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassDistanceScale" value="0.5"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassRingSize" value="4194304"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageShadowDistanceScale" value="8.0"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry overrideGroup="Foliage" varId="MaxVisibilityDepth" value="8"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageDistanceScale" value="1.0"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassDistanceScale" value="0.8"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassRingSize" value="4194304"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageShadowDistanceScale" value="12.0"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry overrideGroup="Foliage" varId="MaxVisibilityDepth" value="12"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageDistanceScale" value="1.0"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassDistanceScale" value="1.0"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassRingSize" value="4194304"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageShadowDistanceScale" value="16.0"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry overrideGroup="Foliage" varId="MaxVisibilityDepth" value="24"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageDistanceScale" value="1.8"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassDistanceScale" value="1.5"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="GrassRingSize" value="16777216"/>
+						<Entry overrideGroup="Rendering/SpeedTree" varId="FoliageShadowDistanceScale" value="54.0"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+			<Var id="Virtual_LevelOfDetailOptionVar" displayName="level_of_detail" displayType="OPTIONS" tags="refreshEngine">
+				<OptionsArray>
+					<Option id="0" displayName="low">
+						<Entry overrideGroup="LevelOfDetail" varId="DecalsHideDistance" 	value="15"/>
+					</Option>
+					<Option id="1" displayName="medium">
+						<Entry overrideGroup="LevelOfDetail" varId="DecalsHideDistance" 	value="30"/>
+					</Option>
+					<Option id="2" displayName="high">
+						<Entry overrideGroup="LevelOfDetail" varId="DecalsHideDistance" 	value="40"/>
+					</Option>
+					<Option id="3" displayName="uber">
+						<Entry overrideGroup="LevelOfDetail" varId="DecalsHideDistance" 	value="80"/>
+					</Option>
+				</OptionsArray>
+			</Var>
+            <Var id="HardwareCursor" displayName="hardware_cursor" displayType="TOGGLE"/>
+		</VisibleVars>
+	</Group>
+</UserConfig>

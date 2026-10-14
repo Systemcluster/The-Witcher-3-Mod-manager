@@ -1,0 +1,9 @@
+[Exploration]
+IK_T=(Action=Test1)
+
+[Combat]
+IK_Space=(Action=Test2)
+IK_T=(Action=Test1)
+
+[CustomContext]
+IK_Space=(Action=Test2)

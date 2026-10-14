@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<UserConfig>
+	<!-- modTestmod begin -->
+	<Group id="Hidden" displayName="hidden">
+		<VisibleVars>
+			<Var builder="Input" id="Test1" displayName="UseItem1" displayType="INPUTPC" actions="UseItem1" />
+			<Var builder="Input" id="Test2" displayName="UseItem2" displayType="INPUTPC" actions="UseItem2" />
+			<Var builder="Input" id="Test3" displayName="UseItem3" displayType="INPUTPC" actions="UseItem3" />
+		</VisibleVars>
+	</Group>
+	<!-- modTestmod end -->
+	<Group builder="Input" id="PCInput" displayName="controls_pc" tags="keybinds">
+		<VisibleVars>
+			<!-- Comment -->
+			<!-- Comment -->
+
+			<!-- modFriendlyHUD begin -->
+			<Var builder="Input" id="PauseGameToggle"			displayName="PauseGameToggle"					displayType="INPUTPC" actions="PauseGameToggle" />
+			<Var builder="Input" id="PinModuleModfier"			displayName="PinModuleModfier"					displayType="INPUTPC" actions="PinModuleModfier" />
+			<Var builder="Input" id="Toggle3DMarkers"			displayName="Toggle3DMarkers"					displayType="INPUTPC" actions="Toggle3DMarkers" />
+			<Var builder="Input" id="ToggleEssentials"			displayName="ToggleEssentials"					displayType="INPUTPC" actions="ToggleEssentials" />
+			<Var builder="Input" id="SwitchCrossbow"			displayName="SwitchCrossbow"					displayType="INPUTPC" actions="SwitchCrossbow" />
+			<Var builder="Input" id="HoldToSeeEssentials"		displayName="HoldToSeeEssentials"				displayType="INPUTPC" actions="HoldToSeeEssentials" />
+			<Var builder="Input" id="HoldToSeeCharStats"		displayName="HoldToSeeCharStats"				displayType="INPUTPC" actions="HoldToSeeCharStats" />
+			<Var builder="Input" id="HoldToSeeMap"				displayName="HoldToSeeMap"						displayType="INPUTPC" actions="HoldToSeeMap" />
+			<Var builder="Input" id="HoldToSeeQuests"			displayName="HoldToSeeQuests"					displayType="INPUTPC" actions="HoldToSeeQuests" />
+			<!-- modFriendlyHUD end -->
+
+			<!-- [BASE_CharacterMovement] -->
+			<Var builder="Input" id="MoveFwd"					displayName="move_forward"						displayType="INPUTPC" actions="MoveForward;MovementDoubleTapW;ChangeChoiceUp"/>
+			<Var builder="Input" id="MoveBck"					displayName="move_back"							displayType="INPUTPC" actions="MoveBackward;MovementDoubleTapS;ChangeChoiceDown;GI_Decelerate"/>
+			<Var builder="Input" id="MoveLft"					displayName="move_left"							displayType="INPUTPC" actions="MoveLeft;MovementDoubleTapA"/>
+			<Var builder="Input" id="MoveRght"					displayName="move_right"						displayType="INPUTPC" actions="MoveRight;MovementDoubleTapD"/>
+
+			<Var builder="Input" id="Sprint"					displayName="ControlLayout_RunSprint"			displayType="INPUTPC" actions="Sprint" tags="input_overlap1"/>
+			<Var builder="Input" id="SprintToggle"				displayName="toggle_sprint"						displayType="INPUTPC" actions="SprintToggle"/>
+			<Var builder="Input" id="WalkToggle"				displayName="toggle_walk_run"					displayType="INPUTPC" actions="WalkToggle"/>
+			<Var builder="Input" id="JumpRoll"					displayName="panel_button_common_jump"          displayType="INPUTPC" actions="Jump;ExplorationInteraction;Roll;HorseJump" tags="input_overlap2"/>
+
+
+			<!-- Camera -->
+			<Var builder="Input" id="CameraLock"				displayName="camera_lock"						displayType="INPUTPC" actions="CameraLock"/>
+
+			<!-- Interactions -->
+			<Var builder="Input" id="Interaction"				displayName="ControlLayout_Interact"			displayType="INPUTPC" actions="PickOilLamp;PlaceOilLamp;PlaceCrystal;SitDown;Knock;Spare;Unequip;FastTravel;GatherHerbs;Examine;EnterBoat;EnterBoatFromSwimming;MountHorse;Talk;Container;Interact;InteractHold;Use;UseDevice;Open;Close;Lock;Unlock;Take;Push;Pull;Locked;Finisher;Destroy;PrayForSun;PrayForStorm;Arm;Disarm;GatherBrushwood;PlaceHerbs;Drink;PlaceOffering;Grab;Free;Ignite;UnblockGate;UseItem;Read;PullAxe;Interaction;Extinguish;CallJohnny;HideBible;SitAndWait;PlaceBottle;WineSlot;BurnBody;PutBack;Debung;Touch;CutRope;KneelDown;PlaceTribute;HangPainting;PlaceArmor;PlaceSword;GiveAlms;PlaceLure;PlaceBeans;Stash;Look;TakePaintGreen;TakePaintBlue;TakePaintRed;TakePaintYellow;TakePaintPurple;DisposePaint;HideIn;PlaceTrophy" tags="input_overlap3"/>
+
+		</VisibleVars>
+	</Group>
+</UserConfig>

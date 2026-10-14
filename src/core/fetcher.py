@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterator
 from os import listdir, path, walk
 from os.path import isfile, join
 from typing import List, Tuple
@@ -34,8 +35,15 @@ def fetchMod(modPath: str, extractionDirectory: str) -> Tuple[Mod, List[str], Li
 # tested
 
 
+def iterModDirectories(modPath: str) -> Iterator[str]:
+    for current_dir, directories, _ in walk(modPath):
+        # Content is copied as payload, not scanned for independently installable packages.
+        directories[:] = [directory for directory in directories if directory.casefold() != "content"]
+        yield current_dir
+
+
 def isValidModFolder(modPath: str) -> bool:
-    for current_dir, _, _ in walk(modPath):
+    for current_dir in iterModDirectories(modPath):
         root, name = path.split(current_dir)
         parent = path.basename(root)
         if containContentFolder(current_dir) and (isModFolder(name, parent) or isDlcFolder(name, parent)):
@@ -55,7 +63,7 @@ def fetchModFromDirectory(modPath: str) -> Tuple[Mod, List[str], List[str]]:
     mod_dirs: List[str] = []
     config_files: List[str] = []
     mod_readmes: List[str] = []
-    for current_dir, _, _ in walk(modPath):
+    for current_dir in iterModDirectories(modPath):
         if fetchDataIfRelevantFolder(current_dir, mod):
             mod_dirs.append(normalizePath(current_dir))
         config_files += fetchDataFromRelevantFiles(current_dir, mod)

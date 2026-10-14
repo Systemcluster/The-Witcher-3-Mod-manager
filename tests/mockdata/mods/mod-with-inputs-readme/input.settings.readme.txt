@@ -1,0 +1,16 @@
+This is some instructional text.
+
+==================START APPEND==================
+[Test]
+IK_0=(Action=TEST_0)
+IK_1=(Action=TEST_1)
+IK_Tab=(Action=TEST_2)
+==================END APPEND==================
+
+Some more instructional text.
+
+==================APPEND TO [Exploration] Section==================
+IK_Z=(Action=OpenTestMenu)
+==================END APPEND==================
+
+Some more text.

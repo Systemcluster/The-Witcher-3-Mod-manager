@@ -1,0 +1,11 @@
+this is a comment. [foo] testsetting1=true
+
+[test1]
+testsetting1=true
+testsetting2=false
+testsetting3=false
+
+[test2]
+testsetting1=false
+testsetting2=false
+testsetting3=0

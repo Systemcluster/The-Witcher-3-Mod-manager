@@ -1,0 +1,7 @@
+put the following in your input.xml, if you want to change the button to enable/disable combatmode/combatstate.
+There are no strings for these, so they will be shown as ##CombatModeToggle and ##CombatStateToggle
+
+            <!-- CombatToggle Begin -->
+            <Var builder="Input" id="CombatModeToggle" displayName="CombatModeToggle" displayType="INPUTPC" actions="CombatModeToggle" />
+            <Var builder="Input" id="CombatStateToggle" displayName="CombatStateToggle" displayType="INPUTPC" actions="CombatStateToggle" />
+            <!-- CombatToggle End -->

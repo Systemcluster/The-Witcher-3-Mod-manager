@@ -42,6 +42,8 @@ Reimporting a disabled package with the same name and Mod folder list keeps it d
 
 Overwrite **Yes to all** and **No to all** apply to the entire selected installation batch. The output log records copied destinations and skipped folders; unrecognized content in an otherwise valid package marks the installation incomplete.
 
+Folders inside a package's `content` directory are treated as payload, not separate mods or DLCs. They are copied with their containing mod or DLC; sibling packages and configuration files outside `content` are still detected.
+
 ### Script Merger on Linux and macOS
 
 Script Merger is run with `wine` using the executable selected in the manager. To run it in a specific Wine prefix, set `mergerlaunchcommand` in the `[PATHS]` section of `config.ini` while the manager is closed:
