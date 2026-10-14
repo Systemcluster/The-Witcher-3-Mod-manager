@@ -384,6 +384,15 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model.add.assert_called_once_with(mod.name, mod)
         self.assertEqual(mod.files, ["modExample"])
 
+    def test_named_dlc_under_dlc_container_is_detected_and_installed(self):
+        source = self.root / 'Package'
+        self.populated(source / 'DLC/ExtraAssets/content')
+        model = Model(ignorelock=True)
+        self.assertEqual(Installer(model).installMod(str(source)), (True, 1, 0))
+        self.assertEqual(model.get('Package').dlcs, ['ExtraAssets'])
+        self.assertTrue((self.game / 'DLC/ExtraAssets/content/asset').exists())
+        self.assertFalse((self.game / 'Mods/ExtraAssets').exists())
+
     def test_protected_menus_are_never_disabled_or_deleted(self):
         protected = (
             "audio.xml",

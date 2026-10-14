@@ -36,10 +36,9 @@ def fetchMod(modPath: str, extractionDirectory: str) -> Tuple[Mod, List[str], Li
 
 def isValidModFolder(modPath: str) -> bool:
     for current_dir, _, _ in walk(modPath):
-        if containContentFolder(current_dir) and (
-            isModFolder(path.split(current_dir)[1], path.split(current_dir)[0])
-            or isDlcFolder(path.split(current_dir)[1], path.split(current_dir)[0])
-        ):
+        root, name = path.split(current_dir)
+        parent = path.basename(root)
+        if containContentFolder(current_dir) and (isModFolder(name, parent) or isDlcFolder(name, parent)):
             return True
         normalized = normalizePath(current_dir).casefold()
         if normalized.endswith("/bin/config/r4game/user_config_matrix/pc") and any(
@@ -77,11 +76,7 @@ def isModFolder(directory: str, parent: str):
 
 
 def isDlcFolder(directory: str, parent: str):
-    return (
-        isDataFolder(directory)
-        and bool(re.match("^dlc[s]?$", parent, re.IGNORECASE))
-        or bool(re.match("^dlc", directory, re.IGNORECASE))
-    )
+    return bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or bool(re.match("^dlc", directory, re.IGNORECASE))
 
 
 # tested
