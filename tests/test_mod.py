@@ -362,11 +362,13 @@ class InstalledFileSafetyTests(unittest.TestCase):
     def test_failed_install_keeps_existing_mod_files(self):
         existing = self.populated(self.game / "Mods" / "modExample")
         mod = Mod(_name="Example", files=["modExample"])
+        model = Mock()
+        model.all.return_value = []
         with (
             patch("src.core.installer.fetchMod", return_value=(mod, [], [])),
             patch.object(mod, "checkPriority", side_effect=OSError("failed")),
         ):
-            self.assertEqual(Installer(Mock()).installMod(str(self.root / "source")), (False, 0, 0))
+            self.assertEqual(Installer(model).installMod(str(self.root / "source")), (False, 0, 0))
         self.assertEqual((existing / "asset").read_text(), "keep")
 
     def test_declined_overwrite_preserves_legacy_inventory_behavior(self):
@@ -384,6 +386,108 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model.add.assert_called_once_with(mod.name, mod)
         self.assertEqual(mod.files, ["modExample"])
 
+    def test_overwrite_all_decisions_persist_across_archives(self):
+        for answer in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
+            with self.subTest(answer=answer):
+                model = Model(ignorelock=True)
+                output = Mock()
+                installer = Installer(model, output=output)
+                sources = []
+                for name in ('modFirst', 'modSecond'):
+                    existing = self.populated(self.game / 'Mods' / name / 'content')
+                    (existing / 'asset').write_text('original')
+                    source = self.populated(self.root / name / 'content')
+                    (source / 'asset').write_text('updated')
+                    sources.append(source.parent)
+                with patch('src.core.installer.MessageOverwrite', return_value=answer) as prompt:
+                    for source in sources:
+                        expected_count = int(answer == QMessageBox.StandardButton.YesToAll)
+                        self.assertEqual(installer.installMod(str(source)), (True, expected_count, 0))
+                    prompt.assert_called_once()
+                for source in sources:
+                    expected = 'updated' if answer == QMessageBox.StandardButton.YesToAll else 'original'
+                    self.assertEqual((self.game / 'Mods' / source.name / 'content/asset').read_text(), expected)
+                self.populated(self.root / 'modNew/content')
+                self.assertEqual(installer.installMod(str(self.root / 'modNew')), (True, 1, 0))
+                removeDirectory(str(self.game / 'Mods/modNew'))
+                if answer == QMessageBox.StandardButton.NoToAll:
+                    self.assertTrue(any('Skipped' in call.args[0] for call in output.call_args_list))
+
+    def test_disabled_package_update_stays_disabled_and_does_not_modify_source(self):
+        source = self.root / 'Example'
+        for name in ('modExample', 'dlcExample'):
+            self.populated(source / name / 'content')
+        package_menu = source / 'bin/config/r4game/user_config_matrix/pc'
+        package_menu.mkdir(parents=True)
+        (package_menu / 'custom.xml').write_text('<v1/>')
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        self.assertEqual(installer.installMod(str(source)), (True, 2, 0))
+        mod = model.get('Example')
+        mod.disable()
+        self.populated(source / 'dlcNew/content')
+        for asset in source.glob('*/content/asset'):
+            asset.write_text('updated')
+        (package_menu / 'custom.xml').write_text('<v2/>')
+        with patch('src.core.installer.MessageOverwrite', return_value=QMessageBox.StandardButton.Yes) as prompt:
+            self.assertEqual(installer.installMod(str(source)), (True, 3, 0))
+            self.assertEqual(prompt.call_count, 2)
+        self.assertFalse(mod.enabled)
+        self.assertFalse((self.game / 'Mods/modExample').exists())
+        self.assertEqual((self.game / 'Mods/~modExample/content/asset').read_text(), 'updated')
+        self.assertFalse((self.game / 'DLC/dlcExample/content/asset').exists())
+        self.assertEqual((self.game / 'DLC/dlcExample/content/asset.disabled').read_text(), 'updated')
+        self.assertFalse((self.game / 'DLC/dlcNew/content/asset').exists())
+        self.assertEqual((self.game / 'DLC/dlcNew/content/asset.disabled').read_text(), 'updated')
+        self.assertFalse((Path(self.config.menu) / 'custom.xml').exists())
+        self.assertEqual((Path(self.config.menu) / 'custom.xml.disabled').read_text(), '<v2/>')
+        self.assertEqual((source / 'dlcExample/content/asset').read_text(), 'updated')
+        self.assertFalse((source / 'dlcExample/content/asset.disabled').exists())
+        mod.enable()
+        self.assertEqual((self.game / 'Mods/modExample/content/asset').read_text(), 'updated')
+        self.assertEqual((self.game / 'DLC/dlcExample/content/asset').read_text(), 'updated')
+        self.assertEqual((self.game / 'DLC/dlcNew/content/asset').read_text(), 'updated')
+
+    def test_uninstall_disabled_version_does_not_enable_or_remove_newer_owned_folders(self):
+        old = Mod(_name='Old', files=['modExample'], dlcs=['dlcExample'], enabled=False)
+        new = Mod(_name='New', files=['modExample'], dlcs=['dlcExample'])
+        model = Model(ignorelock=True)
+        model.add(old.name, old)
+        model.add(new.name, new)
+        disabled = self.populated(self.game / 'Mods/~modExample/content')
+        active = self.populated(self.game / 'Mods/modExample/content')
+        dlc = self.populated(self.game / 'DLC/dlcExample/content')
+        with patch.object(old, 'enable', side_effect=AssertionError('must not enable')) as enable:
+            self.assertTrue(Installer(model).uninstallMod(old))
+            enable.assert_not_called()
+        self.assertFalse(disabled.exists())
+        self.assertTrue(active.exists())
+        self.assertTrue(dlc.exists())
+        self.assertEqual(list(model.list()), ['New'])
+        self.assertTrue(Installer(model).uninstallMod(new))
+        self.assertFalse(active.exists())
+        self.assertFalse(dlc.exists())
+
+    def test_uninstall_disabled_dlc_with_active_and_disabled_files_does_not_rename(self):
+        content = self.populated(self.game / 'DLC/dlcExample/content')
+        (content / 'asset.disabled').write_text('old')
+        mod = Mod(_name='Example', dlcs=['dlcExample'], enabled=False)
+        model = Model(ignorelock=True)
+        model.add(mod.name, mod)
+        self.assertTrue(Installer(model).uninstallMod(mod))
+        self.assertFalse(content.exists())
+
+    def test_disabled_dlc_staging_failure_preserves_existing_files_and_source(self):
+        source = self.populated(self.root / 'dlcExample/content')
+        (source / 'asset.disabled').write_text('conflicting source')
+        target = self.populated(self.game / 'DLC/dlcExample/content')
+        with self.assertRaises(FileExistsError):
+            copyFolder(str(source.parent), str(target.parent), disableFiles=True)
+        self.assertEqual((target / 'asset').read_text(), 'keep')
+        self.assertEqual((source / 'asset').read_text(), 'keep')
+        self.assertEqual((source / 'asset.disabled').read_text(), 'conflicting source')
+        self.assertEqual(list((self.game / 'DLC').glob('.tw3mm-*')), [])
+
     def test_named_dlc_under_dlc_container_is_detected_and_installed(self):
         source = self.root / 'Package'
         self.populated(source / 'DLC/ExtraAssets/content')
@@ -392,6 +496,16 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertEqual(model.get('Package').dlcs, ['ExtraAssets'])
         self.assertTrue((self.game / 'DLC/ExtraAssets/content/asset').exists())
         self.assertFalse((self.game / 'Mods/ExtraAssets').exists())
+
+    def test_unrecognized_content_in_valid_package_marks_installation_incomplete(self):
+        source = self.root / 'Package'
+        self.populated(source / 'modExample/content')
+        self.populated(source / 'Unknown/content')
+        model = Model(ignorelock=True)
+        output = Mock()
+        self.assertEqual(Installer(model, output=output).installMod(str(source)), (True, 1, 1))
+        self.assertTrue(any('manual installation' in call.args[0] for call in output.call_args_list))
+        self.assertFalse((self.game / 'Mods/Unknown').exists())
 
     def test_protected_menus_are_never_disabled_or_deleted(self):
         protected = (

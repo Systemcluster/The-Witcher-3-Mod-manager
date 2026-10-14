@@ -1,6 +1,6 @@
 '''Core functionality'''
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os import listdir, path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
@@ -23,6 +23,7 @@ class Installer:
 
     model: Model
     ask: bool = True
+    overwrite: QMessageBox.StandardButton = field(default=QMessageBox.StandardButton.No, init=False)
 
     progress: Callable[[float], Any] = lambda _: None
     output: Callable[[str], Any] = lambda _: None
@@ -68,9 +69,13 @@ class Installer:
 
             installed_mods = listdir(data.getConfig().mods)
             installed_dlcs = listdir(data.getConfig().dlc)
+            keep_disabled = any(
+                not installed.enabled and installed.name == mod.name and installed.files == mod.files
+                for installed in self.model.all()
+            )
 
             self.progress(0.2)
-            res = None
+            incomplete = False
 
             for index, directory in enumerate(directories):
                 root, name = path.split(directory)
@@ -79,27 +84,26 @@ class Installer:
                 dlcfolder = isDlcFolder(name, parent)
                 basepath = data.getConfig().mods if modfolder else (data.getConfig().dlc if dlcfolder else None)
                 if basepath is not None:
-                    datapath = basepath + "/" + name
-                    if (modfolder and name in installed_mods) or (dlcfolder and name in installed_dlcs):
+                    target_name = "~" + name if modfolder and keep_disabled else name
+                    datapath = basepath + "/" + target_name
+                    if (modfolder and target_name in installed_mods) or (dlcfolder and name in installed_dlcs):
                         if self.ask:
-                            res = MessageOverwrite(
+                            self.overwrite = MessageOverwrite(
                                 name, translate("MainWindow", "Mod") if modfolder else translate("MainWindow", "DLC")
                             )
-                        if res == QMessageBox.StandardButton.Yes:
-                            copyFolder(directory, datapath)
-                            installCount += 1
-                        elif res == QMessageBox.StandardButton.YesToAll:
+                        if self.overwrite in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
                             self.ask = False
-                            copyFolder(directory, datapath)
-                            installCount += 1
-                        elif res == QMessageBox.StandardButton.No:
-                            pass
-                        elif res == QMessageBox.StandardButton.NoToAll:
-                            self.ask = False
+                        if self.overwrite not in (QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.YesToAll):
+                            self.output(translate("MainWindow", "Skipped") + " " + datapath)
+                            continue
+                    if dlcfolder and keep_disabled:
+                        copyFolder(directory, datapath, disableFiles=True)
                     else:
                         copyFolder(directory, datapath)
-                        installCount += 1
+                    self.output(translate("MainWindow", "Installed") + " " + datapath)
+                    installCount += 1
                 elif containContentFolder(directory):
+                    incomplete = True
                     try:
                         ddir = path.relpath(directory, extraction.name)
                     except:
@@ -118,14 +122,6 @@ class Installer:
                     )
                 self.progress(0.2 + (0.5 / len(directories)) * (index + 1))
 
-            keep_disabled = (
-                not mod.files
-                and not mod.dlcs
-                and any(
-                    not installed.enabled and installed.name == mod.name and installed.files == mod.files
-                    for installed in self.model.all()
-                )
-            )
             for config_file in config_files:
                 directory, name = path.split(config_file)
                 base_ini = isBaseIniFile(directory, name)
@@ -145,7 +141,6 @@ class Installer:
             if not mod.files and not mod.dlcs and not mod.menus and not mod.inis:
                 raise Exception('No data found in ' + "'" + mod.name + "'")
 
-            incomplete = False
             try:
                 if not keep_disabled:
                     mod.installMenus()
@@ -240,17 +235,9 @@ class Installer:
         '''Uninstalls given mod'''
         try:
             self.output(translate("MainWindow", "Uninstalling") + " " + mod.name)
-            if not mod.enabled:
-                incomplete = mod.enable()
-                if incomplete:
-                    for i in incomplete:
-                        self.output(
-                            translate("MainWindow", "Note: Additions to ")
-                            + i
-                            + translate("MainWindow", " could not be automatically installed.")
-                        )
-            mod.uninstallMenus()
-            mod.uninstallXmlKeys()
+            if mod.enabled:
+                mod.uninstallMenus()
+                mod.uninstallXmlKeys()
             mod.uninstallUserSettings()
             self.removeModMenus(mod)
             for ini in mod.inis:
@@ -341,7 +328,7 @@ class Installer:
         if not mods_directory or not path.exists(mods_directory):
             return
         for file in mod.files:
-            self._removeInstalledDirectory(mods_directory, file)
+            self._removeInstalledDirectory(mods_directory, file, mod)
 
     def removeModDlcs(self, mod):
         '''Removes dlc data, including folders left behind while the mod was disabled'''
@@ -349,13 +336,21 @@ class Installer:
         if not dlc_directory or not path.exists(dlc_directory):
             return
         for dlc in mod.dlcs:
-            self._removeInstalledDirectory(dlc_directory, dlc)
+            self._removeInstalledDirectory(dlc_directory, dlc, mod, is_dlc=True)
 
-    @staticmethod
-    def _removeInstalledDirectory(base: str, name: str) -> None:
+    def _removeInstalledDirectory(self, base: str, name: str, mod: Mod, *, is_dlc: bool = False) -> None:
         for installed in (name, "~" + name):
             target = path.join(base, installed)
             if path.exists(target):
+                checkInstalledPath(target, modDirectory=True)
+                if any(
+                    other.name != mod.name
+                    and name in (other.dlcs if is_dlc else other.files)
+                    and (is_dlc or other.enabled == (installed == name))
+                    for other in self.model.all()
+                ):
+                    self.output(translate("MainWindow", "Keeping shared folder") + " " + target)
+                    continue
                 removeDirectory(target)
 
     def removeModMenus(self, mod):

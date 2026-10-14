@@ -363,7 +363,7 @@ def renameInstalledPath(source: str, destination: str, *, modDirectory: bool) ->
     os.rename(source, destination)
 
 
-def copyFolder(src: str, dst: str) -> None:
+def copyFolder(src: str, dst: str, *, disableFiles: bool = False) -> None:
     '''Replaces dst with a copy of src, keeping the original until the copy is in place'''
     dst = checkInstalledPath(dst, modDirectory=True)
     src = os.path.normpath(src)
@@ -373,6 +373,15 @@ def copyFolder(src: str, dst: str) -> None:
     original = os.path.join(staging, "old")
     try:
         copytree(src, copied)
+        if disableFiles:
+            for directory, _, files in os.walk(copied):
+                for filename in files:
+                    if not filename.startswith(".") and not filename.endswith(".disabled"):
+                        source = os.path.join(directory, filename)
+                        destination = source + ".disabled"
+                        if os.path.lexists(destination):
+                            raise FileExistsError(destination)
+                        os.rename(source, destination)
         if os.path.lexists(dst):
             os.replace(dst, original)
         try:
