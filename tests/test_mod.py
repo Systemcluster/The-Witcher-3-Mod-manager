@@ -1104,6 +1104,29 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertEqual((content / "asset.disabled").read_text(), "keep")
         self.assertEqual(list(target.parent.glob(".tw3mm-*")), [])
 
+    def test_disabled_uninstall_never_enables_assets_even_when_removal_fails(self):
+        folder = self.populated(self.game / "Mods/~modExample")
+        self.populated(self.game / "DLC/dlcExample/content")
+        menu = Path(self.config.menu) / "custom.xml.disabled"
+        menu.write_text("custom")
+        mod = Mod(_name="Example", enabled=False, files=["modExample"], dlcs=["dlcExample"], menus=["custom.xml"])
+        model = Model(ignorelock=True)
+        model.add(mod.name, mod)
+        installer = Installer(model)
+        with (
+            patch.object(mod, "enable") as enable,
+            patch.object(installer, "removeModData", side_effect=PermissionError("denied")),
+        ):
+            self.assertFalse(installer.uninstallMod(mod))
+            enable.assert_not_called()
+        self.assertFalse(mod.enabled)
+        self.assertEqual((folder / "asset").read_text(), "keep")
+        self.assertFalse((self.game / "Mods/modExample").exists())
+        self.assertTrue(installer.uninstallMod(mod))
+        self.assertEqual(list(model.list()), [])
+        self.assertFalse(folder.exists())
+        self.assertFalse(menu.exists())
+
     def test_archive_extraction_is_private_and_removed(self):
         archive = self.root / "modExample.zip"
         with zipfile.ZipFile(archive, "w") as package:
