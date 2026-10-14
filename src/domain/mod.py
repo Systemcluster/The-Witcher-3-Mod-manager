@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass, field
-from os import path, walk
+from os import path
 from time import gmtime, strftime
 from typing import List, Optional, Tuple, Union
 
@@ -96,8 +96,94 @@ class Mod:
         return name
 
     def enable(self) -> list[str]:
+        return self._setEnabled(True)
+
+    def disable(self) -> None:
+        self._setEnabled(False)
+
+    def _statusRenames(self, enabled: bool) -> list[tuple[str, str, bool]]:
+        renames: list[tuple[str, str, bool]] = []
+        for menu in self.menus:
+            if self.isProtectedMenu(menu):
+                continue
+            active = path.join(data.getConfig().menu, menu)
+            inactive = active + ".disabled"
+            renames.append((inactive, active, False) if enabled else (active, inactive, False))
+        for dlc in self.dlcs:
+            directory = data.getConfig().dlc
+            if directory is None:
+                raise ValueError("No game directory configured for DLC files")
+            renames.extend(
+                (source, destination, True)
+                for source, destination in getDlcFileRenames(path.join(directory, dlc), enabled)
+            )
+        for file in self.files:
+            directory = data.getConfig().mods
+            if directory is None:
+                raise ValueError("No game directory configured for mod files")
+            active = path.join(directory, file)
+            inactive = path.join(directory, "~" + file)
+            renames.append((inactive, active, True) if enabled else (active, inactive, True))
+        pending = []
+        for source, destination, mod_directory in dict.fromkeys(renames):
+            source = checkInstalledPath(source, modDirectory=mod_directory)
+            destination = checkInstalledPath(destination, modDirectory=mod_directory)
+            if not path.lexists(source):
+                continue
+            if path.lexists(destination):
+                raise FileExistsError(f"Cannot rename '{source}': destination '{destination}' already exists")
+            pending.append((source, destination, mod_directory))
+        return pending
+
+    def _setEnabled(self, enabled: bool) -> list[str]:
+        if self.enabled == enabled:
+            return []
+        renames = self._statusRenames(enabled)
+        originals: dict[str, bytes] = {}
+        if not enabled:
+            shared = []
+            if self.xmlkeys:
+                shared.append("input.xml")
+            if self.hidden:
+                shared.append("hidden.xml")
+            if any(not self.isProtectedMenu(menu) for menu in self.menus):
+                shared.extend(("dx11filelist.txt", "dx12filelist.txt"))
+            for name in shared:
+                filename = checkInstalledPath(path.join(data.getConfig().menu, name), modDirectory=False)
+                if path.isfile(filename):
+                    with open(filename, "rb") as file:
+                        originals[filename] = file.read()
+        renamed = []
+        try:
+            for source, destination, mod_directory in renames:
+                renameInstalledPath(source, destination, modDirectory=mod_directory)
+                renamed.append((source, destination, mod_directory))
+            if not enabled:
+                self.uninstallXmlKeys()
+                self.uninstallMenus()
+        except Exception as error:
+            failures = []
+            for source, destination, mod_directory in reversed(renamed):
+                try:
+                    renameInstalledPath(destination, source, modDirectory=mod_directory)
+                except (OSError, ValueError) as restore_error:
+                    failures.append(f"{destination} -> {source}: {restore_error}")
+            for filename, contents in originals.items():
+                try:
+                    with open(filename, "rb") as file:
+                        changed = file.read() != contents
+                    if changed:
+                        with atomicWrite(filename, "wb") as file:
+                            file.write(contents)
+                except (OSError, ValueError) as restore_error:
+                    failures.append(f"{filename}: {restore_error}")
+            if failures:
+                raise RuntimeError(
+                    f"Status change failed: {error}. Could not restore: {'; '.join(failures)}"
+                ) from error
+            raise
         incomplete = []
-        if not self.enabled:
+        if enabled:
             try:
                 self.installXmlKeys()
             except Exception as e:
@@ -108,74 +194,8 @@ class Mod:
             except Exception as e:
                 incomplete.append(translate("MainWindow", "menu xml files"))
                 print("failed to install menus", e)
-            for menu in iter(self.menus):
-                if self.isProtectedMenu(menu) and path.exists(data.getConfig().menu + "/" + menu):
-                    continue
-                if path.exists(data.getConfig().menu + "/" + menu + ".disabled"):
-                    renameInstalledPath(
-                        data.getConfig().menu + "/" + menu + ".disabled",
-                        data.getConfig().menu + "/" + menu,
-                        modDirectory=False,
-                    )
-            for dlc in iter(self.dlcs):
-                dlc_directory = data.getConfig().dlc
-                if dlc_directory is None:
-                    raise ValueError("No game directory configured for DLC files")
-                if path.exists(dlc_directory + "/" + dlc):
-                    for subdir, _, fls in walk(dlc_directory + "/" + dlc):
-                        for file in fls:
-                            if path.exists(subdir + "/" + file):
-                                if file.endswith(".disabled") and not file.startswith("."):
-                                    renameInstalledPath(
-                                        subdir + "/" + file, subdir + "/" + file[:-9], modDirectory=True
-                                    )
-            for filedata in iter(self.files):
-                mods_directory = data.getConfig().mods
-                if mods_directory is None:
-                    raise ValueError("No game directory configured for mod files")
-                if path.exists(mods_directory + "/~" + filedata):
-                    renameInstalledPath(
-                        mods_directory + "/~" + filedata, mods_directory + "/" + filedata, modDirectory=True
-                    )
-            self.enabled = True
+        self.enabled = enabled
         return incomplete
-
-    def disable(self):
-        if self.enabled:
-            self.uninstallXmlKeys()
-            self.uninstallMenus()
-            for menu in iter(self.menus):
-                if self.isProtectedMenu(menu):
-                    continue
-                if path.exists(data.getConfig().menu + "/" + menu) and not menu.endswith(".disabled"):
-                    renameInstalledPath(
-                        data.getConfig().menu + "/" + menu,
-                        data.getConfig().menu + "/" + menu + ".disabled",
-                        modDirectory=False,
-                    )
-            for dlc in iter(self.dlcs):
-                dlc_directory = data.getConfig().dlc
-                if dlc_directory is None:
-                    raise ValueError("No game directory configured for DLC files")
-                if path.exists(dlc_directory + "/" + dlc):
-                    for subdir, _, fls in walk(dlc_directory + "/" + dlc):
-                        for file in fls:
-                            if not file.endswith(".disabled") and not file.startswith("."):
-                                renameInstalledPath(
-                                    path.join(subdir, file), path.join(subdir, file) + ".disabled", modDirectory=True
-                                )
-            for filedata in iter(self.files):
-                mods_directory = data.getConfig().mods
-                if mods_directory is None:
-                    raise ValueError("No game directory configured for mod files")
-                if path.exists(mods_directory + "/" + filedata):
-                    if not filedata.startswith("~"):
-                        renameInstalledPath(
-                            mods_directory + "/" + filedata,
-                            mods_directory + "/~" + filedata,
-                            modDirectory=True,
-                        )
-            self.enabled = False
 
     def checkPriority(self):
         if not self.priority:

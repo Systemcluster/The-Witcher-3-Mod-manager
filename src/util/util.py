@@ -360,7 +360,29 @@ def renameInstalledPath(source: str, destination: str, *, modDirectory: bool) ->
     '''Renames an installed path after validating both source and destination'''
     source = checkInstalledPath(source, modDirectory=modDirectory)
     destination = checkInstalledPath(destination, modDirectory=modDirectory)
+    if os.path.lexists(destination):
+        raise FileExistsError(f"Cannot rename '{source}': destination '{destination}' already exists")
     os.rename(source, destination)
+
+
+def getDlcFileRenames(directory: str, enabled: bool) -> list[tuple[str, str]]:
+    directory = checkInstalledPath(directory, modDirectory=True)
+    if not os.path.lexists(directory):
+        return []
+
+    def raiseWalkError(error: OSError) -> None:
+        raise error
+
+    renames = []
+    for subdir, _, files in os.walk(directory, onerror=raiseWalkError):
+        for file in files:
+            disabled = file.casefold().endswith(".disabled")
+            if file.startswith(".") or disabled != enabled:
+                continue
+            source = os.path.join(subdir, file)
+            destination = source[:-9] if enabled else source + ".disabled"
+            renames.append((source, destination))
+    return renames
 
 
 def copyFolder(src: str, dst: str, *, disableFiles: bool = False) -> None:

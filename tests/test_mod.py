@@ -16,7 +16,7 @@ from src.core.model import Model
 from src.domain.key import Key
 from src.domain.mod import Mod
 from src.domain.usersetting import Usersetting
-from src.util.util import checkInstalledPath, copyFolder, removeDirectory, removeInstalledFile
+from src.util.util import checkInstalledPath, copyFolder, removeDirectory, removeInstalledFile, renameInstalledPath
 
 
 class InstalledFileSafetyTests(unittest.TestCase):
@@ -803,6 +803,186 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertTrue(Installer(model).uninstallMod(second))
         self.assertFalse(target.exists())
         self.assertEqual(filelist.read_text(encoding="utf-16"), "\n")
+
+    def test_status_round_trip_covers_mod_dlc_menus_and_preserves_settings(self):
+        mod_folder = self.populated(self.game / "Mods/modExample")
+        dlc_folder = self.populated(self.game / "DLC/dlcExample/content/nested")
+        (dlc_folder / ".metadata").write_text("hidden")
+        menu = Path(self.config.menu)
+        (menu / "custom.xml").write_text("custom")
+        (menu / "graphics.xml").write_text("shared")
+        xml = '<Var id="Example" />'
+        (menu / "input.xml").write_text(xml + "\n<!-- [BASE_CharacterMovement] -->", encoding="utf-16")
+        (menu / "hidden.xml").write_text(xml + "\n</VisibleVars>", encoding="utf-16")
+        for name in ("dx11filelist.txt", "dx12filelist.txt"):
+            (menu / name).write_text("base.xml;\ncustom.xml;\n", encoding="utf-16")
+        settings = self.root / "user.settings"
+        bindings = self.root / "input.settings"
+        settings.write_text("[Example]\nEnabled=custom\n")
+        bindings.write_text("[Input]\nIK_B=(Action=Jump)\n")
+        mod = Mod(
+            _name="Example",
+            _priority="42",
+            files=["modExample"],
+            dlcs=["dlcExample"],
+            menus=["custom.xml", "graphics.xml"],
+            xmlkeys=[xml],
+            hidden=[xml],
+            usersettings=[Usersetting("Example", "Enabled=true")],
+            inputsettings=[Key("[Input]", "IK_A=(Action=Jump)")],
+        )
+        model = Model(ignorelock=True)
+        model.add(mod.name, mod)
+        for _ in range(2):
+            mod.disable()
+            mod.disable()
+            self.assertFalse(mod.enabled)
+            self.assertFalse(mod_folder.exists())
+            self.assertEqual((self.game / "Mods/~modExample/asset").read_text(), "keep")
+            self.assertFalse((dlc_folder / "asset").exists())
+            self.assertEqual((dlc_folder / "asset.disabled").read_text(), "keep")
+            self.assertEqual((dlc_folder / ".metadata").read_text(), "hidden")
+            self.assertFalse((menu / "custom.xml").exists())
+            self.assertEqual((menu / "custom.xml.disabled").read_text(), "custom")
+            self.assertEqual((menu / "graphics.xml").read_text(), "shared")
+            for name in ("input.xml", "hidden.xml"):
+                self.assertNotIn(xml, (menu / name).read_text(encoding="utf-16"))
+            for name in ("dx11filelist.txt", "dx12filelist.txt"):
+                self.assertEqual((menu / name).read_text(encoding="utf-16"), "base.xml;\n")
+            model.write()
+            mod = Model(ignorelock=True).get(mod.name)
+            self.assertFalse(mod.enabled)
+            self.assertEqual(mod.priority, "42")
+            self.assertEqual(mod.enable(), [])
+            self.assertEqual(mod.enable(), [])
+            self.assertTrue(mod.enabled)
+            self.assertEqual((mod_folder / "asset").read_text(), "keep")
+            self.assertEqual((dlc_folder / "asset").read_text(), "keep")
+            self.assertFalse((dlc_folder / "asset.disabled").exists())
+            self.assertEqual((menu / "custom.xml").read_text(), "custom")
+            for name in ("input.xml", "hidden.xml"):
+                self.assertEqual((menu / name).read_text(encoding="utf-16").count(xml), 1)
+            self.assertEqual(settings.read_text(), "[Example]\nEnabled=custom\n")
+            self.assertEqual(bindings.read_text(), "[Input]\nIK_B=(Action=Jump)\n")
+            model.modList[mod.name] = mod
+
+    def test_toggle_collision_preflight_preserves_all_assets(self):
+        for kind in ("mod", "dlc", "menu"):
+            for enabled in (True, False):
+                with self.subTest(kind=kind, enabled=enabled):
+                    active_menu = Path(self.config.menu) / "other.xml"
+                    inactive_menu = Path(str(active_menu) + ".disabled")
+                    first = active_menu if enabled else inactive_menu
+                    first.write_text("unchanged")
+                    if kind == "mod":
+                        active = self.populated(self.game / "Mods/modCollision") / "asset"
+                        inactive = self.populated(self.game / "Mods/~modCollision") / "asset"
+                        mod = Mod(files=["modCollision"])
+                    elif kind == "dlc":
+                        active = self.populated(self.game / "DLC/dlcCollision/content") / "asset"
+                        inactive = Path(str(active) + ".disabled")
+                        inactive.write_text("keep")
+                        mod = Mod(dlcs=["dlcCollision"])
+                    else:
+                        active = Path(self.config.menu) / "collision.xml"
+                        inactive = Path(str(active) + ".disabled")
+                        active.write_text("keep")
+                        inactive.write_text("keep")
+                        mod = Mod(menus=["collision.xml"])
+                    mod.menus.insert(0, "other.xml")
+                    mod.enabled = enabled
+                    with self.assertRaises(FileExistsError):
+                        mod.disable() if enabled else mod.enable()
+                    self.assertEqual(mod.enabled, enabled)
+                    self.assertEqual(first.read_text(), "unchanged")
+                    self.assertFalse((inactive_menu if enabled else active_menu).exists())
+                    self.assertEqual(active.read_text(), "keep")
+                    self.assertEqual(inactive.read_text(), "keep")
+                    first.unlink()
+
+    def test_failed_toggle_rolls_back_preceding_renames(self):
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                folder = self.game / "Mods" / ("modExample" if enabled else "~modExample")
+                self.populated(folder)
+                menu = Path(self.config.menu) / ("custom.xml" if enabled else "custom.xml.disabled")
+                menu.write_text("custom")
+                mod = Mod(enabled=enabled, files=["modExample"], menus=["custom.xml"])
+
+                def fail_mod_rename(source, destination, *, modDirectory):
+                    if modDirectory:
+                        raise PermissionError("denied")
+                    renameInstalledPath(source, destination, modDirectory=modDirectory)
+
+                with patch("src.domain.mod.renameInstalledPath", side_effect=fail_mod_rename):
+                    with self.assertRaisesRegex(PermissionError, "denied"):
+                        mod.disable() if enabled else mod.enable()
+                self.assertEqual(mod.enabled, enabled)
+                self.assertEqual(menu.read_text(), "custom")
+                self.assertEqual((folder / "asset").read_text(), "keep")
+                menu.unlink()
+                removeDirectory(str(folder))
+
+    def test_failed_disable_restores_shared_configuration_and_files(self):
+        folder = self.populated(self.game / "Mods/modExample")
+        menu = Path(self.config.menu)
+        xml = '<Var id="Example" />'
+        input_file = menu / "input.xml"
+        input_file.write_text(xml + "\n<!-- [BASE_CharacterMovement] -->", encoding="utf-16")
+        original = input_file.read_bytes()
+        (menu / "custom.xml").write_text("custom")
+        mod = Mod(files=["modExample"], menus=["custom.xml"], xmlkeys=[xml])
+        with patch.object(mod, "uninstallMenus", side_effect=PermissionError("denied")):
+            with self.assertRaises(PermissionError):
+                mod.disable()
+        self.assertTrue(mod.enabled)
+        self.assertEqual((folder / "asset").read_text(), "keep")
+        self.assertEqual(input_file.read_bytes(), original)
+        self.assertEqual((menu / "custom.xml").read_text(), "custom")
+
+    def test_failed_toggle_reports_rollback_paths(self):
+        menu = Path(self.config.menu) / "custom.xml"
+        menu.write_text("custom")
+        mod = Mod(menus=["custom.xml"])
+
+        def fail_restore(source, destination, *, modDirectory):
+            if not destination.endswith(".disabled"):
+                raise PermissionError("failed restore")
+            renameInstalledPath(source, destination, modDirectory=modDirectory)
+
+        with (
+            patch.object(mod, "uninstallMenus", side_effect=PermissionError("failed update")),
+            patch("src.domain.mod.renameInstalledPath", side_effect=fail_restore),
+            self.assertRaisesRegex(RuntimeError, r"Could not restore: .*custom.xml.disabled -> .*custom.xml"),
+        ):
+            mod.disable()
+        self.assertTrue(mod.enabled)
+        self.assertFalse(menu.exists())
+        self.assertEqual(Path(str(menu) + ".disabled").read_text(), "custom")
+
+    def test_dlc_walk_errors_are_not_silently_treated_as_success(self):
+        folder = self.game / "DLC/dlcExample"
+        folder.mkdir()
+        mod = Mod(dlcs=["dlcExample"])
+
+        def fail_walk(directory, *, onerror):
+            onerror(PermissionError("unreadable DLC"))
+            return iter(())
+
+        with patch("src.util.util.os.walk", side_effect=fail_walk):
+            with self.assertRaisesRegex(PermissionError, "unreadable DLC"):
+                mod.disable()
+        self.assertTrue(mod.enabled)
+
+    def test_missing_assets_are_not_recreated_by_toggling(self):
+        mod = Mod(files=["modMissing"], dlcs=["dlcMissing"], menus=["missing.xml"])
+        mod.disable()
+        self.assertFalse(mod.enabled)
+        self.assertEqual(mod.enable(), [])
+        self.assertTrue(mod.enabled)
+        self.assertFalse((self.game / "Mods/modMissing").exists())
+        self.assertFalse((self.game / "DLC/dlcMissing").exists())
+        self.assertFalse((Path(self.config.menu) / "missing.xml").exists())
 
     def test_archive_extraction_is_private_and_removed(self):
         archive = self.root / "modExample.zip"
