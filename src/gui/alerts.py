@@ -1,7 +1,7 @@
 '''Alert Dialogs'''
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from src.globals.constants import *
 
@@ -23,7 +23,7 @@ def MessageRebindKeys(current, modded, category, justModifiers=False):
             + translate("MainWindow", "Replace keybind and modifiers?")
         )
     return QMessageBox.question(
-        None,
+        QApplication.activeWindow(),
         translate("MainWindow", "Key Rebind Found"),
         translate("MainWindow", "Key rebind found.")
         + "\n\n"
@@ -51,7 +51,7 @@ def MessageRebindKeys(current, modded, category, justModifiers=False):
 def MessageOverwrite(modname, modtype):
     '''Shows dialog to let user decide what to do if mod is already installed'''
     return QMessageBox.question(
-        None,
+        QApplication.activeWindow(),
         translate("MainWindow", "Mod already installed"),
         str(modtype)
         + " '"

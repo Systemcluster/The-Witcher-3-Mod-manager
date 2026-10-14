@@ -1,5 +1,6 @@
 '''Main Window'''
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMainWindow
 
 from src.core.fetcher import *
@@ -29,4 +30,7 @@ class CustomMainWindow(QMainWindow):
         '''Qt dropEvent override'''
         if self.dropCallback:
             filelist = list(map(lambda url: url.toLocalFile(), event.mimeData().urls()))
-            self.dropCallback(filelist)
+            callback = self.dropCallback
+            event.acceptProposedAction()
+            # Modal prompts must wait until the native drag-and-drop operation has finished.
+            QTimer.singleShot(0, self, lambda: callback(filelist))

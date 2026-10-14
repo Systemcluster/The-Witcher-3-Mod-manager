@@ -8,16 +8,18 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QMimeData, QObject, QPointF, Qt, QUrl
+from PySide6.QtGui import QDropEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QToolBar, QTreeWidget, QWidget
 from watchdog.events import DirModifiedEvent, FileCreatedEvent, FileModifiedEvent, PatternMatchingEventHandler
 
 from main import logStartupFailure
 from src.domain.mod import Mod
 from src.globals import data
-from src.gui.alerts import MessageUnsupportedOSAction
+from src.gui.alerts import MessageOverwrite, MessageRebindKeys, MessageUnsupportedOSAction
 from src.gui.details_dialog import DetailsDialog
 from src.gui.main_widget import CustomMainWidget, ModsSettingsEventHandler
+from src.gui.main_window import CustomMainWindow
 from src.gui.tree_widget import CustomTreeWidgetItem
 from src.util.util import debounceGui, openFile
 
@@ -295,6 +297,34 @@ class GuiContractTests(unittest.TestCase):
             open_file.assert_called_once_with(selected)
             config.setOption.assert_called_once_with("TOOLBAR", selected)
         widget.output.assert_not_called()
+
+    def test_drop_finishes_before_installation_opens_modal_prompts(self):
+        callback = Mock()
+        window = CustomMainWindow(dropCallback=callback)
+        self.addCleanup(window.close)
+        mime = QMimeData()
+        filenames = ['/mods/first.zip', '/mods/second.7z']
+        mime.setUrls([QUrl.fromLocalFile(filename) for filename in filenames])
+        event = QDropEvent(
+            QPointF(0, 0), Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier
+        )
+        window.dropEvent(event)
+        self.assertTrue(event.isAccepted())
+        callback.assert_not_called()
+        self.app.processEvents()
+        callback.assert_called_once_with(filenames)
+
+    def test_install_prompts_are_parented_to_the_active_window(self):
+        window = QMainWindow()
+        self.addCleanup(window.close)
+        with (
+            patch('src.gui.alerts.QApplication.activeWindow', return_value=window),
+            patch('src.gui.alerts.QMessageBox.question', return_value=QMessageBox.StandardButton.Yes) as question,
+        ):
+            self.assertEqual(MessageOverwrite('Example', 'Mod'), QMessageBox.StandardButton.Yes)
+            self.assertIs(question.call_args.args[0], window)
+            self.assertEqual(MessageRebindKeys('old', 'new', 'Input'), QMessageBox.StandardButton.Yes)
+            self.assertIs(question.call_args.args[0], window)
 
     def test_details_dialog_keeps_qt_layout_callable(self):
         parent = QWidget()
