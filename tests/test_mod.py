@@ -1150,6 +1150,19 @@ class InstalledFileSafetyTests(unittest.TestCase):
 
 
 class ModConfigurationTests(unittest.TestCase):
+    def test_loading_status_and_priority_does_not_write_game_settings(self):
+        for enabled in ("True", "False"):
+            with self.subTest(enabled=enabled), patch("src.core.model.data.config") as config:
+                element = XML.fromstring(
+                    f'<mod name="Example" enabled="{enabled}" priority="42"><data>modExample</data></mod>'
+                )
+                mod = Model.populateModFromXml(Mod(), element)
+                self.assertEqual(mod.enabled, enabled == "True")
+                self.assertEqual(mod.priority, "42")
+                config.setPriority.assert_not_called()
+                config.removePriority.assert_not_called()
+                config.write_priority.assert_not_called()
+
     def test_input_keys_round_trip_with_version_metadata(self):
         mod = Mod(inputsettings=[Key("[Input]", "Version=1"), Key("[Input]", "IK_A=(Action=Jump)")])
         self.assertEqual(mod.installInputKeys(), (2, 0))
@@ -1467,6 +1480,15 @@ class InventoryPersistenceTests(unittest.TestCase):
                 self.assertFalse(model.rename('Original', name))
                 self.assertEqual(list(model.list()), ['Original'])
                 self.assertEqual((self.root / 'installed.xml').read_bytes(), original)
+
+    def test_invalid_status_recovers_backup_instead_of_assuming_disabled(self):
+        for status in ('', 'enabled="unknown"', 'enabled="true"'):
+            with self.subTest(status=status):
+                (self.root / "installed.xml").write_text(f'<installed><mod name="Invalid" {status}/></installed>')
+                self.write_inventory("installed.xml.old", "Recovered")
+                model = Model(ignorelock=True)
+                self.assertEqual(list(model.list()), ["Recovered"])
+                self.assertTrue(model.get("Recovered").enabled)
 
     def test_live_inventory_survives_interruption_before_replacement(self):
         self.write_inventory("installed.xml", "Original")

@@ -156,15 +156,13 @@ class Model:
     @staticmethod
     def populateModFromXml(mod: Mod, root: XML.Element) -> Mod:
         mod.date = str(root.get('date'))
-        enabled = str(root.get('enabled'))
-        if enabled == 'True':
-            mod.enabled = True
-        else:
-            mod.enabled = False
+        enabled = root.get('enabled')
+        if enabled not in ('True', 'False'):
+            raise XML.ParseError("Mod inventory entry has a missing or invalid enabled status")
+        mod.enabled = enabled == 'True'
         mod.name = str(root.get('name'))
         prt = str(root.get('priority'))
-        if prt != 'Not Set':
-            mod.priority = prt
+        mod._priority = str(int(prt)) if prt.isdecimal() else None
         for elem in root.findall('data'):
             mod.files.append(str(elem.text))
         for elem in root.findall('dlc'):
