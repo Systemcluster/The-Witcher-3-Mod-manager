@@ -326,6 +326,105 @@ class GuiContractTests(unittest.TestCase):
             self.assertEqual(MessageRebindKeys('old', 'new', 'Input'), QMessageBox.StandardButton.Yes)
             self.assertIs(question.call_args.args[0], window)
 
+    def test_failed_toggle_restores_checkbox_without_reentering_handler(self):
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                tree = QTreeWidget()
+                self.addCleanup(tree.close)
+                tree.setColumnCount(2)
+                item = CustomTreeWidgetItem(["", "Example"])
+                item.setCheckState(0, Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked)
+                tree.addTopLevelItem(item)
+                mod = Mock(enabled=enabled)
+                mod.enable.side_effect = PermissionError("denied")
+                mod.disable.side_effect = PermissionError("denied")
+                widget = Mock(treeWidget=tree)
+                widget.model.get.return_value = mod
+                tree.itemChanged.connect(lambda item, column: CustomMainWidget.modToggled(widget, item, column))
+                item.setCheckState(0, Qt.CheckState.Unchecked if enabled else Qt.CheckState.Checked)
+                self.assertEqual(item.checkState(0), Qt.CheckState.Checked if enabled else Qt.CheckState.Unchecked)
+                widget.model.get.assert_called_once_with("Example")
+                widget.model.write.assert_not_called()
+                widget.output.assert_called_once()
+                widget.alertRunScriptMerger.assert_not_called()
+                self.assertFalse(tree.signalsBlocked())
+
+    def test_successful_toggle_saves_actual_status_and_ignores_other_columns(self):
+        tree = QTreeWidget()
+        self.addCleanup(tree.close)
+        item = CustomTreeWidgetItem(["", "Example"])
+        item.setCheckState(0, Qt.CheckState.Checked)
+        tree.addTopLevelItem(item)
+        mod = Mod(_name="Example")
+        widget = Mock(treeWidget=tree)
+        widget.model.get.return_value = mod
+        CustomMainWidget.modToggled(widget, item, 1)
+        widget.model.get.assert_not_called()
+        tree.itemChanged.connect(lambda item, column: CustomMainWidget.modToggled(widget, item, column))
+        item.setCheckState(0, Qt.CheckState.Unchecked)
+        self.assertFalse(mod.enabled)
+        item.setCheckState(0, Qt.CheckState.Checked)
+        self.assertTrue(mod.enabled)
+        self.assertEqual(widget.model.write.call_count, 2)
+        widget.output.assert_not_called()
+
+    def test_priority_shortcuts_skip_disabled_mods_in_both_lists(self):
+        with patch.object(data, "config") as config:
+            for method, operation in (
+                (CustomMainWidget.increasePriority, "increasePriority"),
+                (CustomMainWidget.decreasePriority, "decreasePriority"),
+            ):
+                enabled = Mock(enabled=True)
+                disabled = Mock(enabled=False)
+                widget = Mock()
+                widget.getSelectedMods.return_value = ["Enabled", "Disabled"]
+                widget.model.get.side_effect = [enabled, disabled]
+                method(widget)
+                getattr(enabled, operation).assert_called_once()
+                getattr(disabled, operation).assert_not_called()
+                widget.output.assert_called_once()
+            for method in (CustomMainWidget.increaseLoadOrderPriority, CustomMainWidget.decreaseLoadOrderPriority):
+                widget = Mock()
+                widget.loadOrder.selectedItems.return_value = [CustomTreeWidgetItem(["~modExample", "42"])]
+                method(widget)
+                widget.output.assert_called_once()
+            config.setPriority.assert_not_called()
+            config.removePriority.assert_not_called()
+
+    def test_display_names_with_tildes_still_have_status_checkboxes(self):
+        tree = QTreeWidget()
+        self.addCleanup(tree.close)
+        widget = Mock(treeWidget=tree)
+        item = CustomMainWidget.addToList(widget, True, "Example ~ Variant", "-", 1, 0, 0, 0, 0, 0, "No", 0, "")
+        self.assertEqual(item.checkState(0), Qt.CheckState.Checked)
+        self.assertIsNotNone(item.data(0, Qt.ItemDataRole.CheckStateRole))
+
+    def test_disabled_load_order_uses_saved_priority_of_active_folder_name(self):
+        class Receiver(QObject):
+            def __init__(self):
+                super().__init__()
+                self.loadOrder = QTreeWidget()
+                self.getSelectedFiles = Mock(return_value=[])
+                self.output = Mock()
+
+        widget = Receiver()
+        self.addCleanup(widget.loadOrder.close)
+        with (
+            patch.object(data, "config") as config,
+            patch("src.gui.main_widget.os.listdir", return_value=["~modExample"]),
+        ):
+            config.getPriority.return_value = "42"
+            timer = CustomMainWidget.refreshLoadOrder(widget)
+            timer.stop()
+            timer.timeout.emit()
+            config.getPriority.assert_called_once_with("modExample")
+        item = widget.loadOrder.topLevelItem(0)
+        self.assertIsNotNone(item)
+        assert item is not None
+        self.assertEqual(item.text(0), "~modExample")
+        self.assertEqual(item.text(1), "42")
+        widget.output.assert_not_called()
+
     def test_details_dialog_keeps_qt_layout_callable(self):
         parent = QWidget()
         self.addCleanup(parent.close)

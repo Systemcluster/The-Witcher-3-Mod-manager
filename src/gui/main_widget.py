@@ -10,6 +10,7 @@ from PySide6.QtCore import (
     QFileInfo,
     QMetaObject,
     QRect,
+    QSignalBlocker,
     QSize,
     Qt,
     QThread,
@@ -593,9 +594,15 @@ class CustomMainWidget(QWidget):
     def modToggled(self, item, column):
         """Triggered when the mod check state is changed.
         Enables or disables the mod based on the current check state"""
+        if column != 0:
+            return
+        mod = None
         try:
+            mod = self.model.get(item.text(1))
+            if (item.checkState(0) == Qt.CheckState.Checked) == mod.enabled:
+                return
             if item.checkState(column) == Qt.CheckState.Checked:
-                incomplete = self.model.get(item.text(1)).enable()
+                incomplete = mod.enable()
                 if incomplete:
                     for i in incomplete:
                         self.output(
@@ -604,12 +611,16 @@ class CustomMainWidget(QWidget):
                             + translate("MainWindow", " could not be automatically installed.")
                         )
             elif item.checkState(column) == Qt.CheckState.Unchecked:
-                self.model.get(item.text(1)).disable()
+                mod.disable()
             self.model.write()
             self.refreshLoadOrder()
             self.alertRunScriptMerger()
         except Exception as err:
             self.output(formatUserError(err))
+        finally:
+            if mod is not None:
+                with QSignalBlocker(self.treeWidget):
+                    item.setCheckState(0, Qt.CheckState.Checked if mod.enabled else Qt.CheckState.Unchecked)
 
     def modDoubleClicked(self):
         '''Triggered when double clicked on the mod'''
@@ -651,6 +662,9 @@ class CustomMainWidget(QWidget):
         if items:
             item = items[0]
             selected = item.text(0)
+            if selected.startswith("~"):
+                self.output(translate("MainWindow", "You cannot set priority to disabled mod") + " '" + selected + "'")
+                return
             selectedvalue = item.text(1)
             if selectedvalue:
                 value = int(selectedvalue)
@@ -668,6 +682,9 @@ class CustomMainWidget(QWidget):
         if items:
             item = items[0]
             selected = item.text(0)
+            if selected.startswith("~"):
+                self.output(translate("MainWindow", "You cannot set priority to disabled mod") + " '" + selected + "'")
+                return
             selectedvalue = item.text(1)
             if selectedvalue:
                 value = max(-1, int(selectedvalue) - 1)
@@ -764,7 +781,13 @@ class CustomMainWidget(QWidget):
         selected = self.getSelectedMods()
         if selected:
             for modname in selected:
-                self.model.get(modname).increasePriority()
+                mod = self.model.get(modname)
+                if mod.enabled:
+                    mod.increasePriority()
+                else:
+                    self.output(
+                        translate("MainWindow", "You cannot set priority to disabled mod") + " '" + modname + "'"
+                    )
             data.getConfig().write_priority()
             self.refreshList()
 
@@ -774,7 +797,13 @@ class CustomMainWidget(QWidget):
         selected = self.getSelectedMods()
         if selected:
             for modname in selected:
-                self.model.get(modname).decreasePriority()
+                mod = self.model.get(modname)
+                if mod.enabled:
+                    mod.decreasePriority()
+                else:
+                    self.output(
+                        translate("MainWindow", "You cannot set priority to disabled mod") + " '" + modname + "'"
+                    )
             data.getConfig().write_priority()
             self.refreshList()
 
@@ -1087,7 +1116,7 @@ class CustomMainWidget(QWidget):
             for data_ in os.listdir(data.getConfig().mods):
                 templist = []
                 templist.append(data_)
-                prt = data.getConfig().getPriority(data_)
+                prt = data.getConfig().getPriority(data_.removeprefix("~"))
                 if prt:
                     temp = int(prt)
                 else:
@@ -1190,11 +1219,10 @@ class CustomMainWidget(QWidget):
         item.setTextAlignment(9, Qt.AlignmentFlag.AlignCenter)
         item.setTextAlignment(10, Qt.AlignmentFlag.AlignRight)
         item.setTextAlignment(11, Qt.AlignmentFlag.AlignCenter)
-        if "~" not in name:
-            if on:
-                item.setCheckState(0, Qt.CheckState.Checked)
-            else:
-                item.setCheckState(0, Qt.CheckState.Unchecked)
+        if on:
+            item.setCheckState(0, Qt.CheckState.Checked)
+        else:
+            item.setCheckState(0, Qt.CheckState.Unchecked)
         self.treeWidget.addTopLevelItem(item)
         return item
 
