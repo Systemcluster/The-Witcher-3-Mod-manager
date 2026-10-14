@@ -229,29 +229,33 @@ class FullPipelineTests(unittest.TestCase):
             installed = next(iter(model.all()))
             installed.dlcs = ["oldDlc"]
             installed.menus = ["oldMenu.xml"]
-            installed.enabled = False
+            installed.disable()
             self.assertEqual(installer.installMod(package), (True, 1, 0))
             self.assertIs(model.get(installed.name), installed)
             self.assertEqual(installed.dlcs, [])
             self.assertEqual(installed.menus, [])
             self.assertFalse(installed.enabled)
+            self.assertFalse((root / "programs/mods/mod-direct").exists())
+            self.assertTrue((root / "programs/mods/~mod-direct/content/blob0.bundle").is_file())
 
     def test_changed_folders_replace_same_name_record_without_merging(self):
         with self.environment() as (root, model, installer):
             package = str(root / "mods" / "mod-direct")
             self.assertEqual(installer.installMod(package), (True, 1, 0))
             installed = next(iter(model.all()))
+            installed.disable()
             installed.files = ["modPrevious"]
             installed.dlcs = ["oldDlc"]
             installed.menus = ["oldMenu.xml"]
-            installed.enabled = False
             self.assertEqual(installer.installMod(package), (True, 1, 0))
             replacement = model.get(installed.name)
             self.assertIsNot(replacement, installed)
             self.assertEqual(replacement.files, ["mod-direct"])
             self.assertEqual(replacement.dlcs, [])
             self.assertEqual(replacement.menus, [])
-            self.assertTrue(replacement.enabled)
+            self.assertFalse(replacement.enabled)
+            self.assertFalse((root / "programs/mods/mod-direct").exists())
+            self.assertTrue((root / "programs/mods/~mod-direct/content/blob0.bundle").is_file())
 
     def test_declined_overwrite_keeps_package_inventory(self):
         with self.environment() as (root, model, installer):
