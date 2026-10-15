@@ -269,6 +269,10 @@ def openFolder(path: str):
         webbrowser.open(path, new=1)
 
 
+def isOfficialDlc(name: str) -> bool:
+    return name.casefold() in ("bob", "ep1") or bool(re.fullmatch(r"dlc(?:[1-9]|1[0-6])", name, re.IGNORECASE))
+
+
 def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
     '''Returns an in-game path, allowing links only within the resolved game directory.'''
     from src.globals import data
@@ -285,6 +289,8 @@ def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
         modDirectory and (len(parts) < 2 or parts[0].casefold() not in ("mods", "dlc"))
     ):
         raise ValueError(f"Refusing to modify '{target}' outside of the game directory")
+    if modDirectory and parts[0].casefold() == "dlc" and isOfficialDlc(parts[1].removeprefix("~")):
+        raise ValueError(f"Refusing to modify official DLC '{target}'")
     paths = [game]
     for part in parts:
         paths.append(os.path.join(paths[-1], part))

@@ -372,7 +372,7 @@ class InstalledFileSafetyTests(unittest.TestCase):
             check_priority.assert_called_once()
         self.assertEqual((existing / "asset").read_text(), "keep")
 
-    def test_declined_overwrite_preserves_legacy_inventory_behavior(self):
+    def test_declined_overwrite_does_not_acquire_unowned_directory(self):
         existing = self.populated(self.game / "Mods" / "modExample")
         source = self.populated(self.root / "source" / "modExample")
         mod = Mod(_name="Example", files=["modExample"])
@@ -384,8 +384,41 @@ class InstalledFileSafetyTests(unittest.TestCase):
         ):
             self.assertEqual(Installer(model).installMod(str(source.parent)), (True, 0, 0))
         self.assertEqual((existing / "asset").read_text(), "keep")
-        model.add.assert_called_once_with(mod.name, mod)
-        self.assertEqual(mod.files, ["modExample"])
+        model.add.assert_not_called()
+        self.assertEqual(mod.files, [])
+
+    def test_official_expansions_cannot_be_installed_toggled_or_removed(self):
+        for name in ("bob", "EP1", "dlc1", "DLC16"):
+            with self.subTest(name=name):
+                original = self.populated(self.game / "DLC" / name / "content")
+                source = self.root / "Package" / name
+                self.populated(source / "DLC" / name / "content")
+                model = Model(ignorelock=True)
+                with patch("src.core.installer.MessageOverwrite") as prompt:
+                    self.assertEqual(Installer(model).installMod(str(source)), (False, 0, 0))
+                    prompt.assert_not_called()
+                legacy = Mod(_name=name, dlcs=[name])
+                model.add(name, legacy)
+                with self.assertRaisesRegex(ValueError, "official DLC"):
+                    legacy.disable()
+                self.assertFalse(Installer(model).uninstallMod(legacy))
+                self.assertEqual((original / "asset").read_text(), "keep")
+                self.assertIn(name, model.list())
+                model.remove(name)
+
+    def test_declined_unowned_dlc_is_not_deleted_with_installed_package(self):
+        source = self.root / "Package"
+        self.populated(source / "modExample/content")
+        self.populated(source / "DLC/ExtraAssets/content")
+        existing = self.populated(self.game / "DLC/ExtraAssets/content")
+        model = Model(ignorelock=True)
+        installer = Installer(model)
+        with patch("src.core.installer.MessageOverwrite", return_value=QMessageBox.StandardButton.NoToAll):
+            self.assertEqual(installer.installMod(str(source)), (True, 1, 0))
+        mod = Model(ignorelock=True).get("Package")
+        self.assertEqual(mod.dlcs, [])
+        self.assertTrue(installer.uninstallMod(mod))
+        self.assertEqual((existing / "asset").read_text(), "keep")
 
     def test_overwrite_all_decisions_persist_across_archives(self):
         for answer in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
@@ -647,7 +680,7 @@ class InstalledFileSafetyTests(unittest.TestCase):
             alert.assert_not_called()
             fetch.assert_called_once_with(source, ANY)
 
-    def test_partial_update_records_fetched_folders_including_declined_copies(self):
+    def test_partial_update_keeps_owned_skips_but_not_unowned_skips(self):
         source = self.root / "Example"
         for name in ("modFirst", "modSecond", "dlcFirst", "dlcSecond"):
             content = source / name / "content"
@@ -668,13 +701,13 @@ class InstalledFileSafetyTests(unittest.TestCase):
             self.assertEqual(installer.installMod(str(source)), (True, 2, 0))
         reloaded = Model(ignorelock=True)
         mod = reloaded.get("Example")
-        self.assertCountEqual(mod.files, ["modFirst", "modSecond", "modUnowned"])
+        self.assertCountEqual(mod.files, ["modFirst", "modSecond"])
         self.assertCountEqual(mod.dlcs, ["dlcFirst", "dlcSecond"])
         self.assertEqual((self.game / "Mods/modSecond/content/asset").read_text(), "original")
         self.assertTrue(Installer(reloaded).uninstallMod(mod))
         self.assertFalse((self.game / "Mods/modSecond").exists())
         self.assertFalse((self.game / "DLC/dlcSecond").exists())
-        self.assertFalse(unowned.exists())
+        self.assertTrue(unowned.exists())
 
     def test_repeated_menu_import_updates_existing_record_until_ui_saves(self):
         source = self.root / 'Example'

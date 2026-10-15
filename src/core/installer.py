@@ -70,6 +70,7 @@ class Installer:
             installed_mods = listdir(data.getConfig().mods)
             installed_dlcs = listdir(data.getConfig().dlc)
             keep_disabled = any(not installed.enabled and installed.name == mod.name for installed in self.model.all())
+            previous = next((installed for installed in self.model.all() if installed.name == mod.name), None)
             mod.enabled = not keep_disabled
 
             self.progress(0.2)
@@ -99,6 +100,10 @@ class Installer:
                             self.ask = False
                         if self.overwrite not in (QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.YesToAll):
                             self.output(translate("MainWindow", "Skipped") + " " + datapath)
+                            owned = previous.files if previous and modfolder else previous.dlcs if previous else []
+                            if name not in owned:
+                                entries = mod.files if modfolder else mod.dlcs
+                                entries[:] = [entry for entry in entries if entry != name]
                             continue
                     if dlcfolder and keep_disabled:
                         copyFolder(directory, datapath, disableFiles=True)
@@ -149,6 +154,8 @@ class Installer:
             self.progress(0.8)
 
             if not mod.files and not mod.dlcs and not mod.menus and not mod.inis:
+                if directories:
+                    return True, 0, int(incomplete)
                 raise Exception('No data found in ' + "'" + mod.name + "'")
 
             try:

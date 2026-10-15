@@ -40,6 +40,8 @@ Use the checkbox to enable or disable a mod. Disabled mod folders get a `~` pref
 
 Shared game menus and base INI files stay installed when a mod is disabled or uninstalled. Their previous contents aren't backed up or restored, so back up affected files before installing replacements. User settings and input bindings stay in place during toggles; uninstall removes recorded user-setting options but leaves input bindings.
 
+Official expansion folders (`bob`, `ep1`, and `dlc1` through `dlc16`) are not managed as custom DLC. Declining a directory overwrite does not give a new package ownership of that directory.
+
 Updating a package with the same manager name keeps its disabled status. **Restore default settings** enables the mod and reapplies its stored settings; it doesn't reinstall missing files.
 
 Follow each mod's installation instructions, especially for optional or mutually exclusive variants. Avoid using multiple managers to change the same installation at the same time.

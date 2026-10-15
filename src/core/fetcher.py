@@ -15,6 +15,7 @@ from src.domain.usersetting import Usersetting
 from src.util.util import (
     detectEncoding,
     getProgramRootFolder,
+    isOfficialDlc,
     normalizePath,
 )
 
@@ -84,7 +85,9 @@ def isModFolder(directory: str, parent: str):
 
 
 def isDlcFolder(directory: str, parent: str):
-    return bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or bool(re.match("^dlc", directory, re.IGNORECASE))
+    return not isOfficialDlc(directory) and (
+        bool(re.match("^dlc[s]?$", parent, re.IGNORECASE)) or bool(re.match("^dlc", directory, re.IGNORECASE))
+    )
 
 
 # tested
