@@ -420,6 +420,61 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertTrue(installer.uninstallMod(mod))
         self.assertEqual((existing / "asset").read_text(), "keep")
 
+    def test_failed_install_removes_only_new_directories_and_menus(self):
+        for existing_first in (False, True):
+            with self.subTest(existing_first=existing_first):
+                source = self.root / "Package"
+                self.populated(source / "modFirst/content")
+                self.populated(source / "modSecond/content")
+                target = self.game / "Mods/modFirst"
+                if existing_first:
+                    self.populated(target / "content")
+                model = Model(ignorelock=True)
+                mod = Mod(files=["modFirst", "modSecond"])
+
+                def copy_then_fail(origin, destination):
+                    if destination.endswith("modSecond"):
+                        raise PermissionError("second copy failed")
+                    copyFolder(origin, destination)
+
+                with (
+                    patch(
+                        "src.core.installer.fetchMod",
+                        return_value=(mod, [str(source / "modFirst"), str(source / "modSecond")], []),
+                    ),
+                    patch("src.core.installer.copyFolder", side_effect=copy_then_fail),
+                    patch("src.core.installer.MessageOverwrite", return_value=QMessageBox.StandardButton.Yes),
+                ):
+                    self.assertEqual(Installer(model).installMod(str(source)), (False, 0, 0))
+                self.assertEqual(target.exists(), existing_first)
+                self.assertEqual(list(model.list()), [])
+
+        menu_source = self.root / "custom.xml"
+        menu_source.write_text("new")
+        missing = self.root / "missing.xml"
+        mod = Mod(menus=["custom.xml", "missing.xml"])
+        with patch("src.core.installer.fetchMod", return_value=(mod, [], [str(menu_source), str(missing)])):
+            self.assertEqual(Installer(model).installMod(str(source)), (False, 0, 0))
+        self.assertFalse((Path(self.config.menu) / "custom.xml").exists())
+
+    def test_failed_install_reports_cleanup_failure_path(self):
+        source = self.populated(self.root / "Package/modFirst/content").parent
+        mod = Mod(files=["modFirst"])
+        output = Mock()
+        model = Model(ignorelock=True)
+        with (
+            patch("src.core.installer.fetchMod", return_value=(mod, [str(source)], [str(self.root / "missing.xml")])),
+            patch("src.core.installer.removeDirectory", side_effect=PermissionError("cleanup denied")),
+        ):
+            self.assertEqual(Installer(model, output=output).installMod(str(source.parent)), (False, 0, 0))
+        self.assertTrue(
+            any(
+                "Could not remove partially installed path:" in call.args[0]
+                and str(self.game / "Mods/modFirst") in call.args[0]
+                for call in output.call_args_list
+            )
+        )
+
     def test_legacy_disabled_shared_menu_recovery_and_collision(self):
         menu = Path(self.config.menu)
         inactive = menu / "graphics.xml.disabled"

@@ -53,6 +53,7 @@ class Installer:
         self.progress(0.1)
         mod = None
         result = True
+        created: list[tuple[str, bool]] = []
         extraction = TemporaryDirectory(prefix="tw3mm-")
         try:
             mod, directories, config_files = fetchMod(modPath, extraction.name)
@@ -105,6 +106,8 @@ class Installer:
                                 entries = mod.files if modfolder else mod.dlcs
                                 entries[:] = [entry for entry in entries if entry != name]
                             continue
+                    if not path.lexists(datapath):
+                        created.append((datapath, True))
                     if dlcfolder and keep_disabled:
                         copyFolder(directory, datapath, disableFiles=True)
                     else:
@@ -148,6 +151,8 @@ class Installer:
                         name += '.disabled'
                 target = checkInstalledPath(path.join(destination_directory, name), modDirectory=False)
                 os.makedirs(destination_directory, exist_ok=True)
+                if not path.lexists(target):
+                    created.append((target, False))
                 with open(config_file, 'rb') as source, atomicWrite(target, 'wb') as destination:
                     copyfileobj(source, destination)
 
@@ -242,6 +247,20 @@ class Installer:
             result = True
         except Exception as err:
             self.output(formatUserError(err))
+            for target, is_directory in reversed(created):
+                try:
+                    if path.lexists(target):
+                        if is_directory:
+                            removeDirectory(target)
+                        else:
+                            removeInstalledFile(target)
+                except (OSError, ValueError) as cleanup_error:
+                    self.output(
+                        translate("MainWindow", "Could not remove partially installed path: ")
+                        + target
+                        + "\n"
+                        + formatUserError(cleanup_error)
+                    )
             result = False
             installCount = 0
         finally:

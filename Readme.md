@@ -42,7 +42,7 @@ Shared game menus and base INI files stay installed when a mod is disabled or un
 
 Enabling an older disabled mod restores shared menus left with a `.disabled` suffix, including their file-list entries. If an active copy also exists, the manager reports a conflict rather than overwriting it.
 
-Official expansion folders (`bob`, `ep1`, and `dlc1` through `dlc16`) are not managed as custom DLC. Declining a directory overwrite does not give a new package ownership of that directory.
+Official expansion folders (`bob`, `ep1`, and `dlc1` through `dlc16`) are not managed as custom DLC. Declining a directory overwrite does not give a new package ownership of that directory. Failed installations remove newly created asset paths; replacements of pre-existing files are not rolled back, and cleanup failures are reported with their paths.
 
 Updating a package with the same manager name keeps its disabled status. **Restore default settings** enables the mod and reapplies its stored settings; it doesn't reinstall missing files.
 
