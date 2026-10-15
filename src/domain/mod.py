@@ -104,10 +104,10 @@ class Mod:
     def _statusRenames(self, enabled: bool) -> list[tuple[str, str, bool]]:
         renames: list[tuple[str, str, bool]] = []
         for menu in self.menus:
-            if self.isProtectedMenu(menu):
-                continue
             active = path.join(data.getConfig().menu, menu)
             inactive = active + ".disabled"
+            if self.isProtectedMenu(menu) and (not enabled or not path.lexists(inactive)):
+                continue
             renames.append((inactive, active, False) if enabled else (active, inactive, False))
         for dlc in self.dlcs:
             directory = data.getConfig().dlc
@@ -139,14 +139,19 @@ class Mod:
         if self.enabled == enabled:
             return []
         renames = self._statusRenames(enabled)
+        recovered_menus = [
+            path.basename(destination)
+            for _, destination, _ in renames
+            if enabled and self.isProtectedMenu(path.basename(destination)) and destination.casefold().endswith(".xml")
+        ]
         originals: dict[str, bytes] = {}
-        if not enabled:
+        if not enabled or recovered_menus:
             shared = []
-            if self.xmlkeys:
+            if not enabled and self.xmlkeys:
                 shared.append("input.xml")
-            if self.hidden:
+            if not enabled and self.hidden:
                 shared.append("hidden.xml")
-            if any(not self.isProtectedMenu(menu) for menu in self.menus):
+            if recovered_menus or any(not self.isProtectedMenu(menu) for menu in self.menus):
                 shared.extend(("dx11filelist.txt", "dx12filelist.txt"))
             for name in shared:
                 filename = checkInstalledPath(path.join(data.getConfig().menu, name), modDirectory=False)
@@ -161,6 +166,8 @@ class Mod:
             if not enabled:
                 self.uninstallXmlKeys()
                 self.uninstallMenus()
+            elif recovered_menus:
+                self.updateMenuFileLists(install=True, menus=recovered_menus)
         except Exception as error:
             failures = []
             for source, destination, mod_directory in reversed(renamed):
@@ -225,8 +232,9 @@ class Mod:
             "rendering.xml",
         )
 
-    def updateMenuFileLists(self, install: bool):
-        menus = [menu for menu in self.menus if not self.isProtectedMenu(menu)]
+    def updateMenuFileLists(self, install: bool, menus: list[str] | None = None):
+        if menus is None:
+            menus = [menu for menu in self.menus if not self.isProtectedMenu(menu)]
         if not menus or not data.getConfig().menu:
             return
         for filename in ('dx11filelist.txt', 'dx12filelist.txt'):

@@ -420,6 +420,43 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertTrue(installer.uninstallMod(mod))
         self.assertEqual((existing / "asset").read_text(), "keep")
 
+    def test_legacy_disabled_shared_menu_recovery_and_collision(self):
+        menu = Path(self.config.menu)
+        inactive = menu / "graphics.xml.disabled"
+        active = menu / "graphics.xml"
+        inactive.write_text("legacy")
+        for name in ("dx11filelist.txt", "dx12filelist.txt"):
+            (menu / name).write_text("base.xml;\n", encoding="utf-16")
+        mod = Model.populateModFromXml(
+            Mod(), XML.fromstring('<mod name="Legacy" enabled="False" priority="-"><menu>graphics.xml</menu></mod>')
+        )
+        active.write_text("new game version")
+        with self.assertRaises(FileExistsError):
+            mod.enable()
+        self.assertEqual(active.read_text(), "new game version")
+        self.assertEqual(inactive.read_text(), "legacy")
+        self.assertFalse(mod.enabled)
+        active.unlink()
+        self.assertEqual(mod.enable(), [])
+        self.assertEqual(active.read_text(), "legacy")
+        for name in ("dx11filelist.txt", "dx12filelist.txt"):
+            self.assertEqual((menu / name).read_text(encoding="utf-16"), "base.xml;\ngraphics.xml;\n")
+        mod.disable()
+        self.assertTrue(active.exists())
+        self.assertFalse(inactive.exists())
+
+    def test_legacy_shared_menu_registration_failure_rolls_back_recovery(self):
+        menu = Path(self.config.menu)
+        inactive = menu / "graphics.xml.disabled"
+        inactive.write_text("legacy")
+        mod = Mod(enabled=False, menus=["graphics.xml"])
+        with patch.object(mod, "updateMenuFileLists", side_effect=PermissionError("registration denied")):
+            with self.assertRaises(PermissionError):
+                mod.enable()
+        self.assertFalse(mod.enabled)
+        self.assertEqual(inactive.read_text(), "legacy")
+        self.assertFalse((menu / "graphics.xml").exists())
+
     def test_overwrite_all_decisions_persist_across_archives(self):
         for answer in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
             with self.subTest(answer=answer):
