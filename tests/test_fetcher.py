@@ -116,7 +116,7 @@ class FetcherDetectionTests(unittest.TestCase):
                 self.assertEqual(mod.files, [])
                 self.assertEqual(mod.dlcs, [])
                 self.assertEqual(config_files, [])
-                self.assertEqual(directories, [str(package)])
+                self.assertEqual(directories, [package.as_posix()])
 
     def test_content_payload_cannot_add_extra_packages_or_menus(self):
         for content_name in ("content", "CONTENT", "Content"):
@@ -132,7 +132,7 @@ class FetcherDetectionTests(unittest.TestCase):
                 self.assertEqual(mod.dlcs, [])
                 self.assertEqual(mod.menus, [])
                 self.assertEqual(config_files, [])
-                self.assertEqual(directories, [str(package)])
+                self.assertEqual(directories, [package.as_posix()])
 
     def test_folder_classification_respects_case_and_immediate_parent(self):
         for name, parent, mod, dlc in (
