@@ -2,7 +2,7 @@
 
 from cx_Freeze import Executable, setup
 
-from src.globals.constants import *
+from src.globals.constants import AUTHORS, AUTHORS_MAIL, TITLE, URL_WEB, VERSION
 
 FILES = ["res/", "translations/", "tools/", ("res/qt.conf", "qt.conf"), "LICENSE"]
 SHORTCUT_TABLE = [

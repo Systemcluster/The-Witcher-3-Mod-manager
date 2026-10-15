@@ -1,5 +1,6 @@
 '''Core functionality'''
 
+import os
 from dataclasses import dataclass, field
 from os import listdir, path
 from shutil import copyfileobj
@@ -9,12 +10,27 @@ from typing import Any, Callable
 
 from PySide6.QtWidgets import QMessageBox
 
-from src.core.fetcher import *
+from src.core.fetcher import (
+    containContentFolder,
+    fetchMod,
+    isBaseIniFile,
+    isDlcFolder,
+    isModFolder,
+    isPlatformIniFile,
+)
 from src.core.model import Model
+from src.domain.mod import Mod
 from src.globals import data
 from src.globals.constants import translate
 from src.gui.alerts import MessageAlertModFromGamePath, MessageOverwrite
-from src.util.util import *
+from src.util.util import (
+    atomicWrite,
+    checkInstalledPath,
+    copyFolder,
+    formatUserError,
+    removeDirectory,
+    removeInstalledFile,
+)
 
 
 @dataclass
@@ -28,7 +44,7 @@ class Installer:
     progress: Callable[[float], Any] = lambda _: None
     output: Callable[[str], Any] = lambda _: None
 
-    def installMod(self, modPath: str) -> Tuple[bool, int, int]:
+    def installMod(self, modPath: str) -> tuple[bool, int, int]:
         '''Installs mod from given path. If given mod is an archive first extracts it'''
 
         gamePath = data.getConfig().game
@@ -118,8 +134,9 @@ class Installer:
                     incomplete = True
                     try:
                         ddir = path.relpath(directory, extraction.name)
-                    except:
-                        ddir = ''
+                    except ValueError as error:
+                        self.output(formatUserError(error))
+                        ddir = directory
                     self.output(
                         translate(
                             "MainWindow", "Detected data folder but could not recognize it as part of a mod or dlc: "
@@ -297,7 +314,7 @@ class Installer:
             self.output(formatUserError(err))
             return False
 
-    def reinstallMod(self, mod: Mod) -> Tuple[bool, bool]:
+    def reinstallMod(self, mod: Mod) -> tuple[bool, bool]:
         try:
             self.output(translate("MainWindow", "Reinstalling") + " " + mod.name)
             incomplete = False

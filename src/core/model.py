@@ -2,24 +2,27 @@
 
 import os
 import re
+import sys
 import xml.etree.ElementTree as XML
 from base64 import b64decode, b64encode
+from binascii import Error as Base64Error
 from collections.abc import KeysView, ValuesView
 from io import StringIO
 from shutil import copyfileobj
 
 from fasteners import InterProcessLock
 
-from src.core.fetcher import *
+from src.core.fetcher import fetchUserSettings
 from src.domain.key import Key
 from src.domain.mod import Mod
+from src.domain.usersetting import Usersetting
 from src.globals import data
 from src.gui.alerts import (
     MessageAlertReadingConfigurationFailed,
     MessageAlertWritingFailed,
 )
-from src.util.syntax import *
-from src.util.util import *
+from src.util.syntax import indent
+from src.util.util import checkInstalledPath, detectEncoding, openFolder
 
 
 class Model:
@@ -197,8 +200,8 @@ class Model:
         for elem in root.findall('readmeb64'):
             try:
                 mod.readmes.append(b64decode(str(elem.text).encode("ascii")).decode("utf-8"))
-            except:
-                print('could not decode readme')
+            except (Base64Error, UnicodeError) as error:
+                print(f"could not decode readme for '{mod.name}': {error}", file=sys.stderr)
 
         mod.checkPriority()
         return mod

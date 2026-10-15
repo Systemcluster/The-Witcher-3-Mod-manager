@@ -4,6 +4,7 @@ import ntpath
 import os
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,6 +14,93 @@ from src.core.model import Model
 from src.domain.mod import Mod
 from src.globals import data
 from src.util.util import normalizePath, reconfigureGamePath
+
+
+class ConfigurationPersistenceTests(unittest.TestCase):
+    @contextmanager
+    def environment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            documents = root / 'Documents'
+            documents.mkdir()
+            with patch.object(Configuration, 'write_config'):
+                config = Configuration(str(documents), configPath=str(root / 'Manager'))
+            yield root, config
+
+    def test_priority_write_preserves_format_and_case_insensitive_access(self):
+        for spaced in (False, True):
+            with self.subTest(spaced=spaced), self.environment() as (_, config):
+                config.priority.read_string(
+                    '[modExample]\n'
+                    'ENABLED=1\n'
+                    'Priority=7\n'
+                    'UnknownKEY=value=with:delimiters\n'
+                    'Valueless\n'
+                    '[modOther]\n'
+                    'enabled=0\n'
+                    'priority=2\n'
+                )
+                config.write_priority(space_around_delimiters=spaced).join()
+                separator = ' = ' if spaced else '='
+                expected = (
+                    f'[modExample]\n'
+                    f'Enabled{separator}1\n'
+                    f'Priority{separator}7\n'
+                    f'Unknownkey{separator}value=with:delimiters\n'
+                    f'Valueless\n\n'
+                    f'[modOther]\n'
+                    f'Enabled{separator}0\n'
+                    f'Priority{separator}2\n\n'
+                )
+                self.assertEqual((Path(config.settings) / 'mods.settings').read_text(encoding='utf-8'), expected)
+                self.assertEqual(
+                    config.priority.options('modExample'), ['enabled', 'priority', 'unknownkey', 'valueless']
+                )
+                self.assertEqual(config.getPriority('modExample'), '7')
+                self.assertEqual(config.priority.get('modExample', 'PRIORITY'), '7')
+                config.readPriority()
+                self.assertEqual(config.getPriority('modExample'), '7')
+                self.assertIsNone(config.priority.get('modExample', 'valueless'))
+
+    def test_priority_write_preserves_inherited_defaults(self):
+        with self.environment() as (_, config):
+            config.priority.read_string('[DEFAULT]\nenabled=1\n[modExample]\npriority=7\n')
+            config.write_priority().join()
+            contents = (Path(config.settings) / 'mods.settings').read_text(encoding='utf-8')
+            self.assertEqual(contents, '[DEFAULT]\nenabled=1\n\n[modExample]\nPriority=7\nEnabled=1\n\n')
+            self.assertEqual(config.priority.defaults(), {'enabled': '1'})
+
+    def test_write_snapshots_are_independent_and_skip_unchanged_files(self):
+        with self.environment() as (_, first), self.environment() as (_, second):
+            for config, value in ((first, 'first'), (second, 'second')):
+                self.assertIsNone(config.configLastWritten)
+                self.assertIsNone(config.priorityLastWritten)
+                config.config['TEST'] = {'value': value}
+                config.setPriority('modExample', '7')
+                config.write_config().join()
+                config.write_priority().join()
+                self.assertEqual(config.configLastWritten, config.config)
+                self.assertEqual(config.priorityLastWritten, config.priority)
+                self.assertIsNot(config.configLastWritten, config.config)
+                self.assertIsNot(config.priorityLastWritten, config.priority)
+
+            first.config.set('TEST', 'value', 'updated')
+            first.setPriority('modExample', '9')
+            self.assertNotEqual(first.configLastWritten, first.config)
+            self.assertNotEqual(first.priorityLastWritten, first.priority)
+            self.assertEqual(second.configLastWritten, second.config)
+            self.assertEqual(second.priorityLastWritten, second.priority)
+            with patch.object(config_module.util, 'atomicWrite', wraps=config_module.util.atomicWrite) as write:
+                second.write_config().join()
+                second.write_priority().join()
+                write.assert_not_called()
+                first.write_config().join()
+                first.write_priority().join()
+                self.assertEqual(write.call_count, 2)
+            self.assertIn('value=updated', (Path(first.configuration) / 'config.ini').read_text(encoding='utf-8'))
+            self.assertIn('Priority=9', (Path(first.settings) / 'mods.settings').read_text(encoding='utf-8'))
+            self.assertEqual(second.get('TEST', 'value'), 'second')
+            self.assertEqual(second.getPriority('modExample'), '7')
 
 
 class ConfigurationPathTests(unittest.TestCase):

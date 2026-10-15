@@ -34,11 +34,17 @@ if __name__ == "__main__":
         from src.configuration.config import Configuration
         from src.core.model import Model
         from src.globals import data
-        from src.gui.alerts import *
+        from src.gui.alerts import MessageAlertOtherInstance, MessageInitializationFailed
         from src.gui.main_widget import CustomMainWidget
         from src.gui.main_window import CustomMainWindow
         from src.gui.themes import get_dark_palette, get_light_palette, get_system_palette
-        from src.util.util import *
+        from src.util.util import (
+            formatUserError,
+            getIcon,
+            getVersionString,
+            reconfigureGamePath,
+            translateToChosenLanguage,
+        )
 
         # correct screen scaling
         if "QT_DEVICE_PIXEL_RATIO" in environ:

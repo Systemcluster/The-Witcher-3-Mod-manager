@@ -13,7 +13,14 @@ from src.domain.usersetting import Usersetting
 from src.globals import data
 from src.globals.constants import translate
 from src.gui.alerts import MessageRebindKeys
-from src.util.util import *
+from src.util.util import (
+    CaseSensitiveConfigParser,
+    atomicWrite,
+    checkInstalledPath,
+    detectEncoding,
+    getDlcFileRenames,
+    renameInstalledPath,
+)
 
 
 @dataclass

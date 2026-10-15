@@ -3,7 +3,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from src.globals.constants import *
+from src.globals.constants import TITLE, translate
 
 
 def MessageRebindKeys(current, modded, category, justModifiers=False):

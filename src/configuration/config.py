@@ -8,7 +8,7 @@ import os.path as path
 import sys
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from fasteners import ReaderWriterLock
 from PySide6.QtWidgets import QMainWindow, QMessageBox
@@ -24,22 +24,7 @@ if TYPE_CHECKING:
 class Configuration:
     '''Configuration'''
 
-    __configPath: str = ''
-    __userSettingsPath: str = ''
-
-    __writing_config: ReaderWriterLock
-    __writing_priority: ReaderWriterLock
-
-    config: configparser.ConfigParser = None  # type: ignore
-    priority: configparser.ConfigParser = None  # type: ignore
-
-    configLastWritten: configparser.ConfigParser = None  # type: ignore
-    priorityLastWritten: configparser.ConfigParser = None  # type: ignore
-
-    __lastPriorityWriteTime: float = 0.0
-
     def __init__(self, documentsPath: str = '', gamePath: str = '', configPath: str = ''):
-
         if configPath:
             self.__configPath = configPath
         else:
@@ -50,6 +35,9 @@ class Configuration:
 
         self.config = configparser.ConfigParser(allow_no_value=True, delimiters="=", strict=False)
         self.priority = configparser.ConfigParser(allow_no_value=True, delimiters="=", strict=False)
+        self.configLastWritten: configparser.ConfigParser | None = None
+        self.priorityLastWritten: configparser.ConfigParser | None = None
+        self.__lastPriorityWriteTime = 0.0
 
         if not path.exists(self.__configPath):
             os.makedirs(self.__configPath)
@@ -147,12 +135,13 @@ class Configuration:
     def write_priority(self, space_around_delimiters: bool = False):
         if self.priority != self.priorityLastWritten:
             # proper-case all keys
-            priority = deepcopy(self.priority)
-            priority.optionxform = str  # type: ignore
-            for section in priority.sections():
-                for option in priority.options(section):
-                    value = priority.get(section, option)
-                    priority.remove_option(section, option)
+            priority = util.CaseSensitiveConfigParser(
+                defaults=self.priority.defaults(), allow_no_value=True, delimiters="=", strict=False
+            )
+            for section in self.priority.sections():
+                priority.add_section(section)
+                for option in self.priority.options(section):
+                    value = self.priority.get(section, option)
                     priority.set(section, f"{option[:1].upper()}{option[1:].lower()}", value)
             with self.__writing_priority.write_lock():
                 with util.atomicWrite(
@@ -457,7 +446,7 @@ class Configuration:
         return ''
 
     @staticmethod
-    def getCorrectGamePath(gameExePath: Union[str, None]) -> str:
+    def getCorrectGamePath(gameExePath: str | None) -> str:
         '''Validates a selected executable or finds one in a game directory.'''
         if not gameExePath:
             return ''

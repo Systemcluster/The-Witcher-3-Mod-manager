@@ -1,4 +1,5 @@
 import configparser
+import io
 import os
 import stat
 import tempfile
@@ -632,6 +633,44 @@ class InstalledFileSafetyTests(unittest.TestCase):
         self.assertEqual(Installer(model, output=output).installMod(str(source)), (True, 1, 1))
         self.assertTrue(any('manual installation' in call.args[0] for call in output.call_args_list))
         self.assertFalse((self.game / 'Mods/Unknown').exists())
+
+    def test_unrecognized_content_reports_full_path_when_relative_path_is_unavailable(self):
+        source = self.root / 'Package'
+        self.populated(source / 'modExample/content')
+        unknown = source / 'Unknown'
+        self.populated(unknown / 'content')
+        model = Model(ignorelock=True)
+        output = Mock()
+        real_relpath = os.path.relpath
+
+        def relative_path(target, start):
+            if Path(target) == unknown:
+                raise ValueError('Paths are on different drives')
+            return real_relpath(target, start)
+
+        with patch('src.core.installer.path.relpath', side_effect=relative_path):
+            self.assertEqual(Installer(model, output=output).installMod(str(source)), (True, 1, 1))
+        messages = [call.args[0] for call in output.call_args_list]
+        self.assertTrue(any('different drives' in message for message in messages))
+        self.assertTrue(
+            any('Detected data folder' in message and unknown.as_posix() in message for message in messages)
+        )
+
+    def test_unrecognized_content_diagnostic_does_not_swallow_process_interruptions(self):
+        source = self.root / 'Package'
+        self.populated(source / 'Unknown/content')
+        base = source / 'bin/config/base'
+        base.mkdir(parents=True)
+        (base / 'general.ini').write_text('[General]\nConfigVersion=5\n')
+        model = Model(ignorelock=True)
+        for interruption in (KeyboardInterrupt, SystemExit):
+            with (
+                self.subTest(interruption=interruption),
+                patch('src.core.installer.path.relpath', side_effect=interruption),
+                self.assertRaises(interruption),
+            ):
+                Installer(model).installMod(str(source))
+        self.assertEqual(list(model.all()), [])
 
     def test_protected_menus_are_never_disabled_or_deleted(self):
         protected = (
@@ -1717,6 +1756,29 @@ class InventoryPersistenceTests(unittest.TestCase):
         model = Model(ignorelock=True)
         model.add("Example", Mod(_name="Example", readmes=["text\x00\x01\x1f"]))
         self.assertEqual(Model(ignorelock=True).get("Example").readmes, ["text\x00\x01\x1f"])
+
+    def test_invalid_readme_is_reported_without_discarding_other_inventory_data(self):
+        for invalid in ('a', '/w==', '\N{LATIN SMALL LETTER E WITH ACUTE}'):
+            with self.subTest(invalid=invalid):
+                element = XML.fromstring(
+                    '<mod name="Example" enabled="True" priority="-">'
+                    '<data>modExample</data><readme>legacy readme</readme>'
+                    f'<readmeb64>{invalid}</readmeb64><readmeb64>dmFsaWQ=</readmeb64></mod>'
+                )
+                with patch('sys.stderr', new_callable=io.StringIO) as errors:
+                    mod = Model.populateModFromXml(Mod(), element)
+                self.assertEqual(mod.files, ['modExample'])
+                self.assertEqual(mod.readmes, ['legacy readme', 'valid'])
+                self.assertIn("could not decode readme for 'Example':", errors.getvalue())
+
+    def test_readme_decode_does_not_swallow_unexpected_errors_or_process_interruptions(self):
+        element = XML.fromstring(
+            '<mod name="Example" enabled="True" priority="-"><readmeb64>dmFsaWQ=</readmeb64></mod>'
+        )
+        for error in (RuntimeError, KeyboardInterrupt, SystemExit):
+            with self.subTest(error=error), patch('src.core.model.b64decode', side_effect=error):
+                with self.assertRaises(error):
+                    Model.populateModFromXml(Mod(), element)
 
     def test_failed_flush_preserves_live_inventory_and_previous_backup(self):
         self.write_inventory("installed.xml", "Original")

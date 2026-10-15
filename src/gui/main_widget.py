@@ -1,6 +1,8 @@
 '''Main Widget'''
 
+import os
 import shlex
+import subprocess
 from collections.abc import Callable
 from os import path
 from sys import platform
@@ -44,7 +46,7 @@ from watchdog.observers import Observer
 from src.core.installer import Installer
 from src.core.model import Model
 from src.globals import data
-from src.globals.constants import *
+from src.globals.constants import TITLE, URL_GIT, URL_WEB, translate
 from src.gui.alerts import (
     MessageAlertIncompleteInstallation,
     MessageAlertScript,
@@ -53,8 +55,23 @@ from src.gui.alerts import (
 from src.gui.details_dialog import DetailsDialog
 from src.gui.themes import get_dark_palette, get_light_palette, get_system_palette
 from src.gui.tree_widget import CustomTreeWidgetItem
-from src.util.syntax import *
-from src.util.util import *
+from src.util.util import (
+    debounceGui,
+    formatUserError,
+    getFile,
+    getIcon,
+    getKey,
+    getProgramRootFolder,
+    getSize,
+    isData,
+    openFile,
+    openUrl,
+    reconfigureGamePath,
+    reconfigureScriptMergerPath,
+    restartProgram,
+    showAboutWindow,
+    throttle,
+)
 
 
 class ModsSettingsEventHandler(PatternMatchingEventHandler):

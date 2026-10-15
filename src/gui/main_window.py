@@ -3,7 +3,7 @@
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMainWindow
 
-from src.core.fetcher import *
+from src.core.fetcher import isArchive, isValidModFolder
 
 
 class CustomMainWindow(QMainWindow):
