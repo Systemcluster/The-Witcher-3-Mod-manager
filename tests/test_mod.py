@@ -701,7 +701,10 @@ class InstalledFileSafetyTests(unittest.TestCase):
         model = Model(ignorelock=True)
         installer = Installer(model)
 
-        self.assertEqual(installer.installMod(str(source)), (True, 0, 0))
+        output = Mock()
+        installer.output = output
+        self.assertEqual(installer.installMod(str(source)), (True, 0, 1))
+        self.assertTrue(any("bin/config/platform/pc/rendering.ini" in call.args[0] for call in output.call_args_list))
         self.assertEqual(list(model.list()), [source.name])
         restored = Model(ignorelock=True).get(source.name)
         self.assertCountEqual(restored.menus, ['graphics.xml', 'graphicsdx11.xml'])

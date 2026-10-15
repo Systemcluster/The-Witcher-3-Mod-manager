@@ -136,6 +136,8 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
         elif isBaseIniFile(current_dir, file):
             mod.inis.append(file)
             config_files.append(normalizePath(current_dir + "/" + file))
+        elif isPlatformIniFile(current_dir, file):
+            config_files.append(normalizePath(current_dir + "/" + file))
         elif isTxtOrInputXmlFile(file):
             filepath = current_dir + "/" + file
             with open(filepath, 'rb') as file_:
@@ -161,6 +163,10 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
 
 def isBaseIniFile(directory: str, file: str) -> bool:
     return normalizePath(directory).casefold().endswith("/bin/config/base") and file.casefold().endswith(".ini")
+
+
+def isPlatformIniFile(directory: str, file: str) -> bool:
+    return normalizePath(directory).casefold().endswith("/bin/config/platform/pc") and file.casefold().endswith(".ini")
 
 
 def fetchReadmes(current_dir: str) -> List[str]:

@@ -136,6 +136,13 @@ class Installer:
 
             for config_file in config_files:
                 directory, name = path.split(config_file)
+                if isPlatformIniFile(directory, name):
+                    incomplete = True
+                    self.output(
+                        translate("MainWindow", "Manual installation required for unsupported configuration file: ")
+                        + config_file
+                    )
+                    continue
                 base_ini = isBaseIniFile(directory, name)
                 destination_directory = checkInstalledPath(
                     path.join(gamePath, 'bin', 'config', 'base') if base_ini else data.getConfig().menu,

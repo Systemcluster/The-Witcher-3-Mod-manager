@@ -44,6 +44,8 @@ Enabling an older disabled mod restores shared menus left with a `.disabled` suf
 
 Official expansion folders (`bob`, `ep1`, and `dlc1` through `dlc16`) are not managed as custom DLC. Declining a directory overwrite does not give a new package ownership of that directory. Failed installations remove newly created asset paths; replacements of pre-existing files are not rolled back, and cleanup failures are reported with their paths.
 
+INI files under `bin/config/platform/pc` still require manual installation. Packages containing these files are reported as incomplete, with the omitted paths listed in the output log.
+
 Updating a package with the same manager name keeps its disabled status. **Restore default settings** enables the mod and reapplies its stored settings; it doesn't reinstall missing files.
 
 Follow each mod's installation instructions, especially for optional or mutually exclusive variants. Avoid using multiple managers to change the same installation at the same time.

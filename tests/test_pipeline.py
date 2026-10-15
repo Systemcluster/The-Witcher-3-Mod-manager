@@ -109,6 +109,40 @@ class FullPipelineTests(unittest.TestCase):
             self.assertTrue(installer.uninstallMod(installed))
             self.assertTrue(target.is_file())
 
+    def test_mixed_graphics_package_reports_omitted_platform_ini(self):
+        # Nexus 8448's public archive preview contains both rendering.ini paths and these two XMLs.
+        with self.environment() as (root, model, installer):
+            package = root / "True Next-Gen Graphic Enhancements"
+            payloads = {
+                "bin/config/base/rendering.ini": b"[Rendering]\nBase=2\n",
+                "bin/config/platform/pc/rendering.ini": b"[Rendering]\nPlatform=3\n",
+                "bin/config/r4game/user_config_matrix/pc/graphics.xml": b"<UserConfig/>",
+                "bin/config/r4game/user_config_matrix/pc/graphicsdx11.xml": b"<UserConfig/>",
+            }
+            for relative, contents in payloads.items():
+                source = package / relative
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_bytes(contents)
+            platform = root / "programs/bin/config/platform/pc/rendering.ini"
+            platform.parent.mkdir(parents=True)
+            original = b"[Rendering]\nPlatform=1\n"
+            platform.write_bytes(original)
+            output: list[str] = []
+            installer.output = output.append
+            self.assertEqual(installer.installMod(str(package)), (True, 0, 1))
+            self.assertEqual(platform.read_bytes(), original)
+            self.assertEqual(
+                (root / "programs/bin/config/base/rendering.ini").read_bytes(),
+                payloads["bin/config/base/rendering.ini"],
+            )
+            self.assertTrue(
+                any(
+                    "Manual installation required" in line and "bin/config/platform/pc/rendering.ini" in line
+                    for line in output
+                )
+            )
+            self.assertEqual(next(iter(model.all())).inis, ["rendering.ini"])
+
     def test_ini_archive_reimport_replaces_shared_file(self):
         with self.environment() as (root, model, installer):
             package = root / "ini-archive"
