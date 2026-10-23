@@ -1,4 +1,5 @@
 import configparser
+import io
 import json
 import ntpath
 import os
@@ -6,7 +7,7 @@ import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import src.configuration.config as config_module
 from src.configuration.config import Configuration
@@ -104,6 +105,71 @@ class ConfigurationPersistenceTests(unittest.TestCase):
 
 
 class ConfigurationPathTests(unittest.TestCase):
+    def test_failed_windows_documents_lookup_does_not_use_working_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            documents = Path(temporary) / "Documents"
+            documents.mkdir()
+            shell = Mock()
+            for result in (-1, 0):
+                with (
+                    self.subTest(result=result),
+                    patch("sys.platform", "win32"),
+                    patch("ctypes.windll", shell, create=True),
+                    patch.object(config_module.util.QStandardPaths, "writableLocation", return_value=str(documents)),
+                    patch.object(config_module.util, "QFileDialog") as dialog,
+                    patch("sys.stderr", new_callable=io.StringIO) as errors,
+                ):
+                    shell.shell32.SHGetFolderPathW.return_value = result
+                    self.assertEqual(config_module.util.getDocumentsFolder(), str(documents))
+                    self.assertIn("Could not resolve", errors.getvalue())
+                    dialog.assert_not_called()
+
+    def test_removed_onedrive_documents_are_redetected_and_override_is_preserved(self):
+        for saved_exists in (False, True):
+            for override in (False, True):
+                with (
+                    self.subTest(saved_exists=saved_exists, override=override),
+                    tempfile.TemporaryDirectory() as temporary,
+                    patch.object(Configuration, "write_config"),
+                ):
+                    root = Path(temporary)
+                    saved = root / "OneDrive/Documents"
+                    local = root / "Documents"
+                    manager = root / "Manager"
+                    local.mkdir()
+                    manager.mkdir()
+                    if saved_exists:
+                        saved.mkdir(parents=True)
+                    (local / "The Witcher 3").mkdir()
+                    (local / "The Witcher 3/mods.settings").write_text("[modLocal]\nEnabled=1\nPriority=7\n")
+                    (manager / "config.ini").write_text(f"[PATHS]\ndocuments={saved.as_posix()}\n")
+                    with patch.object(config_module.util, "getDocumentsFolder", return_value=str(local)) as detect:
+                        config = Configuration(str(local) if override else "", configPath=str(manager))
+                        if saved_exists and not override:
+                            self.assertEqual(config.documents, saved.as_posix())
+                            detect.assert_not_called()
+                        else:
+                            self.assertEqual(config.documents, str(local))
+                            self.assertEqual(Path(config.settings), local / "The Witcher 3")
+                            self.assertEqual(config.getPriority("modLocal"), "7")
+                            self.assertEqual(config.get("PATHS", "documents"), str(local))
+                            self.assertEqual(detect.call_count, int(not override))
+
+    def test_documents_file_is_not_accepted_as_a_directory(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(Configuration, "write_config"):
+            root = Path(temporary)
+            invalid = root / "not-a-directory"
+            invalid.touch()
+            documents = root / "Documents"
+            documents.mkdir()
+            manager = root / "Manager"
+            manager.mkdir()
+            (manager / "config.ini").write_text(f"[PATHS]\ndocuments={invalid.as_posix()}\n")
+            with patch.object(config_module.util, "getDocumentsFolder", return_value=str(documents)):
+                config = Configuration(str(invalid), configPath=str(manager))
+            self.assertEqual(config.documents, str(documents))
+            self.assertTrue(invalid.is_file())
+
     def test_config_and_priority_writes_preserve_file_links(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -45,8 +45,12 @@ def getDocumentsFolder() -> str:
         from ctypes import create_unicode_buffer, windll, wintypes
 
         buf = create_unicode_buffer(wintypes.MAX_PATH)
-        windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
-        path = normalizePath(buf.value)
+        result = windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)
+        if result == 0 and buf.value:
+            path = normalizePath(buf.value)
+        else:
+            print(f"Could not resolve the Windows Documents directory (error {result})", file=sys.stderr)
+            path = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
     elif platform == "linux" or platform == "darwin":
         # try steam proton documents path default (1)
         path = normalizePath(

@@ -48,17 +48,19 @@ class Configuration:
         self.readConfig()
 
         configured_documents = self.get("PATHS", "documents")
-        if documentsPath and not os.path.exists(documentsPath):
+        if documentsPath and not os.path.isdir(documentsPath):
             print(f"documents path override {documentsPath} is invalid, starting with existing configuration")
 
-        if documentsPath and os.path.exists(documentsPath):
+        if documentsPath and os.path.isdir(documentsPath):
             self.documents = documentsPath
-        elif configured_documents and os.path.exists(configured_documents):
+        elif configured_documents and os.path.isdir(configured_documents):
             self.documents = configured_documents
         else:
+            if configured_documents:
+                print(f"configured documents directory {configured_documents} is missing, detecting it again")
             self.documents = util.getDocumentsFolder()
 
-        if not self.documents or not os.path.exists(self.documents):
+        if not self.documents or not os.path.isdir(self.documents):
             QMessageBox.critical(
                 None,
                 translate("Config", "No documents configured"),
