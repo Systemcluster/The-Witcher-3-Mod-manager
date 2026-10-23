@@ -92,6 +92,68 @@ class InstalledFileSafetyTests(unittest.TestCase):
                 removeInstalledFile(str(filename))
             self.assertEqual(filename.read_text(), "keep")
 
+    def test_native_status_and_uninstall_refuse_external_destination_links(self):
+        self.link(self.game / "bin/x64_dx12", self.outside)
+        external = self.outside / "example.asi"
+        external.write_bytes(b"keep")
+        mod = Mod(_name="native", nativefiles=["bin/x64_dx12/example.asi"])
+        with self.assertRaises(ValueError):
+            mod.disable()
+        self.assertTrue(mod.enabled)
+        with self.assertRaises(ValueError):
+            Installer(Model(ignorelock=True)).removeModNativeFiles(mod)
+        self.assertEqual(external.read_bytes(), b"keep")
+
+    def test_native_status_conflict_does_not_toggle_any_files(self):
+        directory = self.game / "bin/x64_dx12"
+        directory.mkdir()
+        for name in ("first.asi", "second.asi", "second.asi.disabled"):
+            (directory / name).write_bytes(name.encode())
+        mod = Mod(_name="native", nativefiles=["bin/x64_dx12/first.asi", "bin/x64_dx12/second.asi"])
+        with self.assertRaises(FileExistsError):
+            mod.disable()
+        self.assertTrue(mod.enabled)
+        self.assertEqual((directory / "first.asi").read_bytes(), b"first.asi")
+        self.assertFalse((directory / "first.asi.disabled").exists())
+
+    def test_native_status_failure_rolls_back_earlier_renames(self):
+        directory = self.game / "bin/x64_dx12"
+        directory.mkdir()
+        for name in ("first.asi", "second.asi"):
+            (directory / name).write_bytes(name.encode())
+        mod = Mod(_name="native", nativefiles=["bin/x64_dx12/first.asi", "bin/x64_dx12/second.asi"])
+
+        def rename(source, destination, **kwargs):
+            if source.endswith("second.asi"):
+                raise PermissionError("simulated failure")
+            renameInstalledPath(source, destination, **kwargs)
+
+        with patch("src.domain.mod.renameInstalledPath", side_effect=rename), self.assertRaises(PermissionError):
+            mod.disable()
+        self.assertTrue(mod.enabled)
+        self.assertEqual(sorted(file.name for file in directory.iterdir()), ["first.asi", "second.asi"])
+
+    def test_native_inventory_rejects_paths_outside_supported_payload_locations(self):
+        for relative in (
+            "../outside.dll",
+            "/bin/x64_dx12/absolute.asi",
+            "bin/x64_dx12/../config/example.ini",
+            "bin/x64_dx12/example.asi:stream",
+            "bin/x64_dx12/witcher3.exe",
+            "bin/x64_dx12/steam_api64.dll",
+            "bin/x64_dx12/example.asi.disabled",
+            "bin/x64_dx12/folder\\example.asi",
+            "bin/x64_dx12/.. /outside.asi",
+            "bin/x64_dx12/example.asi.",
+        ):
+            with self.subTest(relative=relative):
+                element = XML.Element("mod", name="native", enabled="True")
+                XML.SubElement(element, "nativefile").text = relative
+                with self.assertRaises(XML.ParseError):
+                    Model.populateModFromXml(Mod(), element)
+                with self.assertRaises(ValueError):
+                    Mod(_name="native", nativefiles=[relative]).disable()
+
     def test_refuses_without_configured_game(self):
         directory = self.populated(self.game / "Mods" / "modExample")
         self.config.game = ""

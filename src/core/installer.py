@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass, field
+from filecmp import cmp
 from os import listdir, path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
@@ -15,6 +16,7 @@ from src.core.fetcher import (
     fetchMod,
     isBaseIniFile,
     isDlcFolder,
+    isLooseNativeFile,
     isModFolder,
     isPlatformIniFile,
 )
@@ -26,10 +28,14 @@ from src.gui.alerts import MessageAlertModFromGamePath, MessageOverwrite
 from src.util.util import (
     atomicWrite,
     checkInstalledPath,
+    checkNativeFilePath,
     copyFolder,
     formatUserError,
+    isNativeFilePath,
+    nativeFileRelativePath,
     removeDirectory,
     removeInstalledFile,
+    renameInstalledPath,
 )
 
 
@@ -70,9 +76,13 @@ class Installer:
         mod = None
         result = True
         created: list[tuple[str, bool]] = []
+        renamed: list[tuple[str, str]] = []
         extraction = TemporaryDirectory(prefix="tw3mm-")
         try:
             mod, directories, config_files = fetchMod(modPath, extraction.name)
+            if len({filename.casefold() for filename in mod.nativefiles}) != len(mod.nativefiles):
+                raise ValueError("Multiple variants contain the same native file. Select one variant to install.")
+            mod.nativefiles = []
 
             mod.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             mod.name = modname
@@ -109,13 +119,9 @@ class Installer:
                                 f"Cannot install '{name}': conflicting status folder '{other_name}' already exists"
                             )
                     if (modfolder and installed_name in installed_mods) or (dlcfolder and name in installed_dlcs):
-                        if self.ask:
-                            self.overwrite = MessageOverwrite(
-                                name, translate("MainWindow", "Mod") if modfolder else translate("MainWindow", "DLC")
-                            )
-                        if self.overwrite in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
-                            self.ask = False
-                        if self.overwrite not in (QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.YesToAll):
+                        if not self.confirmOverwrite(
+                            name, translate("MainWindow", "Mod") if modfolder else translate("MainWindow", "DLC")
+                        ):
                             self.output(translate("MainWindow", "Skipped") + " " + datapath)
                             owned = previous.files if previous and modfolder else previous.dlcs if previous else []
                             if name not in owned:
@@ -153,6 +159,19 @@ class Installer:
 
             for config_file in config_files:
                 directory, name = path.split(config_file)
+                native = nativeFileRelativePath(config_file)
+                if isNativeFilePath(native):
+                    copied, omitted = self.installNativeFile(config_file, native, mod, previous, created, renamed)
+                    installCount += int(copied)
+                    incomplete |= omitted
+                    continue
+                if native or isLooseNativeFile(name):
+                    incomplete = True
+                    self.output(
+                        translate("MainWindow", "Manual installation required for unsupported native file: ")
+                        + config_file
+                    )
+                    continue
                 if isPlatformIniFile(directory, name):
                     incomplete = True
                     self.output(
@@ -182,7 +201,11 @@ class Installer:
 
             self.progress(0.8)
 
-            if not mod.files and not mod.dlcs and not mod.menus and not mod.inis:
+            if previous:
+                mod.nativefiles = list(dict.fromkeys([*previous.nativefiles, *mod.nativefiles]))
+            if not mod.files and not mod.dlcs and not mod.menus and not mod.inis and not mod.nativefiles:
+                if incomplete:
+                    return False, 0, 1
                 if directories:
                     return True, 0, int(incomplete)
                 raise Exception('No data found in ' + "'" + mod.name + "'")
@@ -260,6 +283,7 @@ class Installer:
                     installed.date = mod.date
                     installed.menus = mod.menus
                     installed.inis = mod.inis
+                    installed.nativefiles = mod.nativefiles
                     installed.inputsettings = mod.inputsettings
                     installed.readmes = mod.readmes
                     exists = True
@@ -285,11 +309,78 @@ class Installer:
                         + "\n"
                         + formatUserError(cleanup_error)
                     )
+            for source_path, destination_path in reversed(renamed):
+                try:
+                    renameInstalledPath(destination_path, source_path, modDirectory=False)
+                except (OSError, ValueError) as cleanup_error:
+                    self.output(
+                        translate("MainWindow", "Could not restore native file: ")
+                        + destination_path
+                        + "\n"
+                        + formatUserError(cleanup_error)
+                    )
             result = False
             installCount = 0
         finally:
             extraction.cleanup()
         return result, installCount, incompleteCount
+
+    def confirmOverwrite(self, name: str, category: str) -> bool:
+        if self.ask:
+            self.overwrite = MessageOverwrite(name, category)
+        if self.overwrite in (QMessageBox.StandardButton.YesToAll, QMessageBox.StandardButton.NoToAll):
+            self.ask = False
+        return self.overwrite in (QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.YesToAll)
+
+    def installNativeFile(
+        self,
+        source: str,
+        relative: str,
+        mod: Mod,
+        previous: Mod | None,
+        created: list[tuple[str, bool]],
+        renamed: list[tuple[str, str]],
+    ) -> tuple[bool, bool]:
+        owners = []
+        for other in self.model.all():
+            match = next((file for file in other.nativefiles if file.casefold() == relative.casefold()), None)
+            if match is not None:
+                relative = match
+                if other.name != mod.name:
+                    owners.append(other)
+        shared_active = any(other.enabled for other in owners)
+        active = mod.enabled or shared_active
+        target = checkNativeFilePath(relative, enabled=active)
+        opposite = checkNativeFilePath(relative, enabled=not active)
+        exists = path.lexists(target)
+        opposite_exists = path.lexists(opposite)
+        owned = previous is not None and relative in previous.nativefiles
+        identical = False
+        if opposite_exists and (exists or not (owners or owned)):
+            raise FileExistsError(f"Cannot install '{relative}': conflicting status file '{opposite}' already exists")
+        current = opposite if opposite_exists else target
+        if exists or opposite_exists:
+            if not path.isfile(current) or path.islink(current):
+                raise ValueError(f"Refusing to replace non-regular native file '{current}'")
+            identical = cmp(source, current, shallow=False)
+            if not mod.enabled and shared_active and not identical:
+                self.output(translate("MainWindow", "Skipped update to native file used by an enabled mod: ") + current)
+                return False, True
+            if not (owners and identical) and not self.confirmOverwrite(relative, translate("MainWindow", "File")):
+                self.output(translate("MainWindow", "Skipped") + " " + current)
+                return False, True
+        if opposite_exists:
+            renameInstalledPath(opposite, target, modDirectory=False)
+            renamed.append((opposite, target))
+        if not (owners and (exists or opposite_exists) and identical):
+            os.makedirs(path.dirname(target), exist_ok=True)
+            if not (exists or opposite_exists):
+                created.append((target, False))
+            with open(source, "rb") as payload, atomicWrite(target, "wb") as destination:
+                copyfileobj(payload, destination)
+        mod.nativefiles.append(relative)
+        self.output(translate("MainWindow", "Installed") + " " + target)
+        return True, False
 
     def uninstallMod(self, mod: Mod) -> bool:
         '''Uninstalls given mod'''
@@ -308,6 +399,7 @@ class Installer:
                 )
             self.removeModDlcs(mod)
             self.removeModData(mod)
+            self.removeModNativeFiles(mod)
             self.model.remove(mod.name)
             return True
         except Exception as err:
@@ -319,7 +411,7 @@ class Installer:
             self.output(translate("MainWindow", "Reinstalling") + " " + mod.name)
             incomplete = False
             if not mod.enabled:
-                failed_additions = mod.enable()
+                failed_additions = mod.enable(self.model.all())
                 if failed_additions:
                     incomplete = True
                     for i in failed_additions:
@@ -432,3 +524,23 @@ class Installer:
                     )
                     break
                 removeInstalledFile(target)
+
+    def removeModNativeFiles(self, mod: Mod) -> None:
+        for relative in mod.nativefiles:
+            active = checkNativeFilePath(relative)
+            inactive = checkNativeFilePath(relative, enabled=False)
+            if path.lexists(active) and path.lexists(inactive):
+                raise FileExistsError(f"Conflicting native files: '{active}' and '{inactive}'")
+            owners = [
+                other
+                for other in self.model.all()
+                if other.name != mod.name and relative.casefold() in (file.casefold() for file in other.nativefiles)
+            ]
+            current = active if path.lexists(active) else inactive
+            if owners:
+                desired = active if any(other.enabled for other in owners) else inactive
+                if current != desired and path.lexists(current):
+                    renameInstalledPath(current, desired, modDirectory=False)
+                self.output(translate("MainWindow", "Keeping shared file") + " " + desired)
+            elif path.lexists(current):
+                removeInstalledFile(current)

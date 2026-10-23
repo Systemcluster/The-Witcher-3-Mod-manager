@@ -15,7 +15,9 @@ from src.domain.usersetting import Usersetting
 from src.util.util import (
     detectEncoding,
     getProgramRootFolder,
+    isNativeFilePath,
     isOfficialDlc,
+    nativeFileRelativePath,
     normalizePath,
 )
 
@@ -39,7 +41,8 @@ def fetchMod(modPath: str, extractionDirectory: str) -> Tuple[Mod, List[str], Li
 def iterModDirectories(modPath: str) -> Iterator[str]:
     for current_dir, directories, _ in walk(modPath):
         # Content is copied as payload, not scanned for independently installable packages.
-        directories[:] = [directory for directory in directories if directory.casefold() != "content"]
+        if not nativeFileRelativePath(current_dir):
+            directories[:] = [directory for directory in directories if directory.casefold() != "content"]
         yield current_dir
 
 
@@ -55,6 +58,11 @@ def isValidModFolder(modPath: str) -> bool:
         ):
             return True
         if any(isBaseIniFile(current_dir, file) for file in getAllFilesFromDirectory(current_dir)):
+            return True
+        if any(
+            nativeFileRelativePath(join(current_dir, file)) or isLooseNativeFile(file)
+            for file in getAllFilesFromDirectory(current_dir)
+        ):
             return True
     return False
 
@@ -116,6 +124,8 @@ def getAllFilesFromDirectory(directory: str) -> List[str]:
 
 
 def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
+    if nativeFileRelativePath(current_dir):
+        return False
     root, dirName = path.split(current_dir)
     _, parent = path.split(root)
     if containContentFolder(current_dir):
@@ -130,7 +140,15 @@ def fetchDataIfRelevantFolder(current_dir: str, mod: Mod) -> bool:
 def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
     config_files: List[str] = []
     for file in getAllFilesFromDirectory(current_dir):
-        if isMenuXmlFile(file):
+        filename = normalizePath(join(current_dir, file))
+        native = nativeFileRelativePath(filename)
+        if native:
+            if isNativeFilePath(native):
+                mod.nativefiles.append(native)
+            config_files.append(filename)
+        elif isLooseNativeFile(file):
+            config_files.append(filename)
+        elif isMenuXmlFile(file):
             mod.menus.append(file)
             config_files.append(normalizePath(current_dir + "/" + file))
         elif isBaseIniFile(current_dir, file):
@@ -159,6 +177,10 @@ def fetchDataFromRelevantFiles(current_dir: str, mod: Mod) -> List[str]:
                 if usrs:
                     mod.usersettings += usrs
     return config_files
+
+
+def isLooseNativeFile(file: str) -> bool:
+    return file.casefold().endswith((".asi", ".dll", ".addon", ".addon32", ".addon64", ".fx", ".fxh"))
 
 
 def isBaseIniFile(directory: str, file: str) -> bool:

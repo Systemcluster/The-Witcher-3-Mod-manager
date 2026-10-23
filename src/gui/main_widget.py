@@ -619,7 +619,7 @@ class CustomMainWidget(QWidget):
             if (item.checkState(0) == Qt.CheckState.Checked) == mod.enabled:
                 return
             if item.checkState(column) == Qt.CheckState.Checked:
-                incomplete = mod.enable()
+                incomplete = mod.enable(self.model.all())
                 if incomplete:
                     for i in incomplete:
                         self.output(
@@ -628,7 +628,7 @@ class CustomMainWidget(QWidget):
                             + translate("MainWindow", " could not be automatically installed.")
                         )
             elif item.checkState(column) == Qt.CheckState.Unchecked:
-                mod.disable()
+                mod.disable(self.model.all())
             self.model.write()
             self.refreshLoadOrder()
             self.alertRunScriptMerger()
@@ -883,7 +883,7 @@ class CustomMainWidget(QWidget):
             "> "
             + translate("MainWindow", "Installed")
             + f" {successCount} "
-            + translate("MainWindow", "mods or dlcs")
+            + translate("MainWindow", "mods, DLCs or native files")
             + f" ({errorCount} "
             + translate("MainWindow", "errors")
             + ")"
@@ -1092,10 +1092,15 @@ class CustomMainWidget(QWidget):
                         raise ValueError("No game directory configured for DLC files")
                     modsize += getSize(dlc_directory + "/" + dlcfile)
                     modsize += getSize(dlc_directory + "/~" + dlcfile)
+                for native in mod.nativefiles:
+                    for suffix in ("", ".disabled"):
+                        filename = path.join(data.getConfig().game, native + suffix)
+                        if path.isfile(filename):
+                            modsize += path.getsize(filename)
                 userstr = translate("MainWindow", "No")
                 if mod.usersettings:
                     userstr = translate("MainWindow", "Yes")
-                self.addToList(
+                item = self.addToList(
                     mod.enabled,
                     mod.name,
                     mod.priority,
@@ -1109,6 +1114,8 @@ class CustomMainWidget(QWidget):
                     modsize,
                     mod.date,
                 )
+                if mod.nativefiles:
+                    item.setToolTip(1, translate("MainWindow", "Native files:") + "\n" + "\n".join(mod.nativefiles))
             for item in selected:
                 rows = self.treeWidget.findItems(item, Qt.MatchFlag.MatchEndsWith, 1)
                 if rows:

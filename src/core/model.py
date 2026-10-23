@@ -22,7 +22,7 @@ from src.gui.alerts import (
     MessageAlertWritingFailed,
 )
 from src.util.syntax import indent
-from src.util.util import checkInstalledPath, detectEncoding, openFolder
+from src.util.util import checkInstalledPath, detectEncoding, isNativeFilePath, openFolder
 
 
 class Model:
@@ -176,6 +176,10 @@ class Model:
             mod.menus.append(str(elem.text))
         for elem in root.findall('ini'):
             mod.inis.append(str(elem.text))
+        for elem in root.findall('nativefile'):
+            if elem.text is None or not isNativeFilePath(elem.text):
+                raise XML.ParseError(f"Invalid native mod file path: '{elem.text}'")
+            mod.nativefiles.append(elem.text)
         for elem in root.findall('xmlkey'):
             mod.xmlkeys.append(str(elem.text))
         for elem in root.findall('hidden'):
@@ -227,6 +231,8 @@ class Model:
                 XML.SubElement(elem, 'menu').text = menu
         for ini in mod.inis:
             XML.SubElement(elem, 'ini').text = ini
+        for filename in mod.nativefiles:
+            XML.SubElement(elem, 'nativefile').text = filename
         if mod.xmlkeys:
             for xml in mod.xmlkeys:
                 XML.SubElement(elem, 'xmlkey').text = xml

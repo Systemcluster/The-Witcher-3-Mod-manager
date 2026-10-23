@@ -1,6 +1,7 @@
 '''Mod Class'''
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from os import path
 from time import gmtime, strftime
@@ -17,6 +18,7 @@ from src.util.util import (
     CaseSensitiveConfigParser,
     atomicWrite,
     checkInstalledPath,
+    checkNativeFilePath,
     detectEncoding,
     getDlcFileRenames,
     renameInstalledPath,
@@ -42,6 +44,7 @@ class Mod:
     hidden: List[str] = field(default_factory=list)
     readmes: List[str] = field(default_factory=list)
     inis: List[str] = field(default_factory=list)
+    nativefiles: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -102,14 +105,33 @@ class Mod:
 
         return name
 
-    def enable(self) -> list[str]:
-        return self._setEnabled(True)
+    def enable(self, otherMods: Iterable["Mod"] = ()) -> list[str]:
+        return self._setEnabled(True, otherMods)
 
-    def disable(self) -> None:
-        self._setEnabled(False)
+    def disable(self, otherMods: Iterable["Mod"] = ()) -> None:
+        self._setEnabled(False, otherMods)
 
-    def _statusRenames(self, enabled: bool) -> list[tuple[str, str, bool]]:
-        renames: list[tuple[str, str, bool]] = []
+    def nativeStatusRenames(self, enabled: bool, otherMods: Iterable["Mod"] = ()) -> list[tuple[str, str, bool]]:
+        if not self.nativefiles:
+            return []
+        active_shared = {
+            filename.casefold()
+            for mod in otherMods
+            if mod.name != self.name and mod.enabled
+            for filename in mod.nativefiles
+        }
+        renames = []
+        for filename in self.nativefiles:
+            active = checkNativeFilePath(filename)
+            inactive = checkNativeFilePath(filename, enabled=False)
+            if enabled or filename.casefold() in active_shared:
+                renames.append((inactive, active, False))
+            else:
+                renames.append((active, inactive, False))
+        return renames
+
+    def _statusRenames(self, enabled: bool, otherMods: Iterable["Mod"] = ()) -> list[tuple[str, str, bool]]:
+        renames = self.nativeStatusRenames(enabled, otherMods)
         for menu in self.menus:
             active = path.join(data.getConfig().menu, menu)
             inactive = active + ".disabled"
@@ -142,14 +164,17 @@ class Mod:
             pending.append((source, destination, mod_directory))
         return pending
 
-    def _setEnabled(self, enabled: bool) -> list[str]:
+    def _setEnabled(self, enabled: bool, otherMods: Iterable["Mod"] = ()) -> list[str]:
         if self.enabled == enabled:
             return []
-        renames = self._statusRenames(enabled)
+        renames = self._statusRenames(enabled, otherMods)
         recovered_menus = [
             path.basename(destination)
             for _, destination, _ in renames
-            if enabled and self.isProtectedMenu(path.basename(destination)) and destination.casefold().endswith(".xml")
+            if enabled
+            and path.dirname(destination) == data.getConfig().menu
+            and self.isProtectedMenu(path.basename(destination))
+            and destination.casefold().endswith(".xml")
         ]
         originals: dict[str, bytes] = {}
         if not enabled or recovered_menus:
@@ -520,6 +545,9 @@ class Mod:
             string += "\n" + translate("MOD", "MENUS:") + "\n"
             for menu in iter(self.menus):
                 string += menu + "\n"
+        if self.nativefiles:
+            string += "\n" + translate("MOD", "NATIVE FILES:") + "\n"
+            string += "\n".join(self.nativefiles) + "\n"
         if self.xmlkeys:
             string += "\n" + translate("MOD", "XML VARIABLES:") + "\n"
             for xml in iter(self.xmlkeys):

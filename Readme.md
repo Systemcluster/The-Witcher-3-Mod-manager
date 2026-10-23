@@ -46,6 +46,20 @@ Official expansion folders (`bob`, `ep1`, and `dlc1` through `dlc16`) are not ma
 
 INI files under `bin/config/platform/pc` still require manual installation. Packages containing these files are reported as incomplete, with the omitted paths listed in the output log.
 
+### ASI and ReShade Mods
+
+Packages with explicit `bin/x64` or `bin/x64_dx12` paths are supported, including ASI plugins, DLL loaders, ReShade add-ons (`.addon64`), presets, shaders, textures and companion data files. Their directory layout is preserved, and native files are listed in the mod's details and name tooltip. Native-only packages appear in the installed-mod list too.
+
+Native files are recorded in `installed.xml`. Disabling a package adds `.disabled` to its native files; enabling it restores them. Shared files stay active while another installed package using them is enabled. Uninstall removes only recorded files, retaining shared files in the state required by their remaining owners. A disabled package update does not replace a shared file used by an enabled package; that omission is reported as incomplete.
+
+Existing native files prompt before replacement, using the same **Yes to All / No to All** choices as mod folders. Declined replacements are reported as incomplete and do not acquire ownership of another package's files. Accepted replacements are managed files and can be removed on uninstall; **back up manually installed files before replacing them**, since their original contents are not backed up or restored. Updates retain previously recorded files omitted from the new archive, matching folder-based mod updates.
+
+Loose native files without a game-relative path require manual installation. Executables and `steam_api64.dll` are not installed or managed. Omitted native files are listed in the output log, and archives containing multiple variants targeting the same native path are rejected instead of silently choosing one.
+
+Install the dependencies specified by each mod (for example, an ASI loader or ReShade with add-on support) and choose a version matching your game. Installing an add-on does not install ReShade itself. Only install native code from sources you trust. With Proton or CrossOver, loader-specific Wine configuration may also be required.
+
+### Updating Packages
+
 Updating a package with the same manager name keeps its disabled status. **Restore default settings** enables the mod and reapplies its stored settings; it doesn't reinstall missing files.
 
 Follow each mod's installation instructions, especially for optional or mutually exclusive variants. Avoid using multiple managers to change the same installation at the same time.

@@ -277,6 +277,38 @@ def isOfficialDlc(name: str) -> bool:
     return name.casefold() in ("bob", "ep1") or bool(re.fullmatch(r"dlc(?:[1-9]|1[0-6])", name, re.IGNORECASE))
 
 
+def nativeFileRelativePath(filename: str) -> str:
+    parts = normalizePath(filename).split("/")
+    for index in range(len(parts) - 1):
+        if parts[index].casefold() == "bin" and parts[index + 1].casefold() in ("x64", "x64_dx12"):
+            return "/".join(["bin", parts[index + 1].casefold(), *parts[index + 2 :]])
+    return ""
+
+
+def isNativeFilePath(relative: str) -> bool:
+    parts = relative.split("/")
+    return (
+        len(parts) >= 3
+        and parts[0] == "bin"
+        and parts[1] in ("x64", "x64_dx12")
+        and all(
+            part not in ("", ".", "..") and part == part.rstrip(" .") and not re.search(r'[\\:\x00<>"|?*]', part)
+            for part in parts
+        )
+        and not relative.casefold().endswith((".exe", ".disabled"))
+        and parts[-1].casefold() != "steam_api64.dll"
+    )
+
+
+def checkNativeFilePath(relative: str, *, enabled: bool = True) -> str:
+    from src.globals import data
+
+    if not isNativeFilePath(relative):
+        raise ValueError(f"Invalid native mod file path: '{relative}'")
+    target = os.path.join(data.getConfig().game, *relative.split("/"))
+    return checkInstalledPath(target if enabled else target + ".disabled", modDirectory=False)
+
+
 def checkInstalledPath(target: str, *, modDirectory: bool) -> str:
     '''Returns an in-game path, allowing links only within the resolved game directory.'''
     from src.globals import data
