@@ -454,18 +454,21 @@ class Configuration:
             return ''
         normalized = util.normalizePath(path.abspath(util.normalizePath(gameExePath)))
         gameDirectory = Configuration.getGameRoot(normalized)
-        if not gameDirectory:
-            return ''
-
         if path.isfile(normalized):
-            return normalized
-        directories = (
-            normalized,
-            path.join(gameDirectory, 'bin', 'x64_dx12'),
-            path.join(gameDirectory, "bin", "x64"),
-        )
+            return normalized if gameDirectory else ''
+        if not path.isdir(normalized):
+            return ''
+        directories = [normalized]
+        if gameDirectory:
+            directories.extend((path.join(gameDirectory, 'bin', 'x64_dx12'), path.join(gameDirectory, "bin", "x64")))
         for directory in directories:
             candidate = Configuration.findGameExecutable(directory)
+            if candidate:
+                return candidate
+        # Xbox installs may wrap the actual game directory in a Content folder.
+        contentRoot = path.join(normalized, "Content")
+        for renderer in ("x64_dx12", "x64"):
+            candidate = Configuration.findGameExecutable(path.join(contentRoot, "bin", renderer))
             if candidate:
                 return candidate
         return ''

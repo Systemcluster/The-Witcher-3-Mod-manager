@@ -24,7 +24,7 @@ New configuration is created in `AppData\Local\The Witcher 3 Mod Manager`. The e
 
 ### Game Configuration
 
-Select `witcher3.exe` in `bin/x64` for DX11 or `bin/x64_dx12` for DX12. The `--game` command-line option also accepts the installation directory.
+Select `witcher3.exe` in `bin/x64` for DX11 or `bin/x64_dx12` for DX12. The `--game` command-line option also accepts the installation directory, including an Xbox PC installation with a `Content` wrapper. Select the real game executable, not `GameLaunchHelper.exe`. The manager needs write access to the game files; it cannot unlock protected store installations.
 
 Steam Remastered installations launch through Steam on Windows. Other Windows installations launch the selected executable directly. On Linux and macOS, Steam installations launch through Steam and other installations use `wine`.
 

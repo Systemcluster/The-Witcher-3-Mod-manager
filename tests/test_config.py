@@ -170,6 +170,39 @@ class ConfigurationPathTests(unittest.TestCase):
             self.assertEqual(config.documents, str(documents))
             self.assertTrue(invalid.is_file())
 
+    def test_xbox_content_wrapper_resolves_to_actual_game_root(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(Configuration, "write_config"):
+            wrapper = Path(temporary) / "XboxGames/The Witcher 3"
+            game = wrapper / "Content"
+            (game / "content").mkdir(parents=True)
+            executable = game / "bin/x64_dx12/witcher3.exe"
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            # A wrapper's launcher must never be selected as the game's executable.
+            (game / "GameLaunchHelper.exe").touch()
+            self.assertEqual(Configuration.getCorrectGamePath(str(wrapper)), executable.as_posix())
+            self.assertEqual(Configuration.getCorrectGamePath(str(game)), executable.as_posix())
+            self.assertEqual(Configuration.getCorrectGamePath(str(executable)), executable.as_posix())
+            config = Configuration.__new__(Configuration)
+            config.config = configparser.ConfigParser()
+            config.gameexe = str(wrapper)
+            self.assertEqual(config.game, game.as_posix())
+            self.assertEqual(config.graphicsapi, "dx12")
+            self.assertEqual(config.usersettings, "dx12user.settings")
+            self.assertEqual(config.mods, str(game / "Mods"))
+            self.assertEqual(config.dlc, str(game / "DLC"))
+            self.assertFalse((wrapper / "Mods").exists())
+            self.assertFalse((wrapper / "DLC").exists())
+            native_isdir = os.path.isdir
+
+            def case_sensitive_isdir(filename):
+                if str(filename) == str(wrapper / "content"):
+                    return False
+                return native_isdir(filename)
+
+            with patch.object(config_module.path, "isdir", side_effect=case_sensitive_isdir):
+                self.assertEqual(Configuration.getCorrectGamePath(str(wrapper)), executable.as_posix())
+
     def test_config_and_priority_writes_preserve_file_links(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
